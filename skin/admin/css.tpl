@@ -1,0 +1,1 @@
+{headlink rel="stylesheet" href="/{baseadmin}/min/?f=plugins/{$pluginName}/css/bootstrap2-toggle.min.css,plugins/{$pluginName}/css/admin.css" concat={$concat} media="screen"}

@@ -425,8 +425,8 @@ var cartProduct =(function($, undefined){
      * @param id_container
      * @param id_table
      */
-    function selectShipping(iso,id_cart,id_container,id_table){
-        $('select#period_ship').on('change',function(){
+    function selectTva(iso,id_cart,id_container,id_table){
+        $('select#country_cart').on('change',function(){
             var $currentOption = $(this).find('option:selected').val();
             if($currentOption != ''){
                 if(id_cart != null){
@@ -435,7 +435,7 @@ var cartProduct =(function($, undefined){
                         uri: '/plugins.php?magixmod=cartpay&strLangue='+iso+'&json_cart='+id_cart,
                         typesend:'post',
                         dataType:'html',
-                        noticedata:'period_ship='+$currentOption,
+                        noticedata:'tva_country='+$currentOption,
                         beforeParams:function(){
                             var loader = $(document.createElement("span")).addClass("loader col-md-offset-5").append(
                                 $(document.createElement("img"))
@@ -574,7 +574,7 @@ var cartProduct =(function($, undefined){
             delivery();
             modalQuantity();
             updateQuantity(isolang,id_cart,id_container,id_table);
-            selectShipping(isolang,id_cart,id_container,id_table);
+            selectTva(isolang,id_cart,id_container,id_table);
            // sendCart(idform,isolang,id_container,id_table);
         },
         runSend:function(id_cart,id_container,id_table,idform,isolang){

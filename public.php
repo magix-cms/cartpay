@@ -42,7 +42,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
      * @var string
      */
     public $add_cart,$delete_item,$get_nbr_items,$get_price_items,$get_amount_to_pay,$idprofil_session,
-        $shipping_price,$json_cart,$item_to_delete,$id_cart_to_send,$devis_to_send,$booking,$payment,$statut,$tva_amount,$idcatalog,$booking_quantity;
+        $shipping_price,$json_cart,$item_to_delete,$id_cart_to_send,$devis_to_send,$booking,$payment,$statut,$tva_amount,$idcatalog,$booking_quantity,$tva_country;
     public $item_qty,$quantity_qty;
     public $logo_perso,$logo;
     /**
@@ -96,6 +96,10 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         }
         if(magixcjquery_filter_request::isGet('statut')){
             $this->statut = magixcjquery_form_helpersforms::inputClean($_GET['statut']);
+        }
+        //
+        if(magixcjquery_filter_request::isPost('tva_country')){
+            $this->tva_country = magixcjquery_form_helpersforms::inputClean($_POST['tva_country']);
         }
         //IMAGE
         if(isset($_FILES['logo_perso']["name"])){
@@ -173,14 +177,18 @@ class plugins_cartpay_public extends database_plugins_cartpay{
      * @param $max
      * @return array
      */
-    private function getItemsTvaData(){
+    private function getItemsTvaData($dataTva){
         $data = parent::fetchTva(
-            array(
-                'fetch'=>'all',
-                'context'=>'country'
-            )
+            $dataTva
         );
         return $this->setItemsTvaData($data);
+    }
+
+    private function getItemTvaData($dataTva){
+        $data = parent::fetchTva(
+            $dataTva
+        );
+        return $data;
     }
 
     /**
@@ -247,51 +255,68 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $amount_to_pay = ($id_cart != null) ? $this->load_cart_amount($id_cart) : 0;
             $amount_to_pay = $amount_to_pay['amount_to_pay'];
             $cart_amount = $this->load_cart_amount($id_cart);
+
             $shipping =  $cart_amount['shipping'];
-            $tva_amount = floatval('0,'.$this->tva_amount);
+            if($data_cart['country_cart']!=null){
+                $tva = $this->getItemTvaData(
+                    array(
+                        'fetch'=>'one',
+                        'context'=>'config',
+                        'country'=>$data_cart['country_cart']
+                    )
+                );
+                $calculate_tva = $tva['amount_tva'];
+            }else{
+                $calculate_tva = $this->tva_amount ;
+            }
+
+            // formate la TVA avant le calcule
+            $tva_amount = floatval('0.'.sprintf("%'.02d", $calculate_tva));
             $tax_amount = ($cart_amount['ammount_products']+$shipping)*$tva_amount;
-            $amount_pay_with_tax = ($amount_to_pay-$shipping);//$tax_amount+$cart_amount['ammount_products'];
+
+            //$amount_pay_with_tax = ($amount_to_pay-$shipping);//$tax_amount+$cart_amount['ammount_products'];
+            $amount_pay_with_tax = $tax_amount+$cart_amount['ammount_products'];
             //Assignation des coordonnée
-            if($this->pstring1 === 'resume'){
-                $payprocess = null;
+            if($this->pstring1 === 'payment'){
+
                 //$this->hipayProcess($create->getLanguage(),$session_key,$id_cart,$shipping,$amount_pay_with_tax);
-                if(class_exists('plugins_ogone_public')){
+                if(class_exists('plugins_ogone_public')) {
                     $ogone = new plugins_ogone_public();
-                    $lang = frontend_model_template::current_Language().'_'.strtoupper(frontend_model_template::current_Language());
-                    if(isset($_POST['profil_cashback'])){
+                    $lang = frontend_model_template::current_Language() . '_' . strtoupper(frontend_model_template::current_Language());
+                    if (isset($_POST['profil_cashback'])) {
                         $profil_cashback = "&profil_cashback=true";
-                    }else{
+                    } else {
                         $profil_cashback = "&profil_cashback=false";
                     }
 
-                    /*$payprocess = $ogone->getData(
+                    $ogoneProcess = $ogone->getData(
                         array(
-                            'urlok'         =>  self::SETURLOK,
-                            'urlnook'       =>  self::SETURLNOOK,
-                            'urlcancel'     =>  self::SETURLCANCEL,
-                            'urlexception'  =>  self::SETURLEXCEPTION,
+                            'plugin'    =>  'cartpay',
+                            'formSubmitImageUrl'=> '/plugins/ogone/img/ogone-'.frontend_model_template::current_Language().'.png',
                             'transaction'   =>  $data_cart['id_cart'],
                             'lastname'      =>  $data_cart['lastname_cart'],
                             'firstname'     =>  $data_cart['firstname_cart'],
                             'email'         =>  $data_cart['email_cart'],
                             'language'=>    $lang,
-                            'amount'=>    number_format($amount_to_pay, 2, '', ''),
+                            'amount'=>    number_format($amount_pay_with_tax, 2, '', ''),
                             'COMPLUS'=>   'module=cartpay&idprofil='.$data_cart['idprofil']."&shipping=".$shipping."&amount_promo=".$cart_amount['amount_promo'],
                         )
-                    );*/
+                    );
+                    $create->assign('ogoneProcess',$ogoneProcess);
                     //"&amount_profil=".$cart_amount['amount_profil']
-                }elseif(class_exists('plugins_hipay_public')){
+                }
+                if(class_exists('plugins_hipay_public')){
                     $hipay = new plugins_hipay_public();
-                    $payprocess = $hipay->getData(
+                    $hipayProcess = $hipay->getData(
                         array(
                             'plugin'    =>  'cartpay',
                             'key'       =>  $session_key,
                             'order'     =>  $data_cart['id_cart'],
-                            'amount'    =>  $amount_to_pay
+                            'amount'    =>  $amount_pay_with_tax
                         )
                     );
+                    $create->assign('hipayProcess',$hipayProcess);
                 }
-                $create->assign('payprocess',$payprocess);
 
             }
             $assign_exclude = array(
@@ -307,7 +332,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         }
 
         $create->assign('id_cart',$id_cart);
-        $create->assign('amount_order',$amount_to_pay);
+        $create->assign('amount_order',$amount_pay_with_tax);
     }
     /**
      * Retourne le nombre d'éléments dans un panier suivant clée de session
@@ -419,8 +444,33 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $promo_amount = 0;
             $profil_amount = 0;
         }
+        $comp_data = parent::s_customer_info($id_cart);
+        //print_r($comp_data);
+        if(isset($this->tva_country)){
+            $tva = $this->getItemTvaData(
+                array(
+                    'fetch'=>'one',
+                    'context'=>'config',
+                    'country'=>$this->tva_country
+                )
+            );
+            $calculate_tva = $tva['amount_tva'];
+        }elseif($comp_data['country_cart'] != null){
+            $tva = $this->getItemTvaData(
+                array(
+                    'fetch'=>'one',
+                    'context'=>'config',
+                    'country'=>$comp_data['country_cart']
+                )
+            );
+            $calculate_tva = $tva['amount_tva'];
+        }else{
+            $calculate_tva = $this->tva_amount ;
+        }
+
+
         // formate la TVA avant le calcule
-        $tva_amount = floatval('0.'.$this->tva_amount);
+        $tva_amount = floatval('0.'.sprintf("%'.02d", $calculate_tva));
         //$shipping = ($amount_products < $this->free_shipping_amount) ? $this->shipping_price : '0.00';
         $tax_amount = ($amount_products+$shipping)*$tva_amount;
         $tva = number_format($tax_amount, 2, '.', '');
@@ -433,9 +483,11 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             //$amount_to_pay =  $total - $promo_amount - $profil_amount;
             $amount_to_pay =  $total - $promo_amount;
         }
+
         $prices = array (
             'ammount_products'  => number_format($amount_products, 2, '.', ''),
             'shipping'          => $shipping_ttc,
+            'amount_vat'        => $calculate_tva,
             'amount_tax'        => $tva,
             'amount_promo'      => number_format($promo_amount, 2, '.', ''),
             //'amount_profil'     => $profil_amount,
@@ -985,6 +1037,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $create->assign('getItemPriceData',$this->getItemPriceData($this->json_cart));
             $create->assign('setParamsData',array('remove'=>'true','editQuantity'=>'true'));
             $create->display('loop/cart.tpl');
+
         }elseif(isset($this->get_nbr_items)){
             $this->load_cart_nbr_item($session_key);
         }elseif(isset($this->get_price_items)){
@@ -1075,7 +1128,12 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                         $create->assign('setPaymentType','devis');
                     }
                     $this->template->assign('getDataConfig',$this->getConfigData());
-                    $this->template->assign('getItemsTvaData',$this->getItemsTvaData());
+                    $this->template->assign('getItemsCountryData',$this->getItemsTvaData(
+                        array(
+                            'fetch'=>'all',
+                            'context'=>'country'
+                        )
+                    ));
                     $create->display('index.tpl');
                 }
             }
@@ -1578,10 +1636,11 @@ class database_plugins_cartpay{
                 }
             }elseif($fetch == 'one'){
                 if($context == 'config') {
-                    $query = "SELECT *
-                      FROM mc_plugins_cartpay_tva_conf WHERE
-                      zone_tva=:zone_tva";
-                    return magixglobal_model_db::layerDB()->selectOne($query,array(':zone_tva'=>$data['zone_tva']));
+                    $query = "SELECT t.*,conf.zone_tva,conf.amount_tva
+                      FROM mc_plugins_cartpay_tva AS t
+                      JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
+                      WHERE t.country = :country";
+                    return magixglobal_model_db::layerDB()->selectOne($query,array(':country'=>$data['country']));
                 }
             }
         }

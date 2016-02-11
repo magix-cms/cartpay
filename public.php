@@ -283,11 +283,6 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 if(class_exists('plugins_ogone_public')) {
                     $ogone = new plugins_ogone_public();
                     $lang = frontend_model_template::current_Language() . '_' . strtoupper(frontend_model_template::current_Language());
-                    if (isset($_POST['profil_cashback'])) {
-                        $profil_cashback = "&profil_cashback=true";
-                    } else {
-                        $profil_cashback = "&profil_cashback=false";
-                    }
 
                     $ogoneProcess = $ogone->getData(
                         array(
@@ -299,7 +294,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                             'email'         =>  $data_cart['email_cart'],
                             'language'=>    $lang,
                             'amount'=>    number_format($amount_pay_with_tax, 2, '', ''),
-                            'COMPLUS'=>   'module=cartpay&idprofil='.$data_cart['idprofil']."&shipping=".$shipping."&amount_promo=".$cart_amount['amount_promo'],
+                            'COMPLUS'=>   'module=cartpay&idprofil='.$data_cart['idprofil']."&shipping=".$shipping,
                         )
                     );
                     $create->assign('ogoneProcess',$ogoneProcess);
@@ -715,68 +710,80 @@ class plugins_cartpay_public extends database_plugins_cartpay{
     }
 
     public function getProcessOrder($create){
-        if(class_exists('plugins_ogone_public')) {
-            if (isset($_POST['COMPLUS'])) {
-                parse_str($_POST['COMPLUS']);
-                $currency_order = 'EUR';
-                $transid = magixglobal_model_cryptrsa::uuid_generator();
-                $id_cart = $_POST['orderID'];
-                $shipping_amount = $shipping;
-                $amount = $_POST['amount'];
-                parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order);
-                parent::u_transmission_cart($id_cart,1);
-                $this->sendOrder($id_cart, $create);
-            }
-        }elseif(class_exists('plugins_hipay_public')){
-            if (isset($_POST['xml'])) {
-                $hipay = new plugins_hipay_public();
-                $data = $hipay->getProcess();
-                if($data){
-                    $operation = $data['operation'];
-                    $merchantdatas = $data['merchantdatas'];
-                    $id_cart = $data['order'];
-                    $shipping_amount = $data['shipping'];
-                    $transid = $data['transaction'];
-                    $amount = $data['amount'];
-                    $currency_order = $data['currency'];
-                    $idformerchant = $data['idformerchant'];
-                    $date = $data['date'];
-                    $time = $data['time'];
-                    $emailClient = $data['email'];
-                    $status = $data['status'];
-                    if($operation == 'authorization'){
-                        parent::i_cart_order($id_cart,$transid,$amount,0,$currency_order);
+        $getConfigData = $this->getConfigData();
+        if($getConfigData['online_payment'] === '1'){
+            if($getConfigData['hipay'] === '1'){
+                if(class_exists('plugins_ogone_public')) {
+                    if (isset($_POST['COMPLUS'])) {
+                        parse_str($_POST['COMPLUS']);
+                        $currency_order = 'EUR';
+                        $transid = magixglobal_model_cryptrsa::uuid_generator();
+                        $id_cart = $_POST['orderID'];
+                        $shipping_amount = $shipping;
+                        $amount = $_POST['amount'];
+                        parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order);
                         parent::u_transmission_cart($id_cart,1);
-                    }elseif($operation == 'capture'){
                         $this->sendOrder($id_cart, $create);
-                    }elseif($operation == 'rejet'){
-                        $core_mail = new magixglobal_model_mail('mail');
-                        //@todo Rendre global la configuration
-                        $getConfigData = $this->getConfigData();
-                        $message = $core_mail->body_mail(
-                            'Erreur de payement',
-                            array($getConfigData['mail_order']),
-                            array($getConfigData['mail_order_from']),
-                            "Test\n
-						operation=$operation\n
-						status=$status\n
-						date=$date\n
-						time=$time\n
-						id_cart=$id_cart\n
-						shipping_amount=$shipping_amount\n
-						transaction_id=$transid\n
-						amount=$amount\n
-						currency=$currency_order\n
-						idformerchant=$idformerchant\n
-						merchantdatas=" . $merchantdatas . "\n
-						emailClient=$emailClient\n",
-                            false
-                        );
-                        $core_mail->batch_send_mail($message);
                     }
+                }else{
+                    parent::u_transmission_cart($this->cart_to_send,1);
                 }
             }
-        }else{
+            if($getConfigData['ogone'] === '1'){
+                if(class_exists('plugins_hipay_public')){
+                    if (isset($_POST['xml'])) {
+                        $hipay = new plugins_hipay_public();
+                        $data = $hipay->getProcess();
+                        if($data){
+                            $operation = $data['operation'];
+                            $merchantdatas = $data['merchantdatas'];
+                            $id_cart = $data['order'];
+                            $shipping_amount = $data['shipping'];
+                            $transid = $data['transaction'];
+                            $amount = $data['amount'];
+                            $currency_order = $data['currency'];
+                            $idformerchant = $data['idformerchant'];
+                            $date = $data['date'];
+                            $time = $data['time'];
+                            $emailClient = $data['email'];
+                            $status = $data['status'];
+                            if($operation == 'authorization'){
+                                parent::i_cart_order($id_cart,$transid,$amount,0,$currency_order);
+                                parent::u_transmission_cart($id_cart,1);
+                            }elseif($operation == 'capture'){
+                                $this->sendOrder($id_cart, $create);
+                            }elseif($operation == 'rejet'){
+                                $core_mail = new magixglobal_model_mail('mail');
+                                //@todo Rendre global la configuration
+                                $message = $core_mail->body_mail(
+                                    'Erreur de payement',
+                                    array($getConfigData['mail_order']),
+                                    array($getConfigData['mail_order_from']),
+                                    "Test\n
+                                    operation=$operation\n
+                                    status=$status\n
+                                    date=$date\n
+                                    time=$time\n
+                                    id_cart=$id_cart\n
+                                    shipping_amount=$shipping_amount\n
+                                    transaction_id=$transid\n
+                                    amount=$amount\n
+                                    currency=$currency_order\n
+                                    idformerchant=$idformerchant\n
+                                    merchantdatas=" . $merchantdatas . "\n
+                                    emailClient=$emailClient\n",
+                                    false
+                                );
+                                $core_mail->batch_send_mail($message);
+                            }
+                        }
+                    }
+                }else{
+                    parent::u_transmission_cart($this->cart_to_send,1);
+                }
+            }
+
+        } else{
             parent::u_transmission_cart($this->cart_to_send,1);
         }
     }

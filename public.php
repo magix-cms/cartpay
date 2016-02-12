@@ -42,7 +42,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
      * @var string
      */
     public $add_cart,$delete_item,$get_nbr_items,$get_price_items,$get_amount_to_pay,$idprofil_session,
-        $shipping_price,$json_cart,$item_to_delete,$id_cart_to_send,$devis_to_send,$booking,$payment,$statut,$tva_amount,$idcatalog,$booking_quantity,$tva_country;
+        $shipping_price,$json_cart,$item_to_delete,$id_cart_to_send,$devis_to_send,$booking,$payment,$tva_amount,$idcatalog,$booking_quantity,$tva_country;
     public $item_qty,$quantity_qty;
     public $logo_perso,$logo;
     /**
@@ -94,8 +94,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         if(magixcjquery_filter_request::isPost('item_qty')){
             $this->item_qty = magixcjquery_form_helpersforms::inputNumeric($_POST['item_qty']);
         }
-        if(magixcjquery_filter_request::isGet('statut')){
-            $this->statut = magixcjquery_form_helpersforms::inputClean($_GET['statut']);
+        if(magixcjquery_filter_request::isGet('pstring2')){
+            $this->pstring2 = magixcjquery_form_helpersforms::inputClean($_GET['pstring2']);
         }
         //
         if(magixcjquery_filter_request::isPost('tva_country')){
@@ -1060,19 +1060,19 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             print($prices['amount_to_pay']);
         }elseif(isset($this->pstring1)){
             $this->template->assign('getDataConfig',$this->getConfigData());
-            if($this->statut == 'process'){
+            if($this->pstring2 == 'process'){
                 $this->getProcessOrder($create);
-            }elseif(isset($this->statut)){
-                if($this->statut == 'success'){
+            }elseif(isset($this->pstring2)){
+                if($this->pstring2 == 'success'){
                     unset($_SESSION['key_cart']);
                     $this->getNotify('success',false);
-                }elseif($this->statut == 'refused'){
+                }elseif($this->pstring2 == 'refused'){
                     unset($_SESSION['key_cart']);
                     $this->getNotify('refused',false);
-                }elseif($this->statut == 'cancel'){
+                }elseif($this->pstring2 == 'cancel'){
                     unset($_SESSION['key_cart']);
                     $this->getNotify('cancel',false);
-                }elseif($this->statut == 'exception'){
+                }elseif($this->pstring2 == 'exception'){
                     unset($_SESSION['key_cart']);
                     $this->getNotify('exception',false);
                 }

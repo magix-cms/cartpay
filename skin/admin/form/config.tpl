@@ -53,7 +53,7 @@
                 <div class="col-sm-4">
                     <div class="checkbox">
                         <label>
-                            <input type="checkbox" name="hipay" id="hipay" value="1" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default">
+                            <input {if $data.hipay eq '1'} checked{/if} type="checkbox" name="hipay" id="hipay" value="1" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default">
                         </label>
                     </div>
                 </div>
@@ -63,7 +63,7 @@
                 <div class="col-sm-4">
                     <div class="checkbox">
                         <label>
-                            <input type="checkbox" name="ogone" id="ogone" value="1" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default">
+                            <input {if $data.ogone eq '1'} checked{/if} type="checkbox" name="ogone" id="ogone" value="1" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default">
                         </label>
                     </div>
                 </div>

@@ -36,19 +36,19 @@
  * @subpackage plugins
  */
 /**
- * Smarty {widget_cartpay_session} function plugin
+ * Smarty {widget_cart_session} function plugin
  *
  * Type:     function
- * Name:     widget_cartpay_session
- * Date:     21 january 2016
- * Update:   28 january 2016
+ * Name:     widget_cart_session
+ * Date:     21 september 2012
+ * Update:   06 january 2014
  * Purpose:
- * Examples:
- * 			### BASIC ###
-{widget_cartpay_session}
- * Output:
- * @link 	http://www.magix-cms.com
+ * USAGE:
+    {widget_cartpay_session}
+ * Output:   
+ * @link 	http://www.magix-dev.be
  * @author   Gerits Aurelien
+ * @version  1.5
  * @param array
  * @param Smarty
  * @return string
@@ -69,6 +69,13 @@ function smarty_function_widget_cartpay_session($params, $template){
     );
     $session->session_run($array_sess);
 //    $session->debug();
+    //@todo créer dans l'api une fonction public applicable dans les widgets.
+    $modelSystem = new magixglobal_model_system();
+    if($_GET['magixmod']!= 'cartpay') {
+        frontend_model_smarty::getInstance()->configLoad(
+            $modelSystem->base_path() . 'plugins/cartpay/i18n/public_local_' . frontend_model_template::current_Language() . '.conf'
+        );
+    }
 
 
 }

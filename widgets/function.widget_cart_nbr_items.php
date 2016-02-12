@@ -23,7 +23,7 @@
  * @category   extends 
  * @package    Smarty
  * @subpackage function
- * @copyright  MAGIX CMS Copyright (c) 2008 - 2016 Gerits Aurelien,
+ * @copyright  MAGIX CMS Copyright (c) 2010 Gerits Aurelien, 
  * http://www.magix-cms.com,  http://www.magix-cjquery.com
  * @license    Dual licensed under the MIT or GPL Version 3 licenses.
  * @version    plugin version
@@ -40,15 +40,16 @@
  *
  * Type:     function
  * Name:     widget_cart_nbr_items
- * Date:     21 january 2016
- * Update:   28 january 2016
+ * Date:     18 juillet 2011
+ * Update:   8 Aout 2011
  * Purpose:
  * Examples: 
  * 			### BASIC ###
         {widget_cart_nbr_items}
  * Output:   
- * @link 	http://www.magix-cms.com
+ * @link 	http://www.magix-dev.be
  * @author   Gerits Aurelien
+ * @version  1.5
  * @param array
  * @param Smarty
  * @return string
@@ -57,7 +58,7 @@
 function smarty_function_widget_cart_nbr_items($params, $template){
     plugins_Autoloader::register(); //chargement des function plugins
     $default_value = '0';
-    $default_price = '0.00';
+    $default_price = '0,00';
     //if session key_cart
     if(isset($_SESSION['key_cart'])){
         $session_key = $_SESSION['key_cart'];

@@ -21,7 +21,7 @@
             </div>
             <div class="col-sm-2">
                 <label for="amount_tva">Zone :</label>
-                <input type="text" class="form-control" id="zone_tva_1" name="zone_tva_1" readonly="readonly" value="intra" size="30" />
+                <input type="text" class="form-control" id="zone_tva_1" name="zone_tva_1" readonly="readonly" value="zone_1" size="30" />
             </div>
         </div>
         <div class="form-group">
@@ -34,7 +34,7 @@
             </div>
             <div class="col-sm-2">
                 <label for="amount_tva">Zone :</label>
-                <input type="text" class="form-control" id="zone_tva_2" name="zone_tva_2" readonly="readonly" value="inter" size="30" />
+                <input type="text" class="form-control" id="zone_tva_2" name="zone_tva_2" readonly="readonly" value="zone_2" size="30" />
             </div>
         </div>
         <div class="form-group">

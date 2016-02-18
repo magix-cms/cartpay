@@ -11,6 +11,7 @@
         <td>{$value.lastname_cart}</td>
         <td>{$value.firstname_cart}</td>
         <td>{#$value.payment_order#|ucfirst}</td>
+        <td>{($value.amount_order-$value.amount_tax)} {$value.currency_order}</td>
         <td>{$value.amount_order} {$value.currency_order}</td>
         <td>{$value.date_order|date_format:" %d/%m/%Y - %H:%M"}</td>
     </tr>
@@ -25,12 +26,11 @@
                 {foreach $value.catalog as $val => $key1 nocache}
                     <tr>
                         <td colspan="3">
-                            {assign var='total_price' value={$key1.CATALOG_LIST_QUANTITY}*{$key1.CATALOG_LIST_PRICE}}
                             <h4>{$key1.CATALOG_LIST_NAME}</h4>
                             <ul>
                                 <li>{#quantity_cart#} : {$key1.CATALOG_LIST_QUANTITY}</li>
                                 <li>{#price_items#} : {$key1.CATALOG_LIST_PRICE} €</li>
-                                <li>{#total_products#} : {$total_price} €</li>
+                                <li>{#total_products#} : {$key1.CATALOG_LIST_SUBTOTAL_PRICE} €</li>
                             </ul>
                         </td>
                     </tr>

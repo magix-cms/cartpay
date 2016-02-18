@@ -443,12 +443,17 @@ class plugins_cartpay_admin extends db_cartpay{
         $newData = array();
         $catalog = array();
         foreach($row as $key => $value){
+            // formate la TVA avant le calcule
+            $tva_amount = floatval('1.'.sprintf("%.02d", $value['amount_tva']));
+            $tax_amount = number_format(($value['amount_order'] - ($value['amount_order'] / $tva_amount)), 2, '.', '');
+
             $newData[$key]['id_cart'] = $value['id_cart'];
             $newData[$key]['id_order'] = $value['id_order'];
             $newData[$key]['idlang'] = $value['idlang'];
             $newData[$key]['iso'] = $value['iso'];
             $newData[$key]['shipping_price_order'] = $value['shipping_price_order'];
             $newData[$key]['amount_order'] = $value['amount_order'];
+            $newData[$key]['amount_tax'] = $tax_amount;
             $newData[$key]['currency_order'] = $value['currency_order'];
             $newData[$key]['payment_order'] = $value['payment_order'];
             $newData[$key]['date_order'] = $value['date_order'];
@@ -473,12 +478,14 @@ class plugins_cartpay_admin extends db_cartpay{
                 null,
                 explode('|', $value['CATALOG_LIST_NAME']),
                 explode('|', $value['CATALOG_LIST_QUANTITY']),
-                explode('|', $value['CATALOG_LIST_PRICE'])
+                explode('|', $value['CATALOG_LIST_PRICE']),
+                explode('|', ($value['CATALOG_LIST_PRICE']*$value['CATALOG_LIST_QUANTITY']))
             );
             foreach($catalog[$key]['catalog'] as $key1 => $value1){
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_NAME'] = $value1[0];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_QUANTITY'] = $value1[1];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_PRICE'] = $value1[2];
+                $newData[$key]['catalog'][$key1]['CATALOG_LIST_SUBTOTAL_PRICE'] = number_format($value1[3], 2, '.', '');
             }
         }
         //$catalog = array_map(null, $listtabs, $idtabs, $pricetabs);
@@ -860,7 +867,7 @@ class db_cartpay{
                 if (array_key_exists('offset', $data)) {
                     $query="SELECT ord.id_cart,ord.id_order,ord.transaction_id_order,ord.shipping_price_order,ord.amount_order,ord.payment_order,
                     ord.currency_order,ord.date_order,
-                    lang.iso,
+                    lang.iso,conf.amount_tva,
                             p.*,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE
                             FROM mc_plugins_cartpay_order AS ord
                             JOIN mc_plugins_cartpay AS p ON(ord.id_cart=p.id_cart)
@@ -873,6 +880,8 @@ class db_cartpay{
                                 JOIN mc_plugins_cartpay_items as items ON(items.idcatalog = catalog.idcatalog)
                                 GROUP BY items.id_cart
                             ) rel_cat ON ( rel_cat.id_cart= p.id_cart)
+                            JOIN mc_plugins_cartpay_tva AS t ON(p.country_cart = t.country)
+                            JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
                             JOIN mc_lang AS lang ON(p.idlang = lang.idlang)
                             ORDER BY ord.date_order DESC
                             {$limit_clause}

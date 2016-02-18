@@ -15,6 +15,7 @@
             <th>Nom</th>
             <th>Prénom</th>
             <th>Type de paiement</th>
+            <th>{#to_pay_htva#}</th>
             <th>Montant TTC</th>
             <th>Date & heure de la commande</th>
         </tr>

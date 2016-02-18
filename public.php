@@ -271,11 +271,12 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             }
 
             // formate la TVA avant le calcule
-            $tva_amount = floatval('0.'.sprintf("%'.02d", $calculate_tva));
-            $tax_amount = ($cart_amount['ammount_products']+$shipping)*$tva_amount;
+            $tva_amount = floatval('1.'.sprintf("%.02d", $calculate_tva));
+            $tax_amount = $cart_amount['ammount_products'] - ($cart_amount['ammount_products']/ $tva_amount);
+
 
             //$amount_pay_with_tax = ($amount_to_pay-$shipping);//$tax_amount+$cart_amount['ammount_products'];
-            $amount_pay_with_tax = $tax_amount+$cart_amount['ammount_products'];
+            $amount_pay_with_tax = $cart_amount['ammount_products']+$shipping;
             //Assignation des coordonnée
             if($this->pstring1 === 'payment'){
 
@@ -465,11 +466,11 @@ class plugins_cartpay_public extends database_plugins_cartpay{
 
 
         // formate la TVA avant le calcule
-        $tva_amount = floatval('0.'.sprintf("%'.02d", $calculate_tva));
+        $tva_amount = floatval('1.'.sprintf("%.02d", $calculate_tva));
         //$shipping = ($amount_products < $this->free_shipping_amount) ? $this->shipping_price : '0.00';
-        $tax_amount = ($amount_products+$shipping)*$tva_amount;
+        $tax_amount = ($amount_products - ($amount_products / $tva_amount));
         $tva = number_format($tax_amount, 2, '.', '');
-        $total = $amount_products + $tva + $shipping_ttc;
+        $total = ($amount_products) + $shipping_ttc;
         if($total <= $promo_amount || $total <=$profil_amount){
             $amount_to_pay = $total;
         }elseif($total <= ($promo_amount+$profil_amount)){
@@ -478,14 +479,18 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             //$amount_to_pay =  $total - $promo_amount - $profil_amount;
             $amount_to_pay =  $total - $promo_amount;
         }
-
+        $amount_hvat = ($total-$tva);
+        /**
+         * retourne un tableau de données formatée
+         */
         $prices = array (
-            'ammount_products'  => number_format($amount_products, 2, '.', ''),
+            'amount_products'  => number_format($amount_products, 2, '.', ''),
             'shipping'          => $shipping_ttc,
             'amount_vat'        => $calculate_tva,
             'amount_tax'        => $tva,
             'amount_promo'      => number_format($promo_amount, 2, '.', ''),
             //'amount_profil'     => $profil_amount,
+            'amount_hvat'       => number_format($amount_hvat, 2, '.', ''),
             'amount_to_pay'     => number_format($amount_to_pay, 2, '.', ''),
             'quantity_total'    => $quantity_total
         );
@@ -1587,6 +1592,12 @@ class database_plugins_cartpay{
             ':idprofil' => $idprofil
         ));
     }
+
+    /**
+     * @param $idprofil
+     * @param $idbooking
+     * @return array
+     */
     protected function s_booking_info($idprofil,$idbooking){
         $sql = 'SELECT DISTINCT bk.idbooking,bk.quantity_bk,bk.date_bk,pr.idprofil,pr.lastname_pr,pr.firstname_pr,pr.email_pr,catalog.titlecatalog
         FROM mc_plugins_booking AS bk

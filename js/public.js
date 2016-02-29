@@ -53,8 +53,7 @@ var cartProduct =(function($, undefined){
                         });
                         loadCartNbrItems('cart-resume-nbr-items');
                         loadCartPriceItems('cart-resume-price-items');
-                        $('#command,#personnalizeall').modal('hide');
-                        $('#fsma').val("");
+                        //$('#command,#personnalizeall').modal('hide');
                     }
                 });
                 return false;
@@ -216,9 +215,9 @@ var cartProduct =(function($, undefined){
             typesend:'get',
             datatype:'html',
             successParams:function(e){
-                $('#'+id_cible).html(e);
-                $('#'+id_cible).parent().stop(true,true);
-                $('#'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
+                $('.'+id_cible).html(e);
+                $('.'+id_cible).parent().stop(true,true);
+                $('.'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
             }
         });
         return false;
@@ -236,9 +235,9 @@ var cartProduct =(function($, undefined){
             typesend:'get',
             datatype:'html',
             successParams:function(e){
-                $('#'+id_cible).html(e);
-                $('#'+id_cible).parent().stop(true,true);
-                $('#'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
+                $('.'+id_cible).html(e);
+                $('.'+id_cible).parent().stop(true,true);
+                $('.'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
             }
         });
         return false;

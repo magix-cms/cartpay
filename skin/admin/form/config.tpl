@@ -28,7 +28,19 @@
                 <div class="col-sm-4">
                     <div class="checkbox">
                         <label>
-                            <input{if $config.shipping eq '1'} checked{/if} id="shipping" name="shipping" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default" >
+                            <input{if $data.shipping eq '1'} checked{/if} id="shipping" name="shipping" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default" >
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-sm-6">
+                <label for="shipping" class="col-sm-6 control-label">Profil&nbsp;</label>
+                <div class="col-sm-4">
+                    <div class="checkbox">
+                        <label>
+                            <input{if $data.profil eq '1'} checked{/if} id="profil" name="profil" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default" >
                         </label>
                     </div>
                 </div>

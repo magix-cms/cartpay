@@ -267,7 +267,7 @@ class plugins_cartpay_admin extends db_cartpay{
         "ZM"=>"Zambia",
         "ZW"=>"Zimbabwe"
     );
-    public $mail_order,$mail_order_from,$online_payment,$bank_wire,$hipay,$ogone,$shipping,$account_owner,$contact_details,$bank_address;
+    public $mail_order,$mail_order_from,$profil,$online_payment,$bank_wire,$hipay,$ogone,$shipping,$account_owner,$contact_details,$bank_address;
     public $zone_tva_1,$zone_tva_2,$amount_tva_1,$amount_tva_2,$remove_tva;
     public $iso,$country,$idtvac;
     /**
@@ -311,6 +311,9 @@ class plugins_cartpay_admin extends db_cartpay{
         }
         if (magixcjquery_filter_request::isPost('online_payment')) {
             $this->online_payment = 1;
+        }
+        if (magixcjquery_filter_request::isPost('profil')) {
+            $this->profil = 1;
         }
         if (magixcjquery_filter_request::isPost('bank_wire')) {
             $this->bank_wire = 1;
@@ -545,6 +548,11 @@ class plugins_cartpay_admin extends db_cartpay{
         }else{
             $edit = false;
         }
+        if(!isset($this->profil)){
+            $profil = '0';
+        }else{
+            $profil = $this->profil;
+        }
         if(!isset($this->online_payment)){
             $online_payment = '0';
         }else{
@@ -575,6 +583,7 @@ class plugins_cartpay_admin extends db_cartpay{
             'fetch'          =>  'config',
             'mail_order'     =>  $this->mail_order,
             'mail_order_from'=>  $this->mail_order_from,
+            'profil'         =>  $profil,
             'online_payment' =>  $online_payment,
             'bank_wire'      =>  $bank_wire,
             'hipay'          =>  $hipay,
@@ -955,20 +964,21 @@ class db_cartpay{
                 $fetch = 'config';
             }
             if($fetch == 'config') {
-                $sql = 'INSERT INTO mc_plugins_cartpay_config (mail_order,mail_order_from,online_payment,bank_wire,hipay,ogone,shipping,account_owner,contact_details,bank_address)
-		        VALUE(:mail_order,:mail_order_from,:online_payment,:bank_wire,:hipay,:ogone,:shipping,:account_owner,:contact_details,:bank_address)';
+                $sql = 'INSERT INTO mc_plugins_cartpay_config (mail_order,mail_order_from,profil,online_payment,bank_wire,hipay,ogone,shipping,account_owner,contact_details,bank_address)
+		        VALUE(:mail_order,:mail_order_from,:profil,:online_payment,:bank_wire,:hipay,:ogone,:shipping,:account_owner,:contact_details,:bank_address)';
                 magixglobal_model_db::layerDB()->insert($sql,
                     array(
-                        'mail_order'        => $data['mail_order'],
-                        'mail_order_from'   => $data['mail_order_from'],
-                        'online_payment'    => $data['online_payment'],
-                        'bank_wire'         => $data['bank_wire'],
-                        'hipay'             => $data['hipay'],
-                        'ogone'             => $data['ogone'],
-                        'shipping'          => $data['shipping'],
-                        'account_owner'     => $data['account_owner'],
-                        'contact_details'   => $data['contact_details'],
-                        'bank_address'      => $data['bank_address']
+                        ':mail_order'        => $data['mail_order'],
+                        ':mail_order_from'   => $data['mail_order_from'],
+                        ':online_payment'    => $data['online_payment'],
+                        ':profil'            => $data['profil'],
+                        ':bank_wire'         => $data['bank_wire'],
+                        ':hipay'             => $data['hipay'],
+                        ':ogone'             => $data['ogone'],
+                        ':shipping'          => $data['shipping'],
+                        ':account_owner'     => $data['account_owner'],
+                        ':contact_details'   => $data['contact_details'],
+                        ':bank_address'      => $data['bank_address']
                     )
                 );
             }elseif($fetch == 'tvac') {
@@ -1006,22 +1016,23 @@ class db_cartpay{
             }
             if($fetch == 'config') {
                 $sql = 'UPDATE mc_plugins_cartpay_config
-                SET mail_order=:mail_order,mail_order_from=:mail_order_from,online_payment=:online_payment,bank_wire=:bank_wire,hipay=:hipay,ogone=:ogone,shipping=:shipping,
+                SET mail_order=:mail_order,mail_order_from=:mail_order_from,profil=:profil,online_payment=:online_payment,bank_wire=:bank_wire,hipay=:hipay,ogone=:ogone,shipping=:shipping,
                 account_owner=:account_owner,contact_details=:contact_details,bank_address=:bank_address
                 WHERE idconfig=:edit';
                 magixglobal_model_db::layerDB()->update($sql,
                     array(
                         ':edit'             => $data['edit'],
-                        'mail_order'        => $data['mail_order'],
-                        'mail_order_from'   => $data['mail_order_from'],
-                        'online_payment'    => $data['online_payment'],
-                        'bank_wire'         => $data['bank_wire'],
-                        'hipay'             => $data['hipay'],
-                        'ogone'             => $data['ogone'],
-                        'shipping'          => $data['shipping'],
-                        'account_owner'     => $data['account_owner'],
-                        'contact_details'   => $data['contact_details'],
-                        'bank_address'      => $data['bank_address']
+                        ':mail_order'        => $data['mail_order'],
+                        ':mail_order_from'   => $data['mail_order_from'],
+                        ':profil'            => $data['profil'],
+                        ':online_payment'    => $data['online_payment'],
+                        ':bank_wire'         => $data['bank_wire'],
+                        ':hipay'             => $data['hipay'],
+                        ':ogone'             => $data['ogone'],
+                        ':shipping'          => $data['shipping'],
+                        ':account_owner'     => $data['account_owner'],
+                        ':contact_details'   => $data['contact_details'],
+                        ':bank_address'      => $data['bank_address']
                     ));
             }elseif($fetch == 'tvac') {
                 $sql = 'UPDATE mc_plugins_cartpay_tva_conf

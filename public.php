@@ -349,7 +349,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
      */
     public function load_cart_price_items($session_key){
         $idcart = parent::s_idcart_session($session_key);
-        $amount_products = '';
+        $amount_products = '0.00';
         $data_cart = parent::s_cart_items($idcart['id_cart']);
         if ($data_cart != null){
             foreach($data_cart as $item){
@@ -359,7 +359,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 $amount_products += $price;
             }
         }
-        return $amount_products;
+        return number_format($amount_products, 2, '.', '');
     }
     /**
      * Retourne le prix total à payer (prix des produits + taxes 21% + shipping)
@@ -580,7 +580,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 $price = $price_item*$quantity_item;
                 $amount_products += $price;
             }
-            echo $amount_products.' €';
+            echo number_format($amount_products, 2, '.', '');
         }else {
             echo '0.00';
         }
@@ -657,6 +657,9 @@ class plugins_cartpay_public extends database_plugins_cartpay{
 
         $data = null;
         $newData = array();
+        // formate la TVA avant le calcule
+        $tva_amount = floatval('1.'.sprintf("%.02d", $row['amount_tva']));
+        $tax_amount = $row['amount_order'] - ($row['amount_order']/ $tva_amount);
 
         $newData['id_cart'] = $row['id_cart'];
         $newData['id_order'] = $row['id_order'];
@@ -680,6 +683,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $newData['city_liv_cart'] = $row['city_liv_cart'];
         $newData['postal_liv_cart'] = $row['postal_liv_cart'];
         $newData['country_liv_cart'] = $row['country_liv_cart'];
+        $newData['amount_tva'] = $row['amount_tva'];
+        $newData['amount_tax'] = number_format($tax_amount, 2, '.', '');
         $catalog = array();
         $catalog = array_map(
             null,
@@ -971,6 +976,10 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $newData = array();
         $catalog = array();
         foreach($row as $key => $value){
+            // formate la TVA avant le calcule
+            $tva_amount = floatval('1.'.sprintf("%.02d", $value['amount_tva']));
+            $tax_amount = $value['amount_order'] - ($value['amount_order']/ $tva_amount);
+
             $newData[$key]['id_cart'] = $value['id_cart'];
             $newData[$key]['id_order'] = $value['id_order'];
             $newData[$key]['shipping_price_order'] = $value['shipping_price_order'];
@@ -993,6 +1002,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $newData[$key]['street_liv_cart'] = $value['street_liv_cart'];
             $newData[$key]['city_liv_cart'] = $value['city_liv_cart'];
             $newData[$key]['postal_liv_cart'] = $value['postal_liv_cart'];
+            $newData[$key]['amount_tva'] = $value['amount_tva'];
+            $newData[$key]['amount_tax'] = number_format($tax_amount, 2, '.', '');
             $catalog[$key]['catalog'] = array_map(
                 null,
                 explode('|', $value['CATALOG_LIST_ID']),
@@ -1115,7 +1126,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 }elseif(isset($this->quantity_qty)){
                     $this->update_quantity_item();
                 }elseif(isset($_GET['testmail'])){
-                    $this->sendOrder(1,$create,true);
+                    $this->sendOrder(9,$create,true);
                 }else{
                     $this->modelSystem = new magixglobal_model_system();
                     frontend_model_template::addConfigFile(
@@ -1139,6 +1150,19 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                     }else{
                         $create->assign('setPaymentType','devis');
                     }
+                    if(class_exists("plugins_profil_public")){
+                        if(frontend_model_smarty::getInstance()->templateExists('profil/forms/profil-forms.tpl')){
+                            $member = new plugins_profil_public();
+                            $getConfigData = $member->getConfigData();
+                            $this->template->assign('getConfigData', $getConfigData, true);
+                            $profilExist = $this->template->fetch('forms/profil-forms.tpl','profil');
+                            $this->template->assign('profilExist',$profilExist);
+                        }else{
+                            trigger_error("Missing 'profil files'");
+                            return;
+                        }
+                    }
+
                     $this->template->assign('getDataConfig',$this->getConfigData());
                     $this->template->assign('getItemsCountryData',$this->getItemsTvaData(
                         array(
@@ -1548,7 +1572,7 @@ class database_plugins_cartpay{
      */
     protected function s_complete_data($id_cart){
         $sql='SELECT ord.id_cart,ord.id_order,ord.transaction_id_order,ord.shipping_price_order,ord.amount_order,ord.date_order,
-        p.*,CATALOG_LIST_ID,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE
+        p.*,CATALOG_LIST_ID,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE,conf.amount_tva
         FROM mc_plugins_cartpay_order AS ord
         JOIN mc_plugins_cartpay AS p ON(ord.id_cart=p.id_cart)
         LEFT OUTER JOIN (
@@ -1561,6 +1585,8 @@ class database_plugins_cartpay{
             JOIN mc_plugins_cartpay_items as items ON(items.idcatalog = catalog.idcatalog)
             GROUP BY items.id_cart
         ) rel_cat ON ( rel_cat.id_cart= p.id_cart)
+        JOIN mc_plugins_cartpay_tva AS t ON(p.country_cart = t.country)
+        JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
         WHERE p.id_cart = :id_cart';
         return magixglobal_model_db::layerDB()->selectOne($sql,array(
             ':id_cart'=>$id_cart
@@ -1573,7 +1599,7 @@ class database_plugins_cartpay{
      */
     protected function s_profil_data($idprofil){
         $sql = 'SELECT ord.id_cart,ord.id_order,ord.transaction_id_order,ord.shipping_price_order,ord.amount_order,ord.date_order,
-        p.*,CATALOG_LIST_ID,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE
+        p.*,CATALOG_LIST_ID,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE,conf.amount_tva
         FROM mc_plugins_cartpay_order AS ord
         JOIN mc_plugins_cartpay AS p ON(ord.id_cart=p.id_cart)
         LEFT OUTER JOIN (
@@ -1586,6 +1612,8 @@ class database_plugins_cartpay{
             JOIN mc_plugins_cartpay_items as items ON(items.idcatalog = catalog.idcatalog)
             GROUP BY items.id_cart
         ) rel_cat ON ( rel_cat.id_cart= p.id_cart)
+        JOIN mc_plugins_cartpay_tva AS t ON(p.country_cart = t.country)
+        JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
         WHERE p.idprofil = :idprofil
         GROUP BY p.id_cart ORDER BY p.id_cart DESC';
         return magixglobal_model_db::layerDB()->select($sql,array(

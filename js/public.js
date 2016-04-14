@@ -61,6 +61,67 @@ var cartProduct =(function($, undefined){
         });
     }
 
+    function quickAddProductCart(idcatalog,form){
+        form.validate({
+            onsubmit: true,
+            highlight: function(element, errorClass, validClass) {
+                if($(element).parent().is("p")){
+                    $(element).parent().addClass("error");
+                }else if($(element).parent().is("div")){
+                    $(element).parent().parent().addClass("error");
+                }
+            },
+            unhighlight: function(element, errorClass, validClass) {
+                if($(element).parent().is("p")){
+                    $(element).parent().removeClass("error");
+                }else if($(element).parent().is("div")){
+                    $(element).parent().parent().removeClass("error");
+                }
+            },
+            // the errorPlacement has to take the table layout into account
+            errorPlacement: function(error, element) {
+                $(".quantity-error").remove();
+                error.insertAfter(element.parent());
+            },
+            errorClass: "quantity-error alert alert-warning col-xs-12",
+            errorElement:"div",
+            validClass: "success",
+            // set this class to error-labels to indicate valid fields
+            success: function(label) {
+                // set &nbsp; as text for IE
+                label.remove();
+                $(".quantity-error").remove();
+
+            },
+            rules: {
+                product_quantity: {
+                    required: true,
+                    min: 1,
+                    max: 1
+                }
+            },
+            submitHandler: function (form) {
+                $.nicenotify({
+                    ntype: "submit",
+                    uri: '/plugins.php?magixmod=cartpay&add_cart='+idcatalog,
+                    typesend: 'post',
+                    idforms: $(form),
+                    resetform: false,
+                    beforeParams:function(){},
+                    successParams:function(e){
+                        $.nicenotify.initbox(e,{
+                            display:true
+                        });
+                        loadCartNbrItems('cart-resume-nbr-items');
+                        loadCartPriceItems('cart-resume-price-items');
+                        //$('#command,#personnalizeall').modal('hide');
+                    }
+                });
+                return false;
+            }
+        });
+    }
+
     /**
      * Suppression d'un élément du tableaux
      * @param adminurl
@@ -215,6 +276,15 @@ var cartProduct =(function($, undefined){
             typesend:'get',
             datatype:'html',
             successParams:function(e){
+                if(e > 0) {
+                    $('.btn-cart').removeClass('hide');
+                    $('.empty-cart').addClass('hide');
+                    $('.'+id_cible).removeClass('hide');
+                }else{
+                    $('.btn-cart').addClass('hide');
+                    $('.empty-cart').removeClass('hide');
+                    $('.'+id_cible).addClass('hide');
+                }
                 $('.'+id_cible).html(e);
                 $('.'+id_cible).parent().stop(true,true);
                 $('.'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
@@ -270,7 +340,27 @@ var cartProduct =(function($, undefined){
      * @param id_table
      */
     function validate_form(idform,lang,id_container,id_table){
+            $(function(){
+                $('#adressliv').change(function(){
+                    if(this.checked) {
+                        $('#lastname_liv_cart').rules('remove');
+                        $('#firstname_liv_cart').rules('remove');
+                        $('#street_liv_cart').rules('remove');
+                        $('#city_liv_cart').rules('remove');
+                        $('#postal_liv_cart').rules('remove');
+                        $('#country_liv_cart').rules('remove');
+                    } else {
+                        $('#lastname_liv_cart').rules('add',{required: true});
+                        $('#firstname_liv_cart').rules('add',{required: true});
+                        $('#street_liv_cart').rules('add',{required: true});
+                        $('#city_liv_cart').rules('add',{required: true});
+                        $('#postal_liv_cart').rules('add',{required: true});
+                        $('#country_liv_cart').rules('add',{required: true});
+                    }
+                });
+            });
             $('#'+idform).validate({
+                ignore: [],
                 onsubmit: true,
                 highlight: function(element, errorClass, validClass) {
                     if($(element).parent().is("p")){
@@ -349,6 +439,24 @@ var cartProduct =(function($, undefined){
                     country_cart: {
                         required: true
                     },
+                    lastname_liv_cart: {
+                        required: true
+                    },
+                    firstname_liv_cart: {
+                        required: true
+                    },
+                    street_liv_cart: {
+                        required: true
+                    },
+                    city_liv_cart: {
+                        required: true
+                    },
+                    postal_liv_cart: {
+                        required: true
+                    },
+                    country_liv_cart: {
+                        required: true
+                    },
                     confidentiality_control:{
                         required: true
                     },
@@ -363,7 +471,7 @@ var cartProduct =(function($, undefined){
      * Afficher/cacher l'adresse de livraison
      */
     function delivery(){
-        $('#group').on('click',function(){
+        $('#adressliv').on('click',function(){
             //si la case a cocher est cochée
             if(this.checked){
                 $('#delivery').hide();
@@ -405,12 +513,14 @@ var cartProduct =(function($, undefined){
                     });
                     $('#quantity-cart').modal('hide');
                     //
-                    var $currentOption = $('select#period_ship option:selected').val();
+                   /* var $currentOption = $('select#period_ship option:selected').val();
                     if($currentOption != ''){
                         currentShipping(iso,id_cart,id_container,id_table);
                     }else{
                         loadCartTable(iso,id_cart,id_container,id_table);
-                    }
+                    }*/
+                    selectTva(iso,id_cart,id_container,id_table);
+                    loadCartAmountToPay(id_cart);
                 }
             });
             return false;
@@ -425,39 +535,71 @@ var cartProduct =(function($, undefined){
      * @param id_table
      */
     function selectTva(iso,id_cart,id_container,id_table){
-        $('select#country_cart').on('change',function(){
-            var $currentOption = $(this).find('option:selected').val();
-            if($currentOption != ''){
-                if(id_cart != null){
-                    $.nicenotify({
-                        ntype:"ajax",
-                        uri: '/plugins.php?magixmod=cartpay&strLangue='+iso+'&json_cart='+id_cart,
-                        typesend:'post',
-                        dataType:'html',
-                        noticedata:'tva_country='+$currentOption,
-                        beforeParams:function(){
-                            var loader = $(document.createElement("span")).addClass("loader col-md-offset-5").append(
-                                $(document.createElement("img"))
-                                    .attr('src','/plugins/cartpay/img/loader/small_loading.gif')
-                                    .attr('width','20px')
-                                    .attr('height','20px')
-                            );
-                            $('#'+id_container).html(loader);
-                        },
-                        successParams:function(j){
-                            $('#'+id_container).empty();
-                            $.nicenotify.initbox(j,{
-                                display:false
-                            });
-                            $('#'+id_container).html(j);
-                        }
-                    });
+        if($('#country_cart').length != 0){
+            if(id_cart != null){
+                $.nicenotify({
+                    ntype:"ajax",
+                    uri: '/plugins.php?magixmod=cartpay&strLangue='+iso+'&json_cart='+id_cart,
+                    typesend:'post',
+                    dataType:'html',
+                    noticedata:'tva_country='+$('#country_cart').val(),
+                    beforeParams:function(){
+                        var loader = $(document.createElement("span")).addClass("loader col-md-offset-5").append(
+                            $(document.createElement("img"))
+                                .attr('src','/plugins/cartpay/img/loader/small_loading.gif')
+                                .attr('width','20px')
+                                .attr('height','20px')
+                        );
+                        $('#'+id_container).html(loader);
+                    },
+                    successParams:function(j){
+                        $('#'+id_container).empty();
+                        $.nicenotify.initbox(j,{
+                            display:false
+                        });
+                        $('#'+id_container).html(j);
+                    }
+                });
 
-                    loadCartNbrItems('cart-resume-nbr-items');
-                    loadCartPriceItems('cart-resume-price-items');
-                }
+                loadCartNbrItems('cart-resume-nbr-items');
+                loadCartPriceItems('cart-resume-price-items');
             }
-        });
+        }else{
+            $('select#country_cart').on('change',function(){
+                var $currentOption = $(this).find('option:selected').val();
+                if($currentOption != ''){
+                    if(id_cart != null){
+                        $.nicenotify({
+                            ntype:"ajax",
+                            uri: '/plugins.php?magixmod=cartpay&strLangue='+iso+'&json_cart='+id_cart,
+                            typesend:'post',
+                            dataType:'html',
+                            noticedata:'tva_country='+$currentOption,
+                            beforeParams:function(){
+                                var loader = $(document.createElement("span")).addClass("loader col-md-offset-5").append(
+                                    $(document.createElement("img"))
+                                        .attr('src','/plugins/cartpay/img/loader/small_loading.gif')
+                                        .attr('width','20px')
+                                        .attr('height','20px')
+                                );
+                                $('#'+id_container).html(loader);
+                            },
+                            successParams:function(j){
+                                $('#'+id_container).empty();
+                                $.nicenotify.initbox(j,{
+                                    display:false
+                                });
+                                $('#'+id_container).html(j);
+                            }
+                        });
+
+                        loadCartNbrItems('cart-resume-nbr-items');
+                        loadCartPriceItems('cart-resume-price-items');
+                    }
+                }
+            });
+        }
+
     }
 
     /**
@@ -559,6 +701,12 @@ var cartProduct =(function($, undefined){
     return{
         run:function(idcatalog,idform){
             addProductCart(idcatalog,idform);
+        },
+        runFast:function(classForm){
+            $(classForm).each(function(){
+                var idcatalog = $('[name="idcatalog"]',$(this)).val();
+                quickAddProductCart(idcatalog,$(this));
+            });
         },
         runBooking:function(idcatalog,idform){
             addBooking(idcatalog,idform);

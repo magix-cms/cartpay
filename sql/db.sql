@@ -16,6 +16,8 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay` (
   `tva_cart` varchar(45) DEFAULT NULL,
   `message_cart` text,
   `transmission_cart` smallint(1) unsigned NOT NULL,
+  `lastname_liv_cart` varchar(45) DEFAULT NULL,
+  `firstname_liv_cart` varchar(45) DEFAULT NULL,
   `street_liv_cart` varchar(45) DEFAULT NULL,
   `city_liv_cart` varchar(45) DEFAULT NULL,
   `postal_liv_cart` varchar(45) DEFAULT NULL,
@@ -74,10 +76,10 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_tva` (
 CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_tva_conf` (
   `idtvac` smallint(3) unsigned NOT NULL AUTO_INCREMENT,
   `amount_tva` decimal(3,1) NOT NULL,
-  `zone_tva` varchar(20) NOT NULL DEFAULT 'intra',
+  `zone_tva` varchar(20) NOT NULL DEFAULT 'zone_1',
   PRIMARY KEY (`idtvac`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 INSERT INTO `mc_plugins_cartpay_tva_conf` (`idtvac`, `amount_tva`, `zone_tva`) VALUES
-(1, '21.0', 'intra'),
-(2, '0', 'inter');
+(1, '21.0', 'zone_1'),
+(2, '0', 'zone_2');

@@ -255,7 +255,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $amount_to_pay = ($id_cart != null) ? $this->load_cart_amount($id_cart) : 0;
             $amount_to_pay = $amount_to_pay['amount_to_pay'];
             $cart_amount = $this->load_cart_amount($id_cart);
-
+            
             $shipping =  $cart_amount['shipping'];
             if($data_cart['country_cart']!=null){
                 $tva = $this->getItemTvaData(
@@ -272,11 +272,10 @@ class plugins_cartpay_public extends database_plugins_cartpay{
 
             // formate la TVA avant le calcule
             $tva_amount = floatval('1.'.sprintf("%.02d", $calculate_tva));
-            $tax_amount = $cart_amount['ammount_products'] - ($cart_amount['ammount_products']/ $tva_amount);
-
+            $tax_amount = $cart_amount['amount_products'] - ($cart_amount['amount_products']/ $tva_amount);
 
             //$amount_pay_with_tax = ($amount_to_pay-$shipping);//$tax_amount+$cart_amount['ammount_products'];
-            $amount_pay_with_tax = $cart_amount['ammount_products']+$shipping;
+            $amount_pay_with_tax = $cart_amount['amount_products'];
             //Assignation des coordonnée
             if($this->pstring1 === 'payment'){
 
@@ -301,6 +300,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                     $create->assign('ogoneProcess',$ogoneProcess);
                     //"&amount_profil=".$cart_amount['amount_profil']
                 }
+
                 if(class_exists('plugins_hipay_public')){
                     $hipay = new plugins_hipay_public();
                     $hipayProcess = $hipay->getData(
@@ -308,11 +308,13 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                             'plugin'    =>  'cartpay',
                             'key'       =>  $session_key,
                             'order'     =>  $data_cart['id_cart'],
-                            'amount'    =>  $amount_pay_with_tax
+                            'amount'    =>  $amount_pay_with_tax,
+                            'shipping'  =>  $shipping
                         )
                     );
                     $create->assign('hipayProcess',$hipayProcess);
                 }
+
 
             }
             $assign_exclude = array(
@@ -363,7 +365,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
     }
     /**
      * Retourne le prix total à payer (prix des produits + taxes 21% + shipping)
-     * Sous forme de table ('ammount_products', 'amount_tax', 'shipping', 'amount_to_pay')
+     * Sous forme de table ('amount_products', 'amount_tax', 'shipping', 'amount_to_pay')
      * Avec vérification dans le cas ou le prix encodé serait différent du prix du catalog
      * Update le prix si nécessaire
      * @access private
@@ -375,6 +377,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $amount_products = '0.00';
         $quantity_total = '0';
         $data_cart = parent::s_cart_items($id_cart);
+        $getConfigCart = $this->getConfigData();
         if ($data_cart != null){
             foreach($data_cart as $item){
                 $price_catalog = parent::s_catalog_price($item['idcatalog']);
@@ -399,7 +402,27 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 $quantity_total += $quantity_item;
             }
         }
-        /*$collectionShipping =  new plugins_shipping_public();
+        if(class_exists('plugins_shipping_public')) {
+            $collectionShipping = new plugins_shipping_public();
+            $shipping = $collectionShipping->getConfigData(array('type'=>'config'));
+            if($getConfigCart['shipping'] === '1'){
+                if($shipping['free_shipping'] != '0.00'){
+                    if($amount_products > $shipping['free_shipping']){
+                        $shipping_ttc = 0;
+                    }else{
+                        $shipping_ttc = $shipping['global_price'];
+                    }
+                }else{
+                    $shipping_ttc = $shipping['global_price'];
+                }
+            }else{
+                $shipping_ttc = 0;
+            }
+        }else{
+            $shipping = 0;
+            $shipping_ttc = $shipping;
+        }
+        /*
         $member = new plugins_profil_public();
         if(isset($_SESSION['idprofil'])){
             $profilData = $member->setAccountData($_SESSION['idprofil']);
@@ -421,8 +444,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $shipping = $dataShip['price'];*/
         //$shipping_tva = number_format($dataShip['price']*floatval('0.21'), 2, '.', '');
         //$shipping_ttc = $shipping+$shipping_tva;
-        $shipping = 0;
-        $shipping_ttc = $shipping;
+
         if(class_exists('plugins_cashback_public')){
             $collectionCashback = new plugins_cashback_public();
             if(isset($_POST['v_code'])){
@@ -467,9 +489,9 @@ class plugins_cartpay_public extends database_plugins_cartpay{
 
         // formate la TVA avant le calcule
         $tva_amount = floatval('1.'.sprintf("%.02d", $calculate_tva));
-        //$shipping = ($amount_products < $this->free_shipping_amount) ? $this->shipping_price : '0.00';
         $tax_amount = ($amount_products - ($amount_products / $tva_amount));
         $tva = number_format($tax_amount, 2, '.', '');
+        //$shipping = ($amount_products < $this->free_shipping_amount) ? $this->shipping_price : '0.00';
         $total = ($amount_products) + $shipping_ttc;
         if($total <= $promo_amount || $total <=$profil_amount){
             $amount_to_pay = $total;
@@ -479,7 +501,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             //$amount_to_pay =  $total - $promo_amount - $profil_amount;
             $amount_to_pay =  $total - $promo_amount;
         }
-        $amount_hvat = ($total-$tva);
+        $amount_hvat = ($amount_products-$tva);
         /**
          * retourne un tableau de données formatée
          */
@@ -504,6 +526,9 @@ class plugins_cartpay_public extends database_plugins_cartpay{
     private function setItemCartData($row){
         $data = null;
         $newData = array();
+        $ModelImagepath     =   new magixglobal_model_imagepath();
+        $ModelTemplate      =   new frontend_model_template();
+
         foreach($row as $key => $value){
             $urlProduct = magixglobal_model_rewrite::filter_catalog_product_url(
                 $value['iso'],
@@ -518,6 +543,43 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $newData[$key]['id_item']         = $value['id_item'];
             $newData[$key]['idcatalog']       = $value['idcatalog'];
             $newData[$key]['titlecatalog']    = $value['titlecatalog'];
+            if($value['imgcatalog']) {
+                $newData[$key]['imgSrc']   = array(
+                    'small'  =>
+                        $ModelImagepath->filterPathImg(
+                            array(
+                                'filtermod' =>  'catalog',
+                                'img'       =>  'mini/'.$value['imgcatalog'],
+                                'levelmod'  =>  ''
+                            )
+                        ),
+                    'medium'    =>
+                        $ModelImagepath->filterPathImg(
+                            array(
+                                'filtermod' =>  'catalog',
+                                'img'       =>  'medium/'.$value['imgcatalog'],
+                                'levelmod'  =>  ''
+                            )
+                        ),
+                    'large' =>
+                        $ModelImagepath->filterPathImg(
+                            array(
+                                'filtermod' =>  'catalog',
+                                'img'       =>  'product/'.$value['imgcatalog'],
+                                'levelmod'  =>  ''
+                            )
+                        )
+                );
+            }
+            $newData[$key]['imgSrc']['default']   =
+                $ModelImagepath->filterPathImg(
+                    array(
+                        'img'=>'skin/'.
+                            $ModelTemplate->frontendTheme()->themeSelected().
+                            '/img/catalog/product-default.png'
+                    )
+                );
+            $newData[$key]['imgcatalog']      = $value['imgcatalog'];
             $newData[$key]['urlproduct']      = $urlProduct;
             $newData[$key]['quantity']        = $value['quantity_items'];
             $newData[$key]['price']           = $value['price_items'];
@@ -620,6 +682,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $message    =   $_POST['message_cart'] != null ? magixcjquery_form_helpersforms::inputClean($_POST['message_cart']) : '';
 
             //$adressliv  =   $_POST['adressliv'] != null ? magixcjquery_form_helpersforms::inputClean($_POST['adressliv']) : '';
+            $lastname_liv  =   magixcjquery_form_helpersforms::inputClean($_POST['lastname_liv_cart']);
+            $firstname_liv  =   magixcjquery_form_helpersforms::inputClean($_POST['firstname_liv_cart']);
             $street_liv  =   magixcjquery_form_helpersforms::inputClean($_POST['street_liv_cart']);
             $city_liv  =   magixcjquery_form_helpersforms::inputClean($_POST['city_liv_cart']);
             $postal_liv  =   magixcjquery_form_helpersforms::inputClean($_POST['postal_liv_cart']);
@@ -631,7 +695,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             }
 
             // Enregistrer les données du formulaire en DB
-            parent::u_cart_customer_infos($id_cart,$idprofil,$firstname,$lastname,$email,$phone,$street,$city,$tva,$postal,$country,$message,$street_liv,$city_liv,$postal_liv,$country_liv);
+            parent::u_cart_customer_infos($id_cart,$idprofil,$firstname,$lastname,$email,$phone,$street,$city,$tva,$postal,$country,$message,$street_liv,$city_liv,$postal_liv,$country_liv,$lastname_liv
+,$firstname_liv);
         }
 
     }
@@ -679,6 +744,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $newData['tva_cart'] = $row['tva_cart'];
         $newData['message_cart'] = $row['message_cart'];
         $newData['transmission_cart'] = $row['transmission_cart'];
+        $newData['lastname_liv_cart'] = $row['lastname_liv_cart'];
+        $newData['firstname_liv_cart'] = $row['firstname_liv_cart'];
         $newData['street_liv_cart'] = $row['street_liv_cart'];
         $newData['city_liv_cart'] = $row['city_liv_cart'];
         $newData['postal_liv_cart'] = $row['postal_liv_cart'];
@@ -758,7 +825,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                             $emailClient = $data['email'];
                             $status = $data['status'];
                             if($operation == 'authorization'){
-                                parent::i_cart_order($id_cart,$transid,$amount,0,$currency_order);
+                                parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order);
                                 parent::u_transmission_cart($id_cart,1);
                             }elseif($operation == 'capture'){
                                 $this->sendOrder($id_cart, $create);
@@ -913,7 +980,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 $email_customer = $data['email_pr'];
                 //récupération des e-mail pour envois
                 $core_mail = new magixglobal_model_mail('mail');
-                $lotsOfRecipients = array('contact@web-solution-way.be');
+                $getConfigData = $this->getConfigData();
+                $lotsOfRecipients = array($getConfigData['mail_order']);
                 foreach ($lotsOfRecipients as $recipient){
                     $message = $core_mail->body_mail(
                         self::setBookingMail(),
@@ -926,7 +994,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 }
                 $msgClient = $core_mail->body_mail(
                     self::setBookingMail(),
-                    array('contact@web-solution-way.be'),
+                    array($getConfigData['mail_order_from']),
                     array($email_customer),
                     $itemData,
                     false
@@ -999,6 +1067,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $newData[$key]['tva_cart'] = $value['tva_cart'];
             $newData[$key]['message_cart'] = $value['message_cart'];
             $newData[$key]['transmission_cart'] = $value['transmission_cart'];
+            $newData[$key]['lastname_liv_cart'] = $value['lastname_liv_cart'];
+            $newData[$key]['firstname_liv_cart'] = $value['firstname_liv_cart'];
             $newData[$key]['street_liv_cart'] = $value['street_liv_cart'];
             $newData[$key]['city_liv_cart'] = $value['city_liv_cart'];
             $newData[$key]['postal_liv_cart'] = $value['postal_liv_cart'];
@@ -1040,6 +1110,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         }else {
             $session_key = null;
         }
+
         //Chargement des données de traduction
         $this->_loadConfigVars();
         $create = frontend_controller_plugins::create();
@@ -1049,6 +1120,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         }elseif(isset($this->delete_item)){
             $this->delete_item_cart($this->item_to_delete,$create);
         }elseif(isset($this->json_cart)){
+            $this->template->assign('getDataConfig',$this->getConfigData());
             $header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
             $header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
             $header->pragma();
@@ -1056,10 +1128,10 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $header->getStatus('200');
             $header->html_header("UTF-8");
             //$this->load_cart_ajax($this->json_cart);
-            $create->assign('getItemCartData',$this->getItemCartData($this->json_cart));
-            $create->assign('getItemPriceData',$this->getItemPriceData($this->json_cart));
-            $create->assign('setParamsData',array('remove'=>'true','editQuantity'=>'true'));
-            $create->display('loop/cart.tpl');
+            $this->template->assign('getItemCartData',$this->getItemCartData($this->json_cart));
+            $this->template->assign('getItemPriceData',$this->getItemPriceData($this->json_cart));
+            $this->template->assign('setParamsData',array('remove'=>'true','editQuantity'=>'true'));
+            $this->template->display('loop/cart.tpl');
 
         }elseif(isset($this->get_nbr_items)){
             $this->load_cart_nbr_item($session_key);
@@ -1101,11 +1173,11 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                     $create->assign('getItemPriceData',$this->getItemPriceData($this->cart_to_send));
                     $create->assign('setParamsData',array('remove'=>'false','editQuantity'=>'false'));
                     $create->display('payment_resume.tpl');
-                }else{
-                    $this->load_cart_data($session_key,$create);
-                    $create->assign('getItemCartData',$this->getItemCartData($this->cart_to_send));
-                    $create->assign('getItemPriceData',$this->getItemPriceData($this->cart_to_send));
-                    $create->assign('setParamsData',array('remove'=>'false','editQuantity'=>'false'));
+                }else {
+                    $this->load_cart_data($session_key, $create);
+                    $create->assign('getItemCartData', $this->getItemCartData($this->cart_to_send));
+                    $create->assign('getItemPriceData', $this->getItemPriceData($this->cart_to_send));
+                    $create->assign('setParamsData', array('remove' => 'false', 'editQuantity' => 'false'));
                     $create->display('payment_resume.tpl');
                 }
             }
@@ -1126,7 +1198,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 }elseif(isset($this->quantity_qty)){
                     $this->update_quantity_item();
                 }elseif(isset($_GET['testmail'])){
-                    $this->sendOrder(9,$create,true);
+                    $this->sendOrder(1,$create,true);
                 }else{
                     $this->modelSystem = new magixglobal_model_system();
                     frontend_model_template::addConfigFile(
@@ -1158,8 +1230,9 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                             $profilExist = $this->template->fetch('forms/profil-forms.tpl','profil');
                             $this->template->assign('profilExist',$profilExist);
                         }else{
-                            trigger_error("Missing 'profil files'");
-                            return;
+                            /*trigger_error("Missing 'profil files'");
+                            return;*/
+                            $this->template->assign('profilExist',false);
                         }
                     }
 
@@ -1279,7 +1352,7 @@ class database_plugins_cartpay{
      * return array
      * */
     protected function s_cart_items($id_cart){
-        $sql='SELECT items.*, p.idproduct, catalog.urlcatalog, catalog.titlecatalog, catalog.idlang, p.idclc, p.idcls,
+        $sql='SELECT items.*, p.idproduct, catalog.urlcatalog, catalog.titlecatalog, catalog.idlang, catalog.imgcatalog, p.idclc, p.idcls,
         catalog.price,c.pathclibelle, s.pathslibelle, lang.iso
 		FROM mc_plugins_cartpay_items AS items
 		LEFT JOIN mc_catalog_product AS p ON(p.idcatalog = items.idcatalog)
@@ -1506,11 +1579,12 @@ class database_plugins_cartpay{
      * @param $postal_liv
      * @param $country_liv
      */
-    protected function u_cart_customer_infos($id_cart,$idprofil = null,$firstname,$lastname,$email,$phone,$street,$city,$tva,$postal,$country,$message,$street_liv,$city_liv,$postal_liv,$country_liv){
+    protected function u_cart_customer_infos($id_cart,$idprofil = null,$firstname,$lastname,$email,$phone,$street,$city,$tva,$postal,$country,$message,$street_liv,$city_liv,$postal_liv,$country_liv,$lastname_liv
+,$firstname_liv){
         $sql='UPDATE mc_plugins_cartpay SET
           idprofil=:idprofil, firstname_cart=:firstname_cart, lastname_cart=:lastname_cart, email_cart=:email_cart, phone_cart=:phone_cart,
           street_cart=:street_cart, city_cart=:city_cart, tva_cart=:tva_cart, postal_cart=:postal_cart, country_cart=:country_cart, message_cart=:message_cart,
-          street_liv_cart=:street_liv_cart, city_liv_cart=:city_liv_cart,
+          street_liv_cart=:street_liv_cart, lastname_liv_cart=:lastname_liv_cart, firstname_liv_cart=:firstname_liv_cart, city_liv_cart=:city_liv_cart,
           postal_liv_cart=:postal_liv_cart, country_liv_cart=:country_liv_cart
           WHERE id_cart=:id_cart';
         magixglobal_model_db::layerDB()->update($sql,
@@ -1528,6 +1602,8 @@ class database_plugins_cartpay{
                 ':country_cart'=> $country,
                 ':message_cart'=> $message,
                 ':street_liv_cart'=> $street_liv,
+                ':firstname_liv_cart'=> $firstname_liv,
+                ':lastname_liv_cart'=> $lastname_liv,
                 ':city_liv_cart'=> $city_liv,
                 ':postal_liv_cart'=> $postal_liv,
                 ':country_liv_cart'=> $country_liv

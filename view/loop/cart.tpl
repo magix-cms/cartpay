@@ -29,6 +29,14 @@
     {/if}
     <tr>
         <td colspan="2" rowspan="{$block_size}">&nbsp;</td>
+        <td colspan="2" class="text-right">
+            {#total_product_ttc#}
+        </td>
+        <td colspan="2">
+            {$getItemPriceData.amount_products} €
+        </td>
+    </tr>
+    <tr class="total-line">
         {if $smarty.session.idprofil && $smarty.session.keyuniqid_pr}
         <td colspan="2" class="text-right">
             {#total_product_htva#}
@@ -38,6 +46,20 @@
         </td>
         {/if}
     </tr>
+    {if $getDataConfig.shipping eq '1'}
+        <tr>
+            <td colspan="2" class="text-right">
+                {#shipping#}
+            </td>
+            <td colspan="2">
+                {if $getItemPriceData.shipping != 0}
+                    {$getItemPriceData.shipping} €
+                {else}
+                    {#free_shipping#}
+                {/if}
+            </td>
+        </tr>
+    {/if}
     {if $smarty.post.tva_country OR $getItemPriceData.amount_vat != null}
         {*<tr>
             <td colspan="4" class="text-right">
@@ -52,29 +74,7 @@
                 {#vat#}
             </td>
             <td colspan="2">
-                {$getItemPriceData.amount_tax} €
-            </td>
-        </tr>
-    {/if}
-    <tr class="total-line">
-        <td colspan="2" class="text-right">
-            {#total_product_ttc#}
-        </td>
-        <td colspan="2">
-            {$getItemPriceData.amount_products} €
-        </td>
-    </tr>
-    {if $getDataConfig.shipping eq '1'}
-        <tr>
-            <td colspan="2" class="text-right">
-                {#shipping#}
-            </td>
-            <td colspan="2">
-                {if $getItemPriceData.shipping != 0}
-                    {$getItemPriceData.shipping} €
-                {else}
-                    {#free_shipping#}
-                {/if}
+                {$getItemPriceData.amount_vat} €
             </td>
         </tr>
     {/if}

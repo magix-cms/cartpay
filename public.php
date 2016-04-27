@@ -363,6 +363,42 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         }
         return number_format($amount_products, 2, '.', '');
     }
+
+    /**
+     * Récupère la TVA et la formate
+     * @param $comp_data
+     * @return float
+     */
+    public function calculate_tva($id_cart)
+    {
+        $comp_data = parent::s_customer_info($id_cart);
+
+        // *** Récupération taux TVA
+        if(isset($this->tva_country)) {
+            $tva = $this->getItemTvaData(
+                array(
+                    'fetch' => 'one',
+                    'context' => 'config',
+                    'country' => $this->tva_country
+                )
+            );
+            $calculate_tva = $tva['amount_tva'];
+        } elseif($comp_data['country_cart'] != null) {
+            $tva = $this->getItemTvaData(
+                array(
+                    'fetch' => 'one',
+                    'context' => 'config',
+                    'country' => $comp_data['country_cart']
+                )
+            );
+            $calculate_tva = $tva['amount_tva'];
+        } else {
+            $calculate_tva = $this->tva_amount;
+        }
+
+        return $calculate_tva;
+    }
+
     /**
      * Retourne le prix total à payer (prix des produits + taxes 21% + shipping)
      * Sous forme de table ('amount_products', 'amount_tax', 'shipping', 'amount_to_pay')
@@ -375,9 +411,23 @@ class plugins_cartpay_public extends database_plugins_cartpay{
     public function load_cart_amount($id_cart){
         $amount_to_pay = null;
         $amount_products = '0.00';
+        $amount_product_hvat = '0.00';
         $quantity_total = '0';
+        $shipping = 0;
+        $shipping_ttc = $shipping;
+        $promo_amount = 0;
+        $profil_amount = 0;
+        $amount_tva = 0;
         $data_cart = parent::s_cart_items($id_cart);
         $getConfigCart = $this->getConfigData();
+        $tva_rate = $this->calculate_tva($id_cart);
+        // Formate la TVA
+        $tva = 1 + (floatval($tva_rate) / 100);
+        //$tva = floatval('1.' . sprintf("%.02d", $tva_rate));
+
+        /**
+         * --- Cart Amount
+         */
         if ($data_cart != null){
             foreach($data_cart as $item){
                 $price_catalog = parent::s_catalog_price($item['idcatalog']);
@@ -401,27 +451,12 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 $amount_products += $price;
                 $quantity_total += $quantity_item;
             }
+
+            $amount_product_hvat = floatval($amount_products) / $tva;
+            $amount_tva = $amount_tva + round(($amount_products - $amount_product_hvat),2);
         }
-        if(class_exists('plugins_shipping_public')) {
-            $collectionShipping = new plugins_shipping_public();
-            $shipping = $collectionShipping->getConfigData(array('type'=>'config'));
-            if($getConfigCart['shipping'] === '1'){
-                if($shipping['free_shipping'] != '0.00'){
-                    if($amount_products > $shipping['free_shipping']){
-                        $shipping_ttc = 0;
-                    }else{
-                        $shipping_ttc = $shipping['global_price'];
-                    }
-                }else{
-                    $shipping_ttc = $shipping['global_price'];
-                }
-            }else{
-                $shipping_ttc = 0;
-            }
-        }else{
-            $shipping = 0;
-            $shipping_ttc = $shipping;
-        }
+
+
         /*
         $member = new plugins_profil_public();
         if(isset($_SESSION['idprofil'])){
@@ -445,11 +480,14 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         //$shipping_tva = number_format($dataShip['price']*floatval('0.21'), 2, '.', '');
         //$shipping_ttc = $shipping+$shipping_tva;
 
-        if(class_exists('plugins_cashback_public')){
+        /**
+         * --- Cashback system
+         */
+        if(class_exists('plugins_cashback_public')) {
             $collectionCashback = new plugins_cashback_public();
-            if(isset($_POST['v_code'])){
-                $promo_amount =$collectionCashback->selectPromo($_POST['v_code']);
-            }else{
+            if (isset($_POST['v_code'])) {
+                $promo_amount = $collectionCashback->selectPromo($_POST['v_code']);
+            } else {
                 $promo_amount = 0;
             }
             /*if(isset($_POST['profil_cashback'])){
@@ -458,61 +496,55 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             }else{
                 $profil_amount = 0;
             }*/
-        }else{
-            $promo_amount = 0;
-            $profil_amount = 0;
-        }
-        $comp_data = parent::s_customer_info($id_cart);
-        //print_r($comp_data);
-        if(isset($this->tva_country)){
-            $tva = $this->getItemTvaData(
-                array(
-                    'fetch'=>'one',
-                    'context'=>'config',
-                    'country'=>$this->tva_country
-                )
-            );
-            $calculate_tva = $tva['amount_tva'];
-        }elseif($comp_data['country_cart'] != null){
-            $tva = $this->getItemTvaData(
-                array(
-                    'fetch'=>'one',
-                    'context'=>'config',
-                    'country'=>$comp_data['country_cart']
-                )
-            );
-            $calculate_tva = $tva['amount_tva'];
-        }else{
-            $calculate_tva = $this->tva_amount ;
         }
 
+        /**
+         * --- Shipping
+         */
+        if(class_exists('plugins_shipping_public')) {
+            $collectionShipping = new plugins_shipping_public();
+            $shipping_conf = $collectionShipping->getConfigData(array('type' => 'config'));
 
-        // formate la TVA avant le calcule
-        $tva_amount = floatval('1.'.sprintf("%.02d", $calculate_tva));
-        $tax_amount = ($amount_products - ($amount_products / $tva_amount));
-        $tva = number_format($tax_amount, 2, '.', '');
+            if ($getConfigCart['shipping'] === '1') {
+                if ($shipping_conf['free_shipping'] == '0.00' ||
+                    ($shipping_conf['free_shipping'] != '0.00' && $amount_products < $shipping_conf['free_shipping'])) {
+                    $shipping = $shipping_conf['global_price'];
+                    $shipping_ttc = $shipping_conf['global_price'];
+                }
+
+                if ($shipping_ttc && $tva) {
+                    $shipping = $shipping_ttc / $tva;
+                    $amount_tva = $amount_tva + round(($shipping_ttc - $shipping),2);
+                }
+            }
+        }
+
         //$shipping = ($amount_products < $this->free_shipping_amount) ? $this->shipping_price : '0.00';
-        $total = ($amount_products) + $shipping_ttc;
-        if($total <= $promo_amount || $total <=$profil_amount){
+        /**
+         * --- Total amount
+         */
+        $total = $amount_products + $shipping_ttc;
+
+        if($total <= $promo_amount || $total <= $profil_amount) {
             $amount_to_pay = $total;
-        }elseif($total <= ($promo_amount+$profil_amount)){
+        } elseif($total <= ($promo_amount + $profil_amount)) {
             $amount_to_pay = $total;
-        }else{
+        } else {
             //$amount_to_pay =  $total - $promo_amount - $profil_amount;
             $amount_to_pay =  $total - $promo_amount;
         }
-        $amount_hvat = ($amount_products-$tva);
+
         /**
          * retourne un tableau de données formatée
          */
         $prices = array (
-            'amount_products'  => number_format($amount_products, 2, '.', ''),
-            'shipping'          => $shipping_ttc,
-            'amount_vat'        => $calculate_tva,
-            'amount_tax'        => $tva,
+            'amount_hvat'       => number_format($amount_product_hvat, 2, '.', ''),
+            'amount_products'   => number_format($amount_products, 2, '.', ''),
+            'shipping'          => number_format($shipping, 2, '.', ''),
+            'amount_vat'        => number_format($amount_tva, 2, '.', ''),
+            'tax_rate'          => $tva_rate,
             'amount_promo'      => number_format($promo_amount, 2, '.', ''),
-            //'amount_profil'     => $profil_amount,
-            'amount_hvat'       => number_format($amount_hvat, 2, '.', ''),
+            'amount_profil'     => number_format($profil_amount, 2, '.', ''),
             'amount_to_pay'     => number_format($amount_to_pay, 2, '.', ''),
             'quantity_total'    => $quantity_total
         );
@@ -723,12 +755,15 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $data = null;
         $newData = array();
         // formate la TVA avant le calcule
-        $tva_amount = floatval('1.'.sprintf("%.02d", $row['amount_tva']));
-        $tax_amount = $row['amount_order'] - ($row['amount_order']/ $tva_amount);
+        //$tva_amount = floatval('1.'.sprintf("%.02d", $row['amount_tva']));
+        $tva_amount = 1 + (floatval($row['amount_tva']) / 100);
+        $newData['tax_amount'] = round($row['amount_order'] - ($row['amount_order']/ $tva_amount),2);
+        $shipping_tax = round($row['shipping_price_order'] - ($row['shipping_price_order']/ $tva_amount),2);
 
         $newData['id_cart'] = $row['id_cart'];
         $newData['id_order'] = $row['id_order'];
         $newData['shipping_price_order'] = $row['shipping_price_order'];
+        $newData['shipping_htva'] = number_format(($row['shipping_price_order']/ $tva_amount), 2, '.', '');
         $newData['amount_order'] = $row['amount_order'];
         $newData['date_order'] = $row['date_order'];
         $newData['nbr_items_cart'] = $row['nbr_items_cart'];
@@ -751,7 +786,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $newData['postal_liv_cart'] = $row['postal_liv_cart'];
         $newData['country_liv_cart'] = $row['country_liv_cart'];
         $newData['amount_tva'] = $row['amount_tva'];
-        $newData['amount_tax'] = number_format($tax_amount, 2, '.', '');
+        $newData['amount_tax'] = number_format(($newData['tax_amount'] + $shipping_tax), 2, '.', '');
+        $newData['tax_amount'] = number_format($newData['tax_amount'], 2, '.', '');
         $catalog = array();
         $catalog = array_map(
             null,
@@ -1198,7 +1234,12 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 }elseif(isset($this->quantity_qty)){
                     $this->update_quantity_item();
                 }elseif(isset($_GET['testmail'])){
-                    $this->sendOrder(1,$create,true);
+                    $cart = 1;
+                    if(!empty($_GET['testmail'])) {
+                        $testmail = intval($_GET['testmail']);
+                        $cart = is_int($testmail) ? $testmail : 1;
+                    }
+                    $this->sendOrder($cart,$create,true);
                 }else{
                     $this->modelSystem = new magixglobal_model_system();
                     frontend_model_template::addConfigFile(

@@ -1,4 +1,4 @@
-<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+{widget_about_data}<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
 <html xmlns="http://www.w3.org/1999/xhtml">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
@@ -9,7 +9,9 @@
             /* Based on The MailChimp Reset INLINE: Yes. */
             /* Client-specific Styles */
             #outlook a {padding:0;} /* Force Outlook to provide a "view in browser" menu link. */
-            body{background:#FFFFFF; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; margin:0; padding:0;}
+            body{background:#FFFFFF; width:100% !important; -webkit-text-size-adjust:100%; -ms-text-size-adjust:100%; margin:0; padding:0;
+                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+                color: #333;}
             /* Prevent Webkit and Windows Mobile platforms from changing default font sizes.*/
             .ExternalClass {width:100%;} /* Force Hotmail to display emails at full width */
             .ExternalClass, .ExternalClass p, .ExternalClass span, .ExternalClass font, .ExternalClass td, .ExternalClass div {line-height: 100%;}
@@ -41,10 +43,8 @@
             .h4,
             .h5,
             .h6 {
-                font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
                 font-weight: 500;
                 line-height: 1.1;
-                color: #234c90;
             }
 
             h1 a, h2 a, h3 a, h4 a, h5 a, h6 a {color: blue !important;}
@@ -59,6 +59,12 @@
 
             /* Outlook 07, 10 Padding issue fix
             Bring inline: No.*/
+            table td {border-collapse: collapse;}
+
+            /* Remove spacing around Outlook 07, 10 tables
+            Bring inline: Yes */
+            table { border-collapse:collapse; mso-table-lspace:0pt; mso-table-rspace:0pt; }
+
             table {
                 max-width: 100%;
                 background-color: transparent;
@@ -229,31 +235,10 @@
             /* Styling your links has become much simpler with the new Yahoo.  In fact, it falls in line with the main credo of styling in email and make sure to bring your styles inline.  Your link colors will be uniform across clients when brought inline.
             Bring inline: Yes. */
             a {color: #428bca;}
-            .btn {
-                display: inline-block;
-                margin-bottom: 0;
-                font-weight: normal;
-                text-align: center;
-                vertical-align: middle;
-                cursor: pointer;
-                background-image: none;
-                border: 1px solid transparent;
-                white-space: nowrap;
-                padding: 6px 12px;
-                font-size: 14px;
-                line-height: 1.428571429;
-                border-radius: 4px;
-                -webkit-user-select: none;
-                -moz-user-select: none;
-                -ms-user-select: none;
-                user-select: none;
-            }
-            .btn-invini-green {
-                color: #ffffff;
-                background-color: #90bd21;
-                border-color: #7fa71d;
-                text-transform: uppercase;
-            }
+            ul {padding: 0;list-style-type: none}
+            li {padding: 5px 0;}
+            .blue {color: #3778af;}
+            .green {color: #489944;}
 
             /***************************************************
             ****************************************************

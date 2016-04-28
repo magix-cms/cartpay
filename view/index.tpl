@@ -38,11 +38,12 @@
         var iso = '{getlang}';
         $(function(){
             var id_cart = {$id_cart};
-            {if $getDataConfig.online_payment eq '1'}
+            {*{if $getDataConfig.online_payment eq '1'}
             var idform = 'form-cart-send';
             {elseif $getDataConfig.online_payment eq '0'}
             var idform = 'form-cart-devis';
-            {/if}
+            {/if}*}
+            var idform = 'form-cart-send';
             if (typeof cartProduct == "undefined")
             {
                 console.log("cartProduct is not defined");

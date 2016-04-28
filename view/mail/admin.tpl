@@ -9,10 +9,10 @@
             <!-- Tables are the most common way to format your email consistently. Set your table widths inside cells and in most cases reset cellpadding, cellspacing, and border to zero. Use nested tables as a way to space effectively in your message. -->
             <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                    <td width="800" style="border-bottom: 10px solid #d6b170;background: #222;padding: 15px 0;text-align: center;" valign="top" colspan="2">
+                    <td width="800" style="background: #222;padding: 15px 0;text-align: center;" valign="top" colspan="2">
                         <!-- Gmail/Hotmail image display fix -->
                         <a href="{geturl}" target ="_blank" title="{$companyData.name}" style="text-decoration: none;font-size: 46px;">
-                            <img src="{geturl}/skin/{template}/img/logo/{#logo_img_small#}" alt="{#logo_img_alt#|ucfirst}" height="60" width="229"/>
+                            <img src="{geturl}/skin/{template}/img/logo/{#logo_img_small#}" alt="{#logo_img_alt#|ucfirst}" height="50" width="269"/>
                         </a>
                     </td>
                 </tr>
@@ -31,37 +31,6 @@
                                     {$smarty.config.auto_message_mail|sprintf:{$data.date_order|date_format:"%d/%m/%Y"}:{$data.date_order|date_format:"%H:%M"}}
                                 </p>
                                 {assign var='to_pay_htva' value=($data.amount_order - $data.tax_amount)}
-                                {*{#pn_cartpay_lastname#|ucfirst} : <strong>{$data.lastname_cart}</strong><br />
-                                {#pn_cartpay_firstname#|ucfirst} : <strong>{$data.firstname_cart}</strong><br />
-                                {if $data.tva_cart}{#pn_cartpay_tva#|ucfirst} : <strong>{$data.tva_cart}</strong><br />{/if}
-                                {if $data.street_liv_cart != null OR $data.postal_liv_cart != null OR $data.city_liv_cart != null OR $data.country_liv_cart != null}
-                                <label>
-                                    {#coordonnees_cart#|ucfirst} :
-                                </label><br />
-                                    {#pn_cartpay_street#|ucfirst} : <strong>{$data.street_cart}</strong><br />
-                                    {#pn_cartpay_locality#|ucfirst} : <strong>{$data.city_cart}</strong><br />
-                                    {#pn_cartpay_postal#|ucfirst} : <strong>{$data.postal_cart}</strong><br />
-                                    {#pn_cartpay_country#|ucfirst} : <strong>{$data.country_cart}</strong><br />
-                                <label>
-                                    {#coordonnees_liv#|ucfirst} :
-                                </label><br />
-                                    {#pn_cartpay_lastname#|ucfirst} : <strong>{$data.lastname_liv_cart}</strong><br />
-                                    {#pn_cartpay_firstname#|ucfirst} : <strong>{$data.firstname_liv_cart}</strong><br />
-                                    {#pn_cartpay_street#|ucfirst} : <strong>{$data.street_liv_cart}</strong><br />
-                                    {#pn_cartpay_locality#|ucfirst} : <strong>{$data.city_liv_cart}</strong><br />
-                                    {#pn_cartpay_postal#|ucfirst} : <strong>{$data.postal_liv_cart}</strong><br />
-                                    {#pn_cartpay_country#|ucfirst} : <strong>{$data.country_liv_cart}</strong><br />
-                                    {else}
-                                    <label>
-                                        {#coordonnees_liv_and_cart#|ucfirst} :
-                                    </label><br />
-                                    {#pn_cartpay_street#|ucfirst} : <strong>{$data.street_cart}</strong><br />
-                                    {#pn_cartpay_locality#|ucfirst} : <strong>{$data.city_cart}</strong><br />
-                                    {#pn_cartpay_postal#|ucfirst} : <strong>{$data.postal_cart}</strong><br />
-                                    {#pn_cartpay_country#|ucfirst} : <strong>{$data.country_cart}</strong><br />
-                                    {/if}
-                                {#pn_cartpay_mail#|ucfirst} : <strong>{$data.email_cart}</strong><br />
-                                {#pn_cartpay_phone#|ucfirst} : <strong>{$data.phone_cart}</strong><br />*}
                                 <table class="table">
                                     <thead>
                                     <tr>
@@ -249,7 +218,7 @@
                     </td>
                 </tr>
                 <tr>
-                    <td style="background: #d6b170;color:#333;padding:0 15px 15px;" valign="top" colspan="2">
+                    <td style="background: #222;color:#fff;padding:0 15px 15px;" valign="top" colspan="2">
                         {#footer_mail_line1#}
                     </td>
                 </tr>

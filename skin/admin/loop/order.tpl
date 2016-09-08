@@ -7,10 +7,12 @@
             </a>
         </td>
         {*<td>{$value.id_cart}</td>*}
-        <td>{$value.date_order|date_format:" %d%m%Y%H%M%S"}</td>
+        {*<td>{$value.date_order|date_format:" %d%m%Y%H%M%S"}</td>*}
         <td>{$value.lastname_cart}</td>
         <td>{$value.firstname_cart}</td>
         <td>{#$value.payment_order#|ucfirst}</td>
+        <td>{$value.amount_tva}%</td>
+        <td>{$value.shipping_price_order} {$value.currency_order}</td>
         <td>{($value.amount_order-$value.amount_tax)} {$value.currency_order}</td>
         <td>{$value.amount_order} {$value.currency_order}</td>
         <td>{$value.date_order|date_format:" %d/%m/%Y - %H:%M"}</td>
@@ -20,24 +22,25 @@
             <table class="table table-condensed table-hover">
                 <tr>
                     <td colspan="3">
-                        <h3 class="bg-primary">{#commande_number#} {$value.id_cart}  </h3>
+                        <h3>{#commande_number#} {$value.id_cart}  </h3>
                     </td>
                 </tr>
                 {foreach $value.catalog as $val => $key1 nocache}
+                    {assign var='total_price' value={$key1.CATALOG_LIST_QUANTITY}*{$key1.CATALOG_LIST_PRICE}}
                     <tr>
                         <td colspan="3">
                             <h4>{$key1.CATALOG_LIST_NAME}</h4>
                             <ul>
                                 <li>{#quantity_cart#} : {$key1.CATALOG_LIST_QUANTITY}</li>
                                 <li>{#price_items#} : {$key1.CATALOG_LIST_PRICE} €</li>
-                                <li>{#total_products#} : {$key1.CATALOG_LIST_SUBTOTAL_PRICE} €</li>
+                                <li>{#total_products#} : {$total_price|string_format:"%.2f"} €</li>
                             </ul>
                         </td>
                     </tr>
                 {/foreach}
                 <tr>
                     <td colspan="3">
-                        <h3 class="bg-primary">Coordonnées : </h3>
+                        <h3>Coordonnées : </h3>
                     </td>
                 </tr>
                 <tr>

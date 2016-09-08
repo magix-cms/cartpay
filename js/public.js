@@ -61,11 +61,6 @@ var cartProduct =(function($, undefined){
         });
     }
 
-    /**
-     * quick add product cart in catalog
-     * @param idcatalog
-     * @param form
-     */
     function quickAddProductCart(idcatalog,form){
         form.validate({
             onsubmit: true,
@@ -155,9 +150,6 @@ var cartProduct =(function($, undefined){
     }
 
     /**
-     * send devis
-     * @param idform
-     * @param iso
      */
     function sendDevis(idform,iso){
         $(document).on("click",'#sendDevis',function(event){
@@ -168,16 +160,11 @@ var cartProduct =(function($, undefined){
                      $.nicenotify({
                          ntype:"submit",
                          idforms: $(this),
-                         resetform: false,
+                         resetform: true,
                          uri: '/plugins.php?magixmod=cartpay&strLangue='+iso+'&send_devis=true',
                          successParams:function(e) {
                              $.nicenotify.initbox(e,{
                                  display:true
-                             });
-                             $.redirect({
-                                 lang: iso,
-                                 url: '/',
-                                 time:100
                              });
                          }
                      });
@@ -221,7 +208,7 @@ var cartProduct =(function($, undefined){
             $('#'+idform).off();
         });
     }
-    //sendCart
+
     /**
      * Envoi la demande
      * @param idform
@@ -269,12 +256,16 @@ var cartProduct =(function($, undefined){
                     $.nicenotify.initbox(j,{
                         display:false
                     });
-                    $('#'+id_container).html(j);
+					if(j) {
+						$('#'+id_container).html(j);
+						loadCartNbrItems('cart-resume-nbr-items');
+						loadCartPriceItems('cart-resume-price-items');
+						loadCartAmountToPay(id_cart);
+					} else {
+						window.location.href = '/'+iso+'/cartpay/';
+					}
                 }
             });
-
-            loadCartNbrItems('cart-resume-nbr-items');
-            loadCartPriceItems('cart-resume-price-items');
         }
     }
 
@@ -494,6 +485,7 @@ var cartProduct =(function($, undefined){
             }
         });
     }
+
     /**
      * Affiche la modale de modifications de la quantité
      */
@@ -549,7 +541,36 @@ var cartProduct =(function($, undefined){
      * @param id_table
      */
     function selectTva(iso,id_cart,id_container,id_table){
-        if($('select#country_cart').length != 0){
+        if($('#country_cart').length != 0){
+            if(id_cart != null){
+                $.nicenotify({
+                    ntype:"ajax",
+                    uri: '/plugins.php?magixmod=cartpay&strLangue='+iso+'&json_cart='+id_cart,
+                    typesend:'post',
+                    dataType:'html',
+                    noticedata:'tva_country='+$('#country_cart').val(),
+                    beforeParams:function(){
+                        var loader = $(document.createElement("span")).addClass("loader col-md-offset-5").append(
+                            $(document.createElement("img"))
+                                .attr('src','/plugins/cartpay/img/loader/small_loading.gif')
+                                .attr('width','20px')
+                                .attr('height','20px')
+                        );
+                        $('#'+id_container).html(loader);
+                    },
+                    successParams:function(j){
+                        $('#'+id_container).empty();
+                        $.nicenotify.initbox(j,{
+                            display:false
+                        });
+                        $('#'+id_container).html(j);
+                    }
+                });
+
+                loadCartNbrItems('cart-resume-nbr-items');
+                loadCartPriceItems('cart-resume-price-items');
+            }
+        }else{
             $('select#country_cart').on('change',function(){
                 var $currentOption = $(this).find('option:selected').val();
                 if($currentOption != ''){
@@ -583,37 +604,7 @@ var cartProduct =(function($, undefined){
                     }
                 }
             });
-        }else{
-            if(id_cart != null){
-                $.nicenotify({
-                    ntype:"ajax",
-                    uri: '/plugins.php?magixmod=cartpay&strLangue='+iso+'&json_cart='+id_cart,
-                    typesend:'post',
-                    dataType:'html',
-                    noticedata:'tva_country='+$('#country_cart').val(),
-                    beforeParams:function(){
-                        var loader = $(document.createElement("span")).addClass("loader col-md-offset-5").append(
-                            $(document.createElement("img"))
-                                .attr('src','/plugins/cartpay/img/loader/small_loading.gif')
-                                .attr('width','20px')
-                                .attr('height','20px')
-                        );
-                        $('#'+id_container).html(loader);
-                    },
-                    successParams:function(j){
-                        $('#'+id_container).empty();
-                        $.nicenotify.initbox(j,{
-                            display:false
-                        });
-                        $('#'+id_container).html(j);
-                    }
-                });
-
-                loadCartNbrItems('cart-resume-nbr-items');
-                loadCartPriceItems('cart-resume-price-items');
-            }
         }
-
     }
 
     /**
@@ -653,6 +644,7 @@ var cartProduct =(function($, undefined){
             loadCartPriceItems('cart-resume-price-items');
         }
     }
+
     function addBooking(idcatalog,idform){
         $( "#"+idform ).validate({
             onsubmit: true,
@@ -709,6 +701,7 @@ var cartProduct =(function($, undefined){
             }
         });
     }
+
     /**
      * fonction public
      */
@@ -728,14 +721,24 @@ var cartProduct =(function($, undefined){
         runCart:function(id_cart,id_container,id_table,idform,isolang){
             loadCartTable(isolang,id_cart,id_container,id_table);
             deleteCartItem(isolang,id_cart,id_container,id_table);
+            //sendDevis(idform,isolang);
+            //sendCart(idform,isolang);
             validate_form(idform,isolang,id_container,id_table);
+            //sendCartDevis(idform,isolang);
             delivery();
             modalQuantity();
             updateQuantity(isolang,id_cart,id_container,id_table);
             selectTva(isolang,id_cart,id_container,id_table);
+           // sendCart(idform,isolang,id_container,id_table);
         },
         runSend:function(id_cart,id_container,id_table,idform,isolang){
             sendDevis(idform,isolang);
+            sendCart(idform,isolang);
+            validate_form(idform);
+            sendCartDevis(idform,isolang);
+            delivery();
+            modalQuantity();
+            updateQuantity(isolang,id_cart,id_container,id_table);
         }
     };
 })(jQuery);

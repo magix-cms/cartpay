@@ -6,6 +6,9 @@
     <tr>
         <th id="cart_product">{#products_cart#}</th>
         <th id="cart_desc">{#desc_cart#}</th>
+        {if isset($attribute)}
+            <th id="cart_attr">{#attr_cart#}</th>
+        {/if}
         <th id="cart_price">{#price#}</th>
         <th id="cart_quantity">{#quantity_cart#}</th>
         <th id="cart_sub_total">{#sub_total_cart#}</th>
@@ -28,7 +31,7 @@
         {$block_size = $block_size + 1}
     {/if}
     <tr>
-        <td colspan="2" rowspan="{$block_size}">&nbsp;</td>
+        <td colspan="{if isset($value.idattr)}2{else}3{/if}" rowspan="{$block_size}">&nbsp;</td>
         <td colspan="2" class="text-right">
             {#total_product_ttc#}
         </td>
@@ -114,6 +117,17 @@
             <td>
                 <p><a href="{$value.urlproduct}" title="{$value.titlecatalog}">{$value.titlecatalog}</a></p>
             </td>
+            {if isset($attribute) && $attribute}
+                <td>
+                    {if isset($value.idattr)}
+                    <a data-target="#attr-cart" data-toggle="modal" data-attr="{$value.idattr}" data-item="{$value.id_item}" class="edit-attr" href="#">
+                        <span class="attr">{$value.title_attr}</span> <span class="fa fa-edit"></span>
+                    </a>
+                    {else}
+                        &mdash;
+                    {/if}
+                </td>
+            {/if}
             <td>
                 {$value.price_products} €
             </td>

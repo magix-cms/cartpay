@@ -11,10 +11,11 @@
         <tr>
             <th></th>
             {*<th>Numéro de commande</th>*}
-            <th>REF</th>
             <th>Nom</th>
             <th>Prénom</th>
             <th>Type de paiement</th>
+            <th>VAT</th>
+            <th>Frais de port</th>
             <th>{#to_pay_htva#}</th>
             <th>Montant TTC</th>
             <th>Date & heure de la commande</th>

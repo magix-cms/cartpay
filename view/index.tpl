@@ -8,16 +8,17 @@
         {block name="article:content"}
             <h1>{#order_cart#|ucfirst}</h1>
             <h2>{#order_resume#|ucfirst}</h2>
-            <div id="cart_container"></div>
-            {include file="cartpay/brick/quantity.tpl"}
-            {*{if $smarty.session.idprofil && $smarty.session.keyuniqid_pr}
-
+            {if !empty($getItemCartData)}
+                <div id="cart_container"></div>
+                {include file="cartpay/brick/quantity.tpl"}
+                {if $dynamicForm}
+                    {$dynamicForm}
+                {else}
+                    {include file="cartpay/forms/order.tpl" config=$getDataConfig f="client-infos"}
+                {/if}
             {else}
-                <div class="alert alert-info" role="alert">
-                    {#connect_to_order#|ucfirst} <a href="#" class="alert-link">{#connection#}</a>.
-                </div>
-            {/if}*}
-            {include file="cartpay/forms/order.tpl" data=$dataAccount config=$getDataConfig}
+                {include file="cartpay/brick/empty.tpl"}
+            {/if}
         {/block}
     </article>
 {/block}
@@ -28,6 +29,9 @@
         /min/?f=
         libjs/vendor/localization/messages_{getlang}.js,
         plugins/cartpay/js/public.js
+        {foreach $moduleJS as $jsf}
+            ,plugins/{$jsf}/public.js
+        {/foreach}
     {/strip}{/capture}
     {script src=$smarty.capture.scriptProduct concat=$concat type="javascript"}
     <script type="text/javascript">
@@ -38,18 +42,26 @@
         var iso = '{getlang}';
         $(function(){
             var id_cart = {$id_cart};
-            {*{if $getDataConfig.online_payment eq '1'}
+            {if $getDataConfig.online_payment eq '1'}
             var idform = 'form-cart-send';
             {elseif $getDataConfig.online_payment eq '0'}
             var idform = 'form-cart-devis';
-            {/if}*}
-            var idform = 'form-cart-send';
+            {/if}
             if (typeof cartProduct == "undefined")
             {
                 console.log("cartProduct is not defined");
             }else{
                 cartProduct.runCart(id_cart,'cart_container','cart_table',idform,iso);
             }
+            {foreach $moduleJS as $jsf}
+            var mod = window['{$jsf}'];
+            if (typeof mod == "undefined")
+            {
+                console.log("{$jsf} is not defined");
+            }else{
+                mod.runCart(id_cart,'cart_container','cart_table',idform,iso);
+            }
+            {/foreach}
         });
     </script>
 {/block}

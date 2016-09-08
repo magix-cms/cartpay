@@ -32,11 +32,12 @@
  # versions in the future. If you wish to customize MAGIX CMS for your
  # needs please refer to http://www.magix-cms.com for more information.
  */
-class plugins_cartpay_admin extends db_cartpay{
+require_once('db/cartpay.php');
+class plugins_cartpay_admin extends database_plugins_cartpay {
     /**
      * @var
      */
-    protected $header, $template, $message;
+    protected $header, $template, $message, $module, $activeMods;
     public static $notify = array('plugin' => 'true');
     // getpage
     public $getpage;
@@ -365,7 +366,25 @@ class plugins_cartpay_admin extends db_cartpay{
         }
         $this->header = new magixglobal_model_header();
         $this->template = new backend_controller_plugins();
+
+        if(class_exists('plugins_cartpay_module')) {
+            $this->module = new plugins_cartpay_module();
+        }
     }
+
+	/**
+	 * @access private
+	 * Installing mysql database plugin
+	 */
+	private function install_tables()
+	{
+		if (parent::c_show_tables() == 0) {
+			$this->template->db_install_table('db.sql', 'request/install.tpl');
+		}
+
+		return true;
+	}
+
     /* ################# ORDER ###################*/
     /**
      * offset for pager in pagination
@@ -447,16 +466,17 @@ class plugins_cartpay_admin extends db_cartpay{
         $catalog = array();
         foreach($row as $key => $value){
             // formate la TVA avant le calcule
-            $tva_amount = floatval('1.'.sprintf("%.02d", $value['amount_tva']));
-            $tax_amount = number_format(($value['amount_order'] - ($value['amount_order'] / $tva_amount)), 2, '.', '');
+            $tva_amount = 1 + (floatval($value['amount_tva']) / 100);
+            $newData[$key]['tax_amount'] = round($value['amount_order'] - ($value['amount_order']/ $tva_amount),2);
+            $shipping_tax = round($value['shipping_price_order'] - ($value['shipping_price_order']/ $tva_amount),2);
 
             $newData[$key]['id_cart'] = $value['id_cart'];
             $newData[$key]['id_order'] = $value['id_order'];
             $newData[$key]['idlang'] = $value['idlang'];
             $newData[$key]['iso'] = $value['iso'];
             $newData[$key]['shipping_price_order'] = $value['shipping_price_order'];
+            $newData[$key]['shipping_htva'] = number_format(($value['shipping_price_order']/ $tva_amount), 2, '.', '');
             $newData[$key]['amount_order'] = $value['amount_order'];
-            $newData[$key]['amount_tax'] = $tax_amount;
             $newData[$key]['currency_order'] = $value['currency_order'];
             $newData[$key]['payment_order'] = $value['payment_order'];
             $newData[$key]['date_order'] = $value['date_order'];
@@ -477,18 +497,19 @@ class plugins_cartpay_admin extends db_cartpay{
             $newData[$key]['street_liv_cart'] = $value['street_liv_cart'];
             $newData[$key]['city_liv_cart'] = $value['city_liv_cart'];
             $newData[$key]['postal_liv_cart'] = $value['postal_liv_cart'];
+            $newData[$key]['amount_tva'] = $value['amount_tva'];
+            $newData[$key]['amount_tax'] = number_format(($newData[$key]['tax_amount'] + $shipping_tax), 2, '.', '');
+            $newData[$key]['tax_amount'] = number_format($newData[$key]['tax_amount'], 2, '.', '');
             $catalog[$key]['catalog'] = array_map(
                 null,
                 explode('|', $value['CATALOG_LIST_NAME']),
                 explode('|', $value['CATALOG_LIST_QUANTITY']),
-                explode('|', $value['CATALOG_LIST_PRICE']),
-                explode('|', ($value['CATALOG_LIST_PRICE']*$value['CATALOG_LIST_QUANTITY']))
+                explode('|', $value['CATALOG_LIST_PRICE'])
             );
             foreach($catalog[$key]['catalog'] as $key1 => $value1){
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_NAME'] = $value1[0];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_QUANTITY'] = $value1[1];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_PRICE'] = $value1[2];
-                $newData[$key]['catalog'][$key1]['CATALOG_LIST_SUBTOTAL_PRICE'] = number_format($value1[3], 2, '.', '');
             }
         }
         //$catalog = array_map(null, $listtabs, $idtabs, $pricetabs);
@@ -600,7 +621,8 @@ class plugins_cartpay_admin extends db_cartpay{
             array(
                 'fetch'=>'all',
                 'context'=>'config'
-            )
+            ),
+            'admin'
         );
     }
     private function setPostTvac($amount_tva,$zone_tva){
@@ -653,7 +675,8 @@ class plugins_cartpay_admin extends db_cartpay{
             array(
                 'fetch'=>'all',
                 'context'=>'country'
-            )
+            ),
+            'admin'
         );
         return $this->setItemsTvaData($data);
     }
@@ -698,88 +721,96 @@ class plugins_cartpay_admin extends db_cartpay{
      * run
      */
     public function run(){
-        if($this->tab == 'config'){
-            if(isset($this->action)){
-                if($this->action === 'update'){
-                    $this->save(
-                        $this->setPostConfig(),
-                        'update'
-                    );
-                }
-            }else{
-                $this->template->assign('getDataConfig',$this->getConfigData());
-                $this->template->display('config.tpl');
-            }
+    	if($this->install_tables()) {
+			if(isset($this->module)) {
+				$this->activeMods = $this->module->load_module(true);
+			}
 
-        }elseif($this->tab == 'about'){
-            $this->template->display('about.tpl');
-        }elseif($this->tab == 'tva'){
-            if(isset($this->zone_tva_1) OR isset($this->zone_tva_2)){
-                $tvac1 = parent::fetchTva(
-                    array(
-                        'fetch'=>'one',
-                        'context'=>'config',
-                        'zone_tva'=> $this->zone_tva_1
-                    )
-                );
-                $tvac2 = parent::fetchTva(
-                    array(
-                        'fetch'=>'one',
-                        'context'=>'config',
-                        'zone_tva'=> $this->zone_tva_2
-                    )
-                );
-                if($tvac1['idtvac'] != null){
-                    $this->save(
-                        $this->setPostTvac($this->amount_tva_1,$this->zone_tva_1),
-                        'update'
-                    );
-                }else{
-                    $this->save(
-                        $this->setPostTvac($this->amount_tva_1,$this->zone_tva_1),
-                        'add'
-                    );
-                }
-                if($tvac2['idtvac'] != null){
-                    $this->update(
-                        $this->setPostTvac($this->amount_tva_2,$this->zone_tva_2)
-                    );
-                }else{
-                    $this->add(
-                        $this->setPostTvac($this->amount_tva_2,$this->zone_tva_2)
-                    );
-                }
-                /*$this->save(
-                    $this->setPostConfig(),
-                    'update'
-                );*/
-            }elseif($this->action){
-                if($this->action === 'html'){
-                    $this->header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
-                    $this->header->head_last_modified(gmdate( "D, d M Y H:i:s" ) . "GMT");
-                    $this->header->pragma();
-                    $this->header->cache_control("nocache");
-                    $this->header->getStatus('200');
-                    $this->header->html_header("UTF-8");
-                    $this->template->assign('getItemsTvaData',$this->getItemsTvaData());
-                    $this->template->display('loop/tva.tpl');
-                }elseif($this->action === 'remove'){
-                    $this->removeTva($this->remove_tva);
-                }elseif($this->action === 'add'){
-                    $this->save(
-                        $this->setPostTva($this->iso,$this->country,$this->idtvac),
-                        'add'
-                    );
-                }
-            }else{
-                $this->template->assign('countryTools',self::$default_country);
-                $this->template->assign('getConfDataTVA',$this->getTvaConfData());
-                $this->template->display('tva.tpl');
-            }
-        }else{
-            $this->setOrderData(30);
-            $this->template->display('list.tpl');
-        }
+			if ($this->tab == 'config') {
+				if (isset($this->action)) {
+					if ($this->action === 'update') {
+						$this->save(
+							$this->setPostConfig(),
+							'update'
+						);
+					}
+				} else {
+					$this->template->assign('getDataConfig', $this->getConfigData());
+					$this->template->display('config.tpl');
+				}
+
+			} elseif ($this->tab == 'about') {
+				$this->template->display('about.tpl');
+			} elseif ($this->tab == 'tva') {
+				if (isset($this->zone_tva_1) OR isset($this->zone_tva_2)) {
+					$tvac1 = parent::fetchTva(
+						array(
+							'fetch' => 'one',
+							'context' => 'config',
+							'zone_tva' => $this->zone_tva_1
+						),
+						'admin'
+					);
+					$tvac2 = parent::fetchTva(
+						array(
+							'fetch' => 'one',
+							'context' => 'config',
+							'zone_tva' => $this->zone_tva_2
+						),
+						'admin'
+					);
+					if ($tvac1['idtvac'] != null) {
+						$this->save(
+							$this->setPostTvac($this->amount_tva_1, $this->zone_tva_1),
+							'update'
+						);
+					} else {
+						$this->save(
+							$this->setPostTvac($this->amount_tva_1, $this->zone_tva_1),
+							'add'
+						);
+					}
+					if ($tvac2['idtvac'] != null) {
+						$this->update(
+							$this->setPostTvac($this->amount_tva_2, $this->zone_tva_2)
+						);
+					} else {
+						$this->add(
+							$this->setPostTvac($this->amount_tva_2, $this->zone_tva_2)
+						);
+					}
+					/*$this->save(
+						$this->setPostConfig(),
+						'update'
+					);*/
+				} elseif ($this->action) {
+					if ($this->action === 'html') {
+						$this->header->head_expires("Mon, 26 Jul 1997 05:00:00 GMT");
+						$this->header->head_last_modified(gmdate("D, d M Y H:i:s") . "GMT");
+						$this->header->pragma();
+						$this->header->cache_control("nocache");
+						$this->header->getStatus('200');
+						$this->header->html_header("UTF-8");
+						$this->template->assign('getItemsTvaData', $this->getItemsTvaData());
+						$this->template->display('loop/tva.tpl');
+					} elseif ($this->action === 'remove') {
+						$this->removeTva($this->remove_tva);
+					} elseif ($this->action === 'add') {
+						$this->save(
+							$this->setPostTva($this->iso, $this->country, $this->idtvac),
+							'add'
+						);
+					}
+				} else {
+					$this->template->assign('countryTools', self::$default_country);
+					$this->template->assign('getConfDataTVA', $this->getTvaConfData());
+					$this->template->display('tva.tpl');
+				}
+			} else {
+				$this->setOrderData(30);
+				$this->template->display('list.tpl');
+			}
+		}
     }
 
     /**
@@ -801,258 +832,4 @@ class plugins_cartpay_admin extends db_cartpay{
 
     }
 }
-class db_cartpay{
-    /**
-     * Vérifie si les tables du plugin sont installé
-     * @access protected
-     * return integer
-     */
-    protected function c_show_table(){
-        $table = 'mc_plugins_cartpay';
-        return magixglobal_model_db::layerDB()->showTable($table);
-    }
-    protected function s_count_cart_order(){
-        $sql = 'SELECT count(ord.id_order) AS total
-		FROM mc_plugins_cartpay_order AS ord';
-        return magixglobal_model_db::layerDB()->selectOne($sql);
-    }
-    protected function s_count_cart_order_currentDate(){
-        $sql = 'SELECT count(ord.id_order) AS total
-		FROM mc_plugins_cartpay_order AS ord
-		WHERE DATE_FORMAT(date_order, "%Y%m%d") = DATE_FORMAT(NOW(), "%Y%m%d")';
-        return magixglobal_model_db::layerDB()->selectOne($sql);
-    }
-    protected function s_count_cart(){
-        $sql = 'SELECT count(p.id_cart) AS total
-		FROM mc_plugins_cartpay AS p';
-        return magixglobal_model_db::layerDB()->selectOne($sql);
-    }
-    /*protected function s_cart_order($limit=5,$max=null,$offset=null){
-        $limit = $limit ? ' LIMIT '.$max : '';
-        $offset = !empty($offset) ? ' OFFSET '.$offset: '';
-        $sql='SELECT ord.id_cart,ord.id_order,ord.transaction_id_order,ord.shipping_price_order,ord.amount_order,ord.payment_order,ord.currency_order,ord.date_order,
-        p.*,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE
-        FROM mc_plugins_cartpay_order AS ord
-        JOIN mc_plugins_cartpay AS p ON(ord.id_cart=p.id_cart)
-        LEFT OUTER JOIN (
-            SELECT catalog.idcatalog,items.id_cart,catalog.titlecatalog,
-            GROUP_CONCAT( CAST(items.quantity_items AS CHAR) ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_QUANTITY,
-            GROUP_CONCAT( CAST(items.price_items AS CHAR) ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_PRICE,
-            GROUP_CONCAT( catalog.titlecatalog ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_NAME
-            FROM mc_catalog AS catalog
-            JOIN mc_plugins_cartpay_items as items ON(items.idcatalog = catalog.idcatalog)
-            GROUP BY items.id_cart
-        ) rel_cat ON ( rel_cat.id_cart= p.id_cart)
-        ORDER BY ord.date_order DESC'.$limit.$offset;
-        return magixglobal_model_db::layerDB()->select($sql);
-    }*/
-
-    /**
-     * @param $data
-     * @return array
-     */
-    protected function fetchOrder($data){
-        if(is_array($data)) {
-            // Si retourne tous les enregistrements ou un seul
-            if (array_key_exists('fetch', $data)) {
-                $fetch = $data['fetch'];
-            } else {
-                $fetch = 'all';
-            }
-            if (array_key_exists('limit', $data)) {
-                $limit_clause = null;
-                if (is_int($data['limit'])) {
-                    $limit_clause = ' LIMIT ' . $data['limit'];
-                }
-            }
-            if (array_key_exists('offset', $data)) {
-                $offset_clause = null;
-                if(!empty($data['offset'])){
-                    $offset_clause = ' OFFSET '.$data['offset'];
-                }
-            }
-            $offset = !empty($offset) ? ' OFFSET '.$offset: '';
-            if($fetch == 'all') {
-                if (array_key_exists('offset', $data)) {
-                    $query="SELECT ord.id_cart,ord.id_order,ord.transaction_id_order,ord.shipping_price_order,ord.amount_order,ord.payment_order,
-                    ord.currency_order,ord.date_order,
-                    lang.iso,conf.amount_tva,
-                            p.*,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE
-                            FROM mc_plugins_cartpay_order AS ord
-                            JOIN mc_plugins_cartpay AS p ON(ord.id_cart=p.id_cart)
-                            LEFT OUTER JOIN (
-                                SELECT catalog.idcatalog,items.id_cart,catalog.titlecatalog,
-                                GROUP_CONCAT( CAST(items.quantity_items AS CHAR) ORDER BY items.id_item SEPARATOR '|' ) AS CATALOG_LIST_QUANTITY,
-                                GROUP_CONCAT( CAST(items.price_items AS CHAR) ORDER BY items.id_item SEPARATOR '|' ) AS CATALOG_LIST_PRICE,
-                                GROUP_CONCAT( catalog.titlecatalog ORDER BY items.id_item SEPARATOR '|' ) AS CATALOG_LIST_NAME
-                                FROM mc_catalog AS catalog
-                                JOIN mc_plugins_cartpay_items as items ON(items.idcatalog = catalog.idcatalog)
-                                GROUP BY items.id_cart
-                            ) rel_cat ON ( rel_cat.id_cart= p.id_cart)
-                            JOIN mc_plugins_cartpay_tva AS t ON(p.country_cart = t.country)
-                            JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
-                            JOIN mc_lang AS lang ON(p.idlang = lang.idlang)
-                            ORDER BY ord.date_order DESC
-                            {$limit_clause}
-                            {$offset_clause}";
-                    return magixglobal_model_db::layerDB()->select($query);
-                }
-            }elseif($fetch == 'count'){
-                $query = 'SELECT count(ord.id_order) AS total
-		          FROM mc_plugins_cartpay_order AS ord';
-                return magixglobal_model_db::layerDB()->selectOne($query);
-            }
-        }
-    }
-    protected function fetchConfig(){
-        $query = "SELECT *
-                      FROM mc_plugins_cartpay_config";
-        return magixglobal_model_db::layerDB()->selectOne($query);
-    }
-    /**
-     * Retourne la configuration de la TVA de base
-     * @param $data
-     * @return array
-     */
-    protected function fetchTva($data){
-        if(is_array($data)) {
-            // Si retourne tous les enregistrements ou un seul
-            if (array_key_exists('fetch', $data)) {
-                $fetch = $data['fetch'];
-            } else {
-                $fetch = 'all';
-            }
-            // Defini le context (configuration, les pays)
-            if (array_key_exists('context', $data)) {
-                $context = $data['context'];
-            } else {
-                $context = 'config';
-            }
-            if($fetch == 'all'){
-
-                if($context == 'config'){
-                    // Configuration
-                    $query = "SELECT *
-                      FROM mc_plugins_cartpay_tva_conf";
-                    return magixglobal_model_db::layerDB()->select($query);
-                }elseif($context == 'country'){
-                    // Liste des pays avec la zone, tva, etc
-                    $query = "SELECT t.*,conf.zone_tva,conf.amount_tva
-                      FROM mc_plugins_cartpay_tva AS t
-                      JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
-                      ORDER BY conf.zone_tva DESC,t.country ASC";
-                    return magixglobal_model_db::layerDB()->select($query);
-                }
-            }elseif($fetch == 'one'){
-                if($context == 'config') {
-                    $query = "SELECT *
-                      FROM mc_plugins_cartpay_tva_conf WHERE
-                      zone_tva=:zone_tva";
-                    return magixglobal_model_db::layerDB()->selectOne($query,array(':zone_tva'=>$data['zone_tva']));
-                }
-            }
-        }
-    }
-    /**
-     * @param $data
-     */
-    protected function insert($data){
-        if(is_array($data)){
-            if (array_key_exists('fetch', $data)) {
-                $fetch = $data['fetch'];
-            } else {
-                $fetch = 'config';
-            }
-            if($fetch == 'config') {
-                $sql = 'INSERT INTO mc_plugins_cartpay_config (mail_order,mail_order_from,profil,online_payment,bank_wire,hipay,ogone,shipping,account_owner,contact_details,bank_address)
-		        VALUE(:mail_order,:mail_order_from,:profil,:online_payment,:bank_wire,:hipay,:ogone,:shipping,:account_owner,:contact_details,:bank_address)';
-                magixglobal_model_db::layerDB()->insert($sql,
-                    array(
-                        ':mail_order'        => $data['mail_order'],
-                        ':mail_order_from'   => $data['mail_order_from'],
-                        ':online_payment'    => $data['online_payment'],
-                        ':profil'            => $data['profil'],
-                        ':bank_wire'         => $data['bank_wire'],
-                        ':hipay'             => $data['hipay'],
-                        ':ogone'             => $data['ogone'],
-                        ':shipping'          => $data['shipping'],
-                        ':account_owner'     => $data['account_owner'],
-                        ':contact_details'   => $data['contact_details'],
-                        ':bank_address'      => $data['bank_address']
-                    )
-                );
-            }elseif($fetch == 'tvac') {
-                $sql = 'INSERT INTO mc_plugins_cartpay_tva_conf (amount_tva,zone_tva)
-		        VALUE(:amount_tva,:zone_tva)';
-                magixglobal_model_db::layerDB()->insert($sql,
-                    array(
-                        ':amount_tva'    => $data['amount_tva'],
-                        ':zone_tva'      => $data['zone_tva']
-                    )
-                );
-            }elseif($fetch == 'tva') {
-                $sql = 'INSERT INTO mc_plugins_cartpay_tva (iso,country,idtvac)
-		        VALUE(:iso,:country,:idtvac)';
-                magixglobal_model_db::layerDB()->insert($sql,
-                    array(
-                        ':iso'    => $data['iso'],
-                        ':country'      => $data['country'],
-                        ':idtvac'      => $data['idtvac']
-                    )
-                );
-            }
-        }
-    }
-
-    /**
-     * @param $data
-     */
-    protected function uData($data){
-        if(is_array($data)){
-            if (array_key_exists('fetch', $data)) {
-                $fetch = $data['fetch'];
-            } else {
-                $fetch = 'config';
-            }
-            if($fetch == 'config') {
-                $sql = 'UPDATE mc_plugins_cartpay_config
-                SET mail_order=:mail_order,mail_order_from=:mail_order_from,profil=:profil,online_payment=:online_payment,bank_wire=:bank_wire,hipay=:hipay,ogone=:ogone,shipping=:shipping,
-                account_owner=:account_owner,contact_details=:contact_details,bank_address=:bank_address
-                WHERE idconfig=:edit';
-                magixglobal_model_db::layerDB()->update($sql,
-                    array(
-                        ':edit'             => $data['edit'],
-                        ':mail_order'        => $data['mail_order'],
-                        ':mail_order_from'   => $data['mail_order_from'],
-                        ':profil'            => $data['profil'],
-                        ':online_payment'    => $data['online_payment'],
-                        ':bank_wire'         => $data['bank_wire'],
-                        ':hipay'             => $data['hipay'],
-                        ':ogone'             => $data['ogone'],
-                        ':shipping'          => $data['shipping'],
-                        ':account_owner'     => $data['account_owner'],
-                        ':contact_details'   => $data['contact_details'],
-                        ':bank_address'      => $data['bank_address']
-                    ));
-            }elseif($fetch == 'tvac') {
-                $sql = 'UPDATE mc_plugins_cartpay_tva_conf
-                SET amount_tva=:amount_tva,zone_tva=:zone_tva
-                WHERE idtvac=:edit';
-                magixglobal_model_db::layerDB()->update($sql,
-                    array(
-                        ':edit'          => $data['edit'],
-                        ':amount_tva'    => $data['amount_tva'],
-                        ':zone_tva'      => $data['zone_tva']
-                    ));
-            }
-        }
-    }
-    protected function delete($remove_tva){
-        $sql = 'DELETE FROM mc_plugins_cartpay_tva WHERE idtva = :remove';
-        magixglobal_model_db::layerDB()->delete($sql,
-            array(
-                ':remove'   =>  $remove_tva
-            )
-        );
-    }
-}
+?>

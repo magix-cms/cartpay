@@ -9,10 +9,10 @@
             <!-- Tables are the most common way to format your email consistently. Set your table widths inside cells and in most cases reset cellpadding, cellspacing, and border to zero. Use nested tables as a way to space effectively in your message. -->
             <table cellpadding="0" cellspacing="0" border="0" align="center">
                 <tr>
-                    <td width="800" style="background: #222;padding: 15px 0;text-align: center;" valign="top" colspan="2">
+                    <td width="800" style="border-bottom: 10px solid #d6b170;background: #222;padding: 15px 0;text-align: center;" valign="top" colspan="2">
                         <!-- Gmail/Hotmail image display fix -->
                         <a href="{geturl}" target ="_blank" title="{$companyData.name}" style="text-decoration: none;font-size: 46px;">
-                            <img src="{geturl}/skin/{template}/img/logo/{#logo_img_small#}" alt="{#logo_img_alt#|ucfirst}" height="50" width="269"/>
+                            <img src="{geturl}/skin/{template}/img/logo/{#logo_img_small#}" alt="{#logo_img_alt#|ucfirst}" height="60" width="229"/>
                         </a>
                     </td>
                 </tr>
@@ -115,7 +115,7 @@
                                 <h3 class="bg-primary">{#order_resume#} : </h3>
                                 {foreach $data.catalog as $val => $key1}
                                     {assign var='total_price' value={$key1.CATALOG_LIST_QUANTITY}*{$key1.CATALOG_LIST_PRICE}}
-                                    {assign var='price_hvat' value=($key1.CATALOG_LIST_PRICE - $data.tax_amount)}
+                                    {assign var='price_hvat' value=($key1.CATALOG_LIST_PRICE / (1 + ($data.amount_tva / 100)))}
                                     {assign var='total_price_hvat' value=($total_price - $data.tax_amount)}
                                     {*<h4 style="font-weight: bold;">{$key1.CATALOG_LIST_NAME}</h4>*}
                                     <table class="table">
@@ -125,6 +125,12 @@
                                         </tr>
                                         </thead>
                                         <tbody>
+                                        {if isset($key1.CATALOG_LIST_ATTR)}
+                                        <tr>
+                                            <td style="text-align: right; width: 50%">{#attr_cart#}</td>
+                                            <td><strong>{$key1.CATALOG_LIST_ATTR}</strong></td>
+                                        </tr>
+                                        {/if}
                                         <tr>
                                             <td style="text-align: right; width: 50%">{#quantity_cart#}</td>
                                             <td><strong>{$key1.CATALOG_LIST_QUANTITY}</strong></td>
@@ -218,8 +224,8 @@
                     </td>
                 </tr>
                 <tr>
-                    <td style="background: #222;color:#fff;padding:0 15px 15px;" valign="top" colspan="2">
-                        {#footer_mail_line1#}
+                    <td style="background: #d6b170;color:#333;padding:0 15px 15px;" valign="top" colspan="2">
+                        {$smarty.config.footer_mail_line1|sprintf:{#website_name#}:$companyData.tva}
                     </td>
                 </tr>
             </table>

@@ -29,7 +29,6 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_config` (
   `idconfig` smallint(1) unsigned NOT NULL AUTO_INCREMENT,
   `mail_order` varchar(125) DEFAULT NULL,
   `mail_order_from` varchar(125) DEFAULT NULL,
-  `profil` smallint(1) unsigned NOT NULL DEFAULT '0',
   `online_payment` smallint(1) unsigned NOT NULL DEFAULT '0',
   `bank_wire` smallint(1) unsigned NOT NULL DEFAULT '1',
   `hipay` smallint(1) unsigned NOT NULL DEFAULT '0',
@@ -41,8 +40,10 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_config` (
   PRIMARY KEY (`idconfig`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
-INSERT INTO `mc_plugins_cartpay_config` (`idconfig`, `mail_order`, `mail_order_from`, `profil`, `online_payment`, `bank_wire`, `hipay`, `ogone`, `shipping`, `account_owner`, `contact_details`, `bank_address`) VALUES
-(1, NULL, NULL, 1, 1, 0, 1, 0, 1, NULL, NULL, NULL);
+TRUNCATE `mc_plugins_cartpay_config`;
+
+INSERT INTO `mc_plugins_cartpay_config` (`idconfig`, `mail_order`, `mail_order_from`, `online_payment`, `bank_wire`, `hipay`, `ogone`, `shipping`, `account_owner`, `contact_details`, `bank_address`) VALUES
+(1, NULL, NULL, 0, 1, 0, 0, 0, NULL, NULL, NULL);
 
 CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_items` (
   `id_item` int(6) unsigned NOT NULL AUTO_INCREMENT,
@@ -52,6 +53,13 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_items` (
   `price_items` decimal(12,2) NOT NULL,
   PRIMARY KEY (`id_item`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_module` (
+  `idmodule` SMALLINT(2) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `module_name` VARCHAR(150) NOT NULL,
+  `active` SMALLINT(1) UNSIGNED NOT NULL DEFAULT '1',
+  PRIMARY KEY (`idmodule`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
 
 CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_order` (
   `id_order` int(6) unsigned NOT NULL AUTO_INCREMENT,
@@ -79,6 +87,8 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_tva_conf` (
   `zone_tva` varchar(20) NOT NULL DEFAULT 'zone_1',
   PRIMARY KEY (`idtvac`)
 ) ENGINE=InnoDB  DEFAULT CHARSET=utf8 AUTO_INCREMENT=1 ;
+
+TRUNCATE `mc_plugins_cartpay_tva_conf`;
 
 INSERT INTO `mc_plugins_cartpay_tva_conf` (`idtvac`, `amount_tva`, `zone_tva`) VALUES
 (1, '21.0', 'zone_1'),

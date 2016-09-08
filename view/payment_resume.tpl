@@ -33,10 +33,10 @@
                 {/if}
             {else}
                 <div class="col-xs-6">
-                    <form action="" method="post" id="form-cart-devis">
+                    <form action="" method="post" id="form-cart-send">
                         <p class="col valid">
                             <input type="hidden" id="id_cart_to_send" name="id_cart_to_send" value="{$id_cart}" />
-                            <input type="submit" id="sendDevis" class="btn btn-danger btn-lg" value="{#pn_cartpay_send_devis#|ucfirst}" />
+                            <input type="submit" id="sendCartDevis" class="btn btn-danger btn-lg" value="{#pn_contact_send_devis#|ucfirst}" />
                         </p>
                     </form>
                 </div>
@@ -68,7 +68,6 @@
     <div class="mc-message"></div>
 {/block}
 {block name="foot" append}
-{if $getDataConfig.online_payment eq '0'}
     {capture name="scriptProduct"}{strip}
         /min/?f=
         libjs/vendor/localization/messages_{getlang}.js,
@@ -87,9 +86,8 @@
             {
                 console.log("cartProduct is not defined");
             }else{
-                cartProduct.runSend(id_cart,'cart_container','cart_table','form-cart-devis',iso);
+                cartProduct.runSend(id_cart,'cart_container','cart_table','form-cart-send',iso);
             }
         });
     </script>
-{/if}
 {/block}

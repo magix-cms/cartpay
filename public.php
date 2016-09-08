@@ -32,11 +32,12 @@
  # versions in the future. If you wish to customize MAGIX CMS for your
  # needs please refer to http://www.magix-cms.com for more information.
  */
-class plugins_cartpay_public extends database_plugins_cartpay{
+require_once('db/cartpay.php');
+class plugins_cartpay_public extends database_plugins_cartpay {
     /**
      * @var frontend_controller_plugins
      */
-    protected $template,$modelSystem;
+    protected $template,$modelSystem, $module, $activeMods;
     public $pstring1,$pstring2;
     /**
      * @var string
@@ -44,7 +45,9 @@ class plugins_cartpay_public extends database_plugins_cartpay{
     public $add_cart,$delete_item,$get_nbr_items,$get_price_items,$get_amount_to_pay,$idprofil_session,
         $shipping_price,$json_cart,$item_to_delete,$id_cart_to_send,$devis_to_send,$booking,$payment,$tva_amount,$idcatalog,$booking_quantity,$tva_country;
     public $item_qty,$quantity_qty;
+    public $item_attr,$attr;
     public $logo_perso,$logo;
+    public $mod, $action;
     /**
      *
      */
@@ -71,7 +74,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $this->item_to_delete = magixcjquery_form_helpersforms::inputNumeric($_POST['item_to_delete']);
         }
         if(magixcjquery_filter_request::isPost('id_cart_to_send')){
-            $this->id_cart_to_send = magixcjquery_form_helpersforms::inputClean($_POST['id_cart_to_send']);
+            $this->cart_to_send = magixcjquery_form_helpersforms::inputClean($_POST['id_cart_to_send']);
         }
         if(magixcjquery_filter_request::isGet('send_devis')){
             $this->devis_to_send = magixcjquery_form_helpersforms::inputClean($_GET['send_devis']);
@@ -91,8 +94,14 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         if(magixcjquery_filter_request::isPost('quantity_qty')){
          $this->quantity_qty = magixcjquery_form_helpersforms::inputNumeric($_POST['quantity_qty']);
         }
+        if(magixcjquery_filter_request::isPost('attr')){
+         $this->attr = magixcjquery_form_helpersforms::inputNumeric($_POST['attr']);
+        }
         if(magixcjquery_filter_request::isPost('item_qty')){
             $this->item_qty = magixcjquery_form_helpersforms::inputNumeric($_POST['item_qty']);
+        }
+        if(magixcjquery_filter_request::isPost('item_attr')){
+            $this->item_attr = magixcjquery_form_helpersforms::inputNumeric($_POST['item_attr']);
         }
         if(magixcjquery_filter_request::isGet('pstring2')){
             $this->pstring2 = magixcjquery_form_helpersforms::inputClean($_GET['pstring2']);
@@ -120,7 +129,16 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         //Montant de la TVA
         $this->tva_amount = 00;
         $this->modelSystem = new magixglobal_model_system();
-
+        // Module
+        if(class_exists('plugins_cartpay_module')) {
+            $this->module = new plugins_cartpay_module();
+        }
+        if(magixcjquery_filter_request::isGet('mod')){
+            $this->mod = magixcjquery_form_helpersforms::inputClean($_GET['mod']);
+        }
+        if(magixcjquery_filter_request::isGet('action')){
+            $this->action = magixcjquery_form_helpersforms::inputClean($_GET['action']);
+        }
     }
     /**
      * Retourne le message de notification
@@ -179,16 +197,30 @@ class plugins_cartpay_public extends database_plugins_cartpay{
      */
     private function getItemsTvaData($dataTva){
         $data = parent::fetchTva(
-            $dataTva
+            $dataTva,'public'
         );
         return $this->setItemsTvaData($data);
     }
 
     private function getItemTvaData($dataTva){
         $data = parent::fetchTva(
-            $dataTva
+            $dataTva,'public'
         );
         return $data;
+    }
+
+	protected function add_new_item($id_cart,$idcatalog,$quantity,$current_price)
+	{
+		parent::i_cart_items($id_cart,$idcatalog,$quantity,$current_price);
+		$lastItem = parent::s_last_cart_item($id_cart);
+
+		if(!empty($this->activeMods)) {
+			foreach ($this->activeMods as $name => $mod) {
+				if(method_exists($mod,'add_cart_item')) {
+					$mod->add_cart_item($lastItem['id_item'],$_POST);
+				}
+			}
+		}
     }
 
     /**
@@ -214,6 +246,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $idcatalog = $values['idcatalog'];
             $quantity = $values['product_quantity'];
             $current_price =  $values['product_price'];
+            $attr = isset($values['attr']) ? $values['attr'] : null;
             $lang = frontend_db_lang::s_id_current_lang(frontend_model_template::current_Language());
             //récupération des donnée panier en fonction le clé de session
             $data_cart = parent::s_cart_session($session_key);
@@ -224,13 +257,25 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $id_cart = $data_cart['id_cart'];
             //Vérifie si l'item est déjà dans le panier
             $v_item = parent::s_cart_item_catalog($id_cart,$idcatalog);
-            if($v_item['idcatalog']!= null){
-                //Si l'item est déjà dans le panier, on modifie la quantité
-                parent::u_cart_item_qty($v_item['id_item'],$v_item['quantity_items']+$quantity);
-            }else{
-                //insertion du nouvel item
-                parent::i_cart_items($id_cart,$idcatalog,$quantity,$current_price);
-            }
+
+			if($v_item['idcatalog'] == null){
+				$this->add_new_item($id_cart,$idcatalog,$quantity,$current_price);
+			} else {
+				$exist = true;
+				if(!empty($this->activeMods)) {
+					foreach ($this->activeMods as $name => $mod) {
+						if(method_exists($mod,'exist_item')) {
+							$exist = $mod->exist_item($v_item['id_item'],$_POST);
+						}
+					}
+				}
+				if ($exist) {
+					parent::u_cart_item_qty($v_item['id_item'],$v_item['quantity_items']+$quantity);
+				} else {
+					$this->add_new_item($id_cart,$idcatalog,$quantity,$current_price);
+				}
+			}
+
             //Mise à jour du calcul d'items dans le panier
             $count_items = parent::count_cart_items($id_cart);
             parent::u_cart_items($id_cart,$count_items['total']);
@@ -256,7 +301,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $amount_to_pay = $amount_to_pay['amount_to_pay'];
             $cart_amount = $this->load_cart_amount($id_cart);
             
-            $shipping =  $cart_amount['shipping'];
+            $shipping =  $cart_amount['shipping_ttc'];
             if($data_cart['country_cart']!=null){
                 $tva = $this->getItemTvaData(
                     array(
@@ -413,11 +458,10 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $amount_products = '0.00';
         $amount_product_hvat = '0.00';
         $quantity_total = '0';
-        $shipping = 0;
-        $shipping_ttc = $shipping;
         $promo_amount = 0;
         $profil_amount = 0;
         $amount_tva = 0;
+        $impact = array();
         $data_cart = parent::s_cart_items($id_cart);
         $getConfigCart = $this->getConfigData();
         $tva_rate = $this->calculate_tva($id_cart);
@@ -499,31 +543,9 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         }
 
         /**
-         * --- Shipping
-         */
-        if(class_exists('plugins_shipping_public')) {
-            $collectionShipping = new plugins_shipping_public();
-            $shipping_conf = $collectionShipping->getConfigData(array('type' => 'config'));
-
-            if ($getConfigCart['shipping'] === '1') {
-                if ($shipping_conf['free_shipping'] == '0.00' ||
-                    ($shipping_conf['free_shipping'] != '0.00' && $amount_products < $shipping_conf['free_shipping'])) {
-                    $shipping = $shipping_conf['global_price'];
-                    $shipping_ttc = $shipping_conf['global_price'];
-                }
-
-                if ($shipping_ttc && $tva) {
-                    $shipping = $shipping_ttc / $tva;
-                    $amount_tva = $amount_tva + round(($shipping_ttc - $shipping),2);
-                }
-            }
-        }
-
-        //$shipping = ($amount_products < $this->free_shipping_amount) ? $this->shipping_price : '0.00';
-        /**
          * --- Total amount
          */
-        $total = $amount_products + $shipping_ttc;
+        $total = $amount_products;
 
         if($total <= $promo_amount || $total <= $profil_amount) {
             $amount_to_pay = $total;
@@ -535,12 +557,35 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         }
 
         /**
+         * --- Pass through active mods and search after cart impact
+         */
+        if(!empty($this->activeMods)) {
+            foreach ($this->activeMods as $name => $mod) {
+                if(method_exists($mod,'cart_impact')) {
+                    $impact[$name] = $mod->cart_impact($getConfigCart,$amount_products,$tva);
+                    foreach($impact[$name]['update'] as $var => $upd) {
+                        switch ($var) {
+                            case 'amount_tva':
+                                $amount_tva = $amount_tva + $upd;
+                                break;
+                            case 'total':
+                                $amount_to_pay = $amount_to_pay + $upd;
+                                break;
+                        }
+                    }
+
+                    unset($impact[$name]['update']);
+                }
+            }
+        }
+        //$shipping = ($amount_products < $this->free_shipping_amount) ? $this->shipping_price : '0.00';
+
+        /**
          * retourne un tableau de données formatée
          */
         $prices = array (
             'amount_hvat'       => number_format($amount_product_hvat, 2, '.', ''),
             'amount_products'   => number_format($amount_products, 2, '.', ''),
-            'shipping'          => number_format($shipping, 2, '.', ''),
             'amount_vat'        => number_format($amount_tva, 2, '.', ''),
             'tax_rate'          => $tva_rate,
             'amount_promo'      => number_format($promo_amount, 2, '.', ''),
@@ -548,6 +593,12 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             'amount_to_pay'     => number_format($amount_to_pay, 2, '.', ''),
             'quantity_total'    => $quantity_total
         );
+
+        if(isset($impact) && !empty($impact)) {
+            foreach ($impact as $name => $var) {
+                $prices = $prices + $var;
+            }
+        }
         return $prices;
     }
 
@@ -615,6 +666,11 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $newData[$key]['urlproduct']      = $urlProduct;
             $newData[$key]['quantity']        = $value['quantity_items'];
             $newData[$key]['price']           = $value['price_items'];
+            $newData[$key]['idattr']          = $value['idattr'];
+            if($value['idattr'] && $value['idattr'] != null) {
+                $newData[$key]['title_attr'] = $value['title_attribute'];
+                $newData[$key]['idgroup']    = $value['idgroup'];
+            }
             //$newData[$key]['fixed_costs']     = $value['fixed_costs'];
             //$newData[$key]['weight']          = !is_null($value['weight']) ? ($value['weight']*$value['quantity_items']) : null;
             //$newData[$key]['marking_costs']   = !is_null($value['marking_costs']) ? $value['marking_costs']/*($value['quantity_items']*$value['marking_costs'])*/ : null;
@@ -631,7 +687,24 @@ class plugins_cartpay_public extends database_plugins_cartpay{
      */
     private function getItemCartData($id_cart){
         $dataCart = parent::s_cart($id_cart);
-        $dataItem = parent::s_cart_items($dataCart['id_cart']);
+
+		$ext = array();
+		if(!empty($this->activeMods)) {
+			foreach ($this->activeMods as $name => $mod) {
+				if(method_exists($mod,'slct_ext')) {
+					$joint = $mod->slct_ext();
+					$ext = $ext + $joint;
+				}
+			}
+		}
+		$dataItem = parent::s_cart_items($dataCart['id_cart'],$ext);
+
+        //if (key_exists('attribute',$this->activeMods)) {
+        //    $this->template->assign('attribute',true);
+        //    $dataItem = parent::s_cart_items_attr($dataCart['id_cart']);
+        //} else {
+        //    $dataItem = parent::s_cart_items($dataCart['id_cart']);
+        //}
 
         return $this->setItemCartData($dataItem);
     }
@@ -739,10 +812,8 @@ class plugins_cartpay_public extends database_plugins_cartpay{
      * @return string
      */
     private function setTitleMail($create){
-        $about = new plugins_about_public();
-        $collection = $about->getData();
         $subject = $create->getConfigVars('subject_mail');
-        $website = $collection['name'];
+        $website = $create->getConfigVars('website');
         return sprintf($subject,$website);
     }
 
@@ -767,6 +838,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $newData['shipping_price_order'] = $row['shipping_price_order'];
         $newData['shipping_htva'] = number_format(($row['shipping_price_order']/ $tva_amount), 2, '.', '');
         $newData['amount_order'] = $row['amount_order'];
+        $newData['payment_order'] = $row['payment_order'];
         $newData['date_order'] = $row['date_order'];
         $newData['nbr_items_cart'] = $row['nbr_items_cart'];
         $newData['session_key_cart'] = $row['session_key_cart'];
@@ -790,19 +862,25 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $newData['amount_tva'] = $row['amount_tva'];
         $newData['amount_tax'] = number_format(($newData['tax_amount'] + $shipping_tax), 2, '.', '');
         $newData['tax_amount'] = number_format($newData['tax_amount'], 2, '.', '');
+
         $catalog = array();
         $catalog = array_map(
             null,
             explode('|', $row['CATALOG_LIST_ID']),
             explode('|', $row['CATALOG_LIST_NAME']),
             explode('|', $row['CATALOG_LIST_QUANTITY']),
-            explode('|', $row['CATALOG_LIST_PRICE'])
+            explode('|', $row['CATALOG_LIST_PRICE']),
+            explode('|', $row['CATALOG_LIST_ATTR'])
         );
         foreach($catalog as $key => $value){
             $newData['catalog'][$key]['CATALOG_LIST_ID'] = $value[0];
             $newData['catalog'][$key]['CATALOG_LIST_NAME'] = $value[1];
             $newData['catalog'][$key]['CATALOG_LIST_QUANTITY'] = $value[2];
             $newData['catalog'][$key]['CATALOG_LIST_PRICE'] = $value[3];
+            if($value[4] != null && key_exists('attribute',$this->activeMods)) {
+                $attr = $this->activeMods['attribute']->g_attr($value[4]);
+                $newData['catalog'][$key]['CATALOG_LIST_ATTR'] = $attr['title_attribute'];
+            }
         }
         return $newData;
     }
@@ -827,7 +905,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
     public function getProcessOrder($create){
         $getConfigData = $this->getConfigData();
         if($getConfigData['online_payment'] === '1'){
-            if($getConfigData['hipay'] === '1'){
+            if($getConfigData['ogone'] === '1'){
                 if(class_exists('plugins_ogone_public')) {
                     if (isset($_POST['COMPLUS'])) {
                         parse_str($_POST['COMPLUS']);
@@ -836,15 +914,15 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                         $id_cart = $_POST['orderID'];
                         $shipping_amount = $shipping;
                         $amount = $_POST['amount'];
-                        parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order,'ogone');
+                        parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order);
                         parent::u_transmission_cart($id_cart,1);
                         $this->sendOrder($id_cart, $create);
                     }
                 }else{
-                    parent::u_transmission_cart($this->id_cart_to_send,1);
+                    parent::u_transmission_cart($this->cart_to_send,1);
                 }
             }
-            if($getConfigData['ogone'] === '1'){
+            if($getConfigData['hipay'] === '1'){
                 if(class_exists('plugins_hipay_public')){
                     if (isset($_POST['xml'])) {
                         $hipay = new plugins_hipay_public();
@@ -863,7 +941,7 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                             $emailClient = $data['email'];
                             $status = $data['status'];
                             if($operation == 'authorization'){
-                                parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order,'hipay');
+                                parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order);
                                 parent::u_transmission_cart($id_cart,1);
                             }elseif($operation == 'capture'){
                                 $this->sendOrder($id_cart, $create);
@@ -894,12 +972,12 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                         }
                     }
                 }else{
-                    parent::u_transmission_cart($this->id_cart_to_send,1);
+                    parent::u_transmission_cart($this->cart_to_send,1);
                 }
             }
 
         } else{
-            parent::u_transmission_cart($this->id_cart_to_send,1);
+            parent::u_transmission_cart($this->cart_to_send,1);
         }
     }
     /**
@@ -1071,6 +1149,15 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             parent::u_cart_item_qty($this->item_qty,$this->quantity_qty);
         }
     }
+
+    /**
+     * Mise a jour de la quantité
+     */
+    public function update_attr_item(){
+        if(isset($this->attr)){
+            parent::u_cart_item_attr($this->item_attr,$this->attr);
+        }
+    }
     /**
      * @param $row
      * @return array
@@ -1083,13 +1170,16 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         $catalog = array();
         foreach($row as $key => $value){
             // formate la TVA avant le calcule
-            $tva_amount = floatval('1.'.sprintf("%.02d", $value['amount_tva']));
-            $tax_amount = $value['amount_order'] - ($value['amount_order']/ $tva_amount);
+            $tva_amount = 1 + (floatval($value['amount_tva']) / 100);
+            $newData[$key]['tax_amount'] = round($value['amount_order'] - ($value['amount_order']/ $tva_amount),2);
+            $shipping_tax = round($value['shipping_price_order'] - ($value['shipping_price_order']/ $tva_amount),2);
 
             $newData[$key]['id_cart'] = $value['id_cart'];
             $newData[$key]['id_order'] = $value['id_order'];
             $newData[$key]['shipping_price_order'] = $value['shipping_price_order'];
+            $newData[$key]['shipping_htva'] = number_format(($value['shipping_price_order']/ $tva_amount), 2, '.', '');
             $newData[$key]['amount_order'] = $value['amount_order'];
+            $newData[$key]['payment_order'] = $value['payment_order'];
             $newData[$key]['date_order'] = $value['date_order'];
             $newData[$key]['nbr_items_cart'] = $value['nbr_items_cart'];
             $newData[$key]['session_key_cart'] = $value['session_key_cart'];
@@ -1111,19 +1201,26 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $newData[$key]['city_liv_cart'] = $value['city_liv_cart'];
             $newData[$key]['postal_liv_cart'] = $value['postal_liv_cart'];
             $newData[$key]['amount_tva'] = $value['amount_tva'];
-            $newData[$key]['amount_tax'] = number_format($tax_amount, 2, '.', '');
+            $newData[$key]['amount_tax'] = number_format(($newData[$key]['tax_amount'] + $shipping_tax), 2, '.', '');
+            $newData[$key]['tax_amount'] = number_format($newData[$key]['tax_amount'], 2, '.', '');
+
             $catalog[$key]['catalog'] = array_map(
                 null,
                 explode('|', $value['CATALOG_LIST_ID']),
                 explode('|', $value['CATALOG_LIST_NAME']),
                 explode('|', $value['CATALOG_LIST_QUANTITY']),
-                explode('|', $value['CATALOG_LIST_PRICE'])
+                explode('|', $value['CATALOG_LIST_PRICE']),
+                explode('|', $value['CATALOG_LIST_ATTR'])
             );
             foreach($catalog[$key]['catalog'] as $key1 => $value1){
-                $newData[$key]['catalog'][$key]['CATALOG_LIST_ID'] = $value1[0];
+                $newData[$key]['catalog'][$key1]['CATALOG_LIST_ID'] = $value1[0];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_NAME'] = $value1[1];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_QUANTITY'] = $value1[2];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_PRICE'] = $value1[3];
+                if($value1[4] != null && key_exists('attribute',$this->activeMods)) {
+                    $attr = $this->activeMods['attribute']->g_attr($value1[4]);
+                    $newData['catalog'][$key1]['CATALOG_LIST_ATTR'] = $attr['title_attribute'];
+                }
             }
         }
         return $newData;
@@ -1149,11 +1246,19 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $session_key = null;
         }
 
+		if(isset($this->module)) {
+			$this->activeMods = $this->module->load_module(false);
+		}
+
         //Chargement des données de traduction
         $this->_loadConfigVars();
         $create = frontend_controller_plugins::create();
         $header= new magixglobal_model_header();
-        if (isset( $this->add_cart)){
+        if (isset( $this->mod) && isset($this->action)) {
+            $cartMod = $this->activeMods[$this->mod];
+            $params = array('params' => $_GET['params'], 'controller' => $this->template);
+            call_user_func(array($cartMod,$this->action),$params);
+        }elseif (isset( $this->add_cart)){
             $this->add_item_cart($_POST,$session_key);
         }elseif(isset($this->delete_item)){
             $this->delete_item_cart($this->item_to_delete,$create);
@@ -1166,11 +1271,16 @@ class plugins_cartpay_public extends database_plugins_cartpay{
             $header->getStatus('200');
             $header->html_header("UTF-8");
             //$this->load_cart_ajax($this->json_cart);
-            $this->template->assign('getItemCartData',$this->getItemCartData($this->json_cart));
-            $this->template->assign('getItemPriceData',$this->getItemPriceData($this->json_cart));
-            $this->template->assign('setParamsData',array('remove'=>'true','editQuantity'=>'true'));
-            $this->template->display('loop/cart.tpl');
+			$cartData = $this->getItemCartData($this->json_cart);
+			$this->template->assign('getItemCartData',$cartData);
 
+			if(!empty($cartData)) {
+				$this->template->assign('getItemPriceData',$this->getItemPriceData($this->json_cart));
+				$this->template->assign('setParamsData',array('remove'=>'true','editQuantity'=>'true'));
+				$this->template->display('loop/cart.tpl');
+			} else {
+				return false;
+			}
         }elseif(isset($this->get_nbr_items)){
             $this->load_cart_nbr_item($session_key);
         }elseif(isset($this->get_price_items)){
@@ -1204,17 +1314,17 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                 }
                 $create->display('payment_statut.tpl');
             }else{
-                if(isset($this->id_cart_to_send)){
-                    $this->validate_cart($this->id_cart_to_send,$create);
+                if(isset($this->cart_to_send)){
+                    $this->validate_cart($this->cart_to_send,$create);
                     $this->load_cart_data($session_key,$create);
-                    $create->assign('getItemCartData',$this->getItemCartData($this->id_cart_to_send));
-                    $create->assign('getItemPriceData',$this->getItemPriceData($this->id_cart_to_send));
+                    $create->assign('getItemCartData',$this->getItemCartData($this->cart_to_send));
+                    $create->assign('getItemPriceData',$this->getItemPriceData($this->cart_to_send));
                     $create->assign('setParamsData',array('remove'=>'false','editQuantity'=>'false'));
                     $create->display('payment_resume.tpl');
                 }else {
                     $this->load_cart_data($session_key, $create);
-                    $create->assign('getItemCartData', $this->getItemCartData($this->id_cart_to_send));
-                    $create->assign('getItemPriceData', $this->getItemPriceData($this->id_cart_to_send));
+                    $create->assign('getItemCartData', $this->getItemCartData($this->cart_to_send));
+                    $create->assign('getItemPriceData', $this->getItemPriceData($this->cart_to_send));
                     $create->assign('setParamsData', array('remove' => 'false', 'editQuantity' => 'false'));
                     $create->display('payment_resume.tpl');
                 }
@@ -1228,24 +1338,15 @@ class plugins_cartpay_public extends database_plugins_cartpay{
         }*/else{
             if (magixcjquery_filter_request::isSession('key_cart')){
                 if(isset($this->devis_to_send)){
-                    //$this->validate_cart($this->id_cart_to_send,$create);
-                    $dataCart = $this->getItemPriceData($this->id_cart_to_send);
-                    parent::i_cart_order(
-                        $this->id_cart_to_send,
-                        magixglobal_model_cryptrsa::uuid_generator(),
-                        $dataCart['amount_products'],
-                        $dataCart['shipping'],
-                        'EUR',
-                        'bank_wire'
-                    );
-                    $this->sendOrder($this->id_cart_to_send,$create,false);
-                    parent::u_transmission_cart($this->id_cart_to_send,1);
-                    $this->getNotify('success',true);
+                    $this->validate_cart($this->cart_to_send,$create);
+                    /*$this->sendOrder($this->cart_to_send,$create);*/
                     //Supprime la session du panier après envoi du mail si le système de devis est activé
                     unset($_SESSION['key_cart']);
                     //return;
                 }elseif(isset($this->quantity_qty)){
                     $this->update_quantity_item();
+                }elseif(isset($this->attr)){
+                    $this->update_attr_item();
                 }elseif(isset($_GET['testmail'])){
                     $cart = 1;
                     if(!empty($_GET['testmail'])) {
@@ -1276,548 +1377,39 @@ class plugins_cartpay_public extends database_plugins_cartpay{
                     }else{
                         $create->assign('setPaymentType','devis');
                     }
-                    if(class_exists("plugins_profil_public")){
-                        if(frontend_model_smarty::getInstance()->templateExists('profil/forms/profil-forms.tpl')){
-                            $member = new plugins_profil_public();
-                            $getConfigData = $member->getConfigData();
-                            $this->template->assign('getConfigData', $getConfigData, true);
-                            $profilExist = $this->template->fetch('forms/profil-forms.tpl','profil');
-                            $this->template->assign('profilExist',$profilExist);
-                        }else{
-                            /*trigger_error("Missing 'profil files'");
-                            return;*/
-                            $this->template->assign('profilExist',false);
-                        }
-                    }
 
-                    $this->template->assign('getDataConfig',$this->getConfigData());
-                    $this->template->assign('getItemsCountryData',$this->getItemsTvaData(
-                        array(
-                            'fetch'=>'all',
-                            'context'=>'country'
-                        )
-                    ));
+					$this->template->assign('getDataConfig',$this->getConfigData());
+					$this->template->assign('getItemsCountryData',$this->getItemsTvaData(
+						array(
+							'fetch'=>'all',
+							'context'=>'country'
+						)
+					));
+
+					$moduleJS = array();
+					$dynamicForm = false;
+					if(!empty($this->activeMods)) {
+						foreach ($this->activeMods as $name => $mod) {
+							if(property_exists($mod,'js_impact')) {
+								if($mod->js_impact) $moduleJS[] = $name;
+							}
+							if(property_exists($mod,'dynamicForm')) {
+								if($mod->dynamicForm) {
+									$confdir = magixglobal_model_system::base_path().'plugins/'.$name.'/i18n/';
+									$lang = frontend_model_template::getLanguage();
+									if(file_exists($confdir)) {
+										$translate = !empty($lang) ? $lang : 'fr';
+										frontend_model_smarty::getInstance()->configLoad($confdir . 'public_local_' . $translate . '.conf', null);
+										$dynamicForm = $this->template->fetch('forms/order.tpl', $name);
+									}
+								}
+							}
+						}
+					}
+
+					$this->template->assign('moduleJS',$moduleJS);
+					$this->template->assign('dynamicForm',$dynamicForm);
                     $create->display('index.tpl');
-                }
-            }
-        }
-    }
-}
-class database_plugins_cartpay{
-    /**
-     * Vérifie si les tables du plugin sont installé
-     * @access protected
-     * return integer
-     */
-    protected function c_show_table(){
-        $table = 'mc_plugins_cartpay';
-        return magixglobal_model_db::layerDB()->showTable($table);
-    }
-    /**
-     * @access protected
-     * Selectionne les contacts pour le formulaire
-     */
-    protected function s_contact($iso){
-        $sql = 'SELECT c.*
-        FROM mc_plugins_contact AS c
-        JOIN mc_lang AS lang ON(c.idlang = lang.idlang)
-		WHERE lang.iso = :iso';
-        return magixglobal_model_db::layerDB()->select($sql,array(':iso'=>$iso));
-    }
-
-    /**
-     * Récupére un panier en fonction de l'id
-     * @access protected
-     * @param integer id_cart
-     * @return array
-     */
-    protected function s_cart($id_cart){
-        $sql=' SELECT cart.*
-        FROM mc_plugins_cartpay AS cart
-        WHERE cart.id_cart = :id_cart AND cart.transmission_cart = 0';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':id_cart' => $id_cart
-        ));
-    }
-
-    /**
-     * Récupére un panier déja transmis en fonction de l'id
-     * @access protected
-     * @param integer id_cart
-     * @return array
-     */
-    protected function s_cart_transmitted($id_cart){
-        $sql=' SELECT cart.*
-        FROM mc_plugins_cartpay AS cart
-        WHERE cart.id_cart = :id_cart AND cart.transmission_cart = 1';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':id_cart' => $id_cart
-        ));
-    }
-
-    /**
-     * Récupére un panier en fonction de la session
-     * @access protected
-     * @param string session_key
-     * @return array
-     */
-    protected function s_cart_session($session_key){
-        $sql=' SELECT cart.*
-        FROM mc_plugins_cartpay AS cart
-        WHERE cart.session_key_cart = :session_key AND cart.transmission_cart = 0';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':session_key' => $session_key
-        ));
-    }
-    /**
-     * Récupére l'id_cart
-     * @access protected
-     * @param integer id_cart
-     * return array
-     * */
-    protected function s_idcart_session($session_key){
-        $sql=' SELECT cart.id_cart
-        FROM mc_plugins_cartpay AS cart
-        WHERE cart.session_key_cart = :session_key AND cart.transmission_cart = 0';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':session_key' => $session_key
-        ));
-    }
-    /**
-     * Récupére les données du client dans le panier (nom, prénom, téléphone,...)
-     * @access protected
-     * @param int id_cart
-     * return array
-     * */
-    protected function s_customer_info($id_cart){
-        $sql=' SELECT cart.id_cart, cart.firstname_cart, cart.lastname_cart, cart.email_cart, cart.phone_cart,
-        cart.street_cart, cart.city_cart, cart.tva_cart, cart.postal_cart, cart.country_cart,cart.message_cart
-        FROM mc_plugins_cartpay AS cart
-        WHERE cart.id_cart = :id_cart';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':id_cart' => $id_cart
-        ));
-    }
-
-    /**
-     * Récupére tous les élémetns du panier
-     * @access protected
-     * @param integer id_cart
-     * return array
-     * */
-    protected function s_cart_items($id_cart){
-        $sql='SELECT items.*, p.idproduct, catalog.urlcatalog, catalog.titlecatalog, catalog.idlang, catalog.imgcatalog, p.idclc, p.idcls,
-        catalog.price,c.pathclibelle, s.pathslibelle, lang.iso
-		FROM mc_plugins_cartpay_items AS items
-		LEFT JOIN mc_catalog_product AS p ON(p.idcatalog = items.idcatalog)
-		LEFT JOIN mc_catalog AS catalog ON ( catalog.idcatalog = p.idcatalog )
-		LEFT JOIN mc_catalog_c AS c ON ( c.idclc = p.idclc )
-		LEFT JOIN mc_catalog_s AS s ON ( s.idcls = p.idcls )
-		LEFT JOIN mc_lang AS lang ON ( catalog.idlang = lang.idlang )
-        WHERE items.id_cart = :id_cart
-        GROUP BY items.idcatalog';
-        return magixglobal_model_db::layerDB()->select($sql,array(
-            ':id_cart' => $id_cart
-        ));
-    }
-    /**
-     * Récupére tous les élémetns du panier
-     * @access protected
-     * @param integer id_cart
-     * return array
-     * */
-    protected function s_cart_item_one($id_item){
-        $sql='SELECT items.*
-        FROM mc_plugins_cartpay_items AS items
-        WHERE id_item = :id_item';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':id_item' => $id_item
-        ));
-    }
-
-    /**
-     * @param $id_cart
-     * @param $idcatalog
-     * @return array
-     */
-    protected function s_cart_item_catalog($id_cart,$idcatalog){
-        $sql='SELECT items.*
-        FROM mc_plugins_cartpay_items AS items
-        WHERE idcatalog = :idcatalog AND id_cart = :id_cart';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':id_cart' => $id_cart,
-            ':idcatalog' => $idcatalog
-        ));
-    }
-
-    /**
-     * Récupére les informations nécessaire pour affichage titre + liens produit
-     * @access protected
-     * @param integer idcatalog
-     * return array
-     * */
-    protected function s_catalog_product($idcatalog){
-        $sql = 'SELECT p.idproduct, catalog.urlcatalog, catalog.titlecatalog, catalog.idlang, p.idclc, p.idcls, catalog.price,c.pathclibelle, s.pathslibelle, lang.iso
-		FROM mc_catalog_product AS p
-		LEFT JOIN mc_catalog AS catalog ON ( catalog.idcatalog = p.idcatalog )
-		LEFT JOIN mc_catalog_c AS c ON ( c.idclc = p.idclc )
-		LEFT JOIN mc_catalog_s AS s ON ( s.idcls = p.idcls )
-		LEFT JOIN mc_lang AS lang ON ( catalog.idlang = lang.idlang )
-		WHERE catalog.idcatalog = :idcatalog';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':idcatalog'=>$idcatalog
-        ));
-    }
-    /**
-     * Récupére les informations nécessaire pour affichage titre + liens produit
-     * @access protected
-     * @param integer idcatalog
-     * return array
-     * */
-    protected function s_catalog_price($idcatalog){
-        $sql = 'SELECT catalog.price
-		FROM mc_catalog AS catalog
-		WHERE catalog.idcatalog = :idcatalog';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':idcatalog'=>$idcatalog
-        ));
-    }
-
-    /**
-     * Récupére un panier en fonction de la session
-     * @access protected
-     * @param string session_key
-     * @return array
-     */
-    protected function count_cart_items($id_cart){
-        $sql=' SELECT count(items.id_item) as total
-        FROM mc_plugins_cartpay_items AS items
-        WHERE id_cart = :id_cart';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':id_cart' => $id_cart
-        ));
-    }
-
-    /**
-     * Ajoute un prix en db
-     * @access protected
-     * return array
-     */
-    protected function i_cart_items($id_cart,$idcatalog,$quantity,$price){
-        $sql='INSERT INTO mc_plugins_cartpay_items (id_cart,idcatalog,quantity_items,price_items)
-        VALUE (:id_cart,:idcatalog,:quantity_item,:price_item)';
-        return magixglobal_model_db::layerDB()->insert($sql,array(
-            ':id_cart' => $id_cart,
-            ':idcatalog' => $idcatalog,
-            ':quantity_item' => $quantity,
-            ':price_item' => $price
-        ));
-    }
-
-    /**
-     * Ajoute un prix en db
-     * @access protected
-     * return array
-     */
-    protected function i_cart_session($idlang,$session_key){
-        $sql='INSERT INTO mc_plugins_cartpay (idlang,nbr_items_cart,transmission_cart,session_key_cart)
-        VALUE (:idlang,0,0,:session_key)';
-        return magixglobal_model_db::layerDB()->insert($sql,array(
-            ':idlang' => $idlang,
-            ':session_key' => $session_key
-        ));
-    }
-
-    /**
-     * Insertion d'un payement dans la table order
-     * @param $id_cart
-     * @param $transaction_id_order
-     * @param $amount_order
-     * @param $shipping_price_order
-     * @param $currency_order
-     */
-    protected function i_cart_order($id_cart,$transaction_id_order,$amount_order,$shipping_price_order,$currency_order,$payment_order){
-        $sql='INSERT INTO mc_plugins_cartpay_order (id_cart,transaction_id_order,amount_order,shipping_price_order,currency_order,payment_order)
-        VALUE (:id_cart,:transaction_id_order,:amount_order,:shipping_price_order,:currency_order,:payment_order)';
-        return magixglobal_model_db::layerDB()->insert($sql,array(
-            ':id_cart'              => $id_cart,
-            ':transaction_id_order' => $transaction_id_order,
-            ':amount_order'         => $amount_order,
-            ':shipping_price_order' => $shipping_price_order,
-            ':currency_order'       => $currency_order,
-            ':payment_order'        => $payment_order
-        ));
-    }
-
-    /**
-     * Ajoute une demande de réservation
-     * @access protected
-     * return array
-     */
-    protected function i_booking($idcatalog,$idprofil,$quantity){
-        $sql='INSERT INTO mc_plugins_booking (idprofil,idcatalog,quantity_bk)
-        VALUE (:idprofil,:idcatalog,:quantity_bk)';
-        return magixglobal_model_db::layerDB()->insert($sql,array(
-            ':idprofil'     => $idprofil,
-            ':idcatalog'    => $idcatalog,
-            ':quantity_bk'  => $quantity
-        ));
-    }
-    /**
-     * @access protected
-     * Mise à jour du nombre d'éléments dans le panier
-     * @param integer $id_cart
-     * @param integer $nbr_items
-     */
-    protected function u_cart_items($id_cart,$nbr_items){
-        $sql='UPDATE mc_plugins_cartpay SET
-          nbr_items_cart=:nbr_items_cart
-          WHERE id_cart=:id_cart';
-        magixglobal_model_db::layerDB()->update($sql,
-            array(
-                ':id_cart' => $id_cart,
-                ':nbr_items_cart'=> $nbr_items
-            )
-        );
-    }
-    /**
-     * @access protected
-     * Mise à jour du prix d'un item
-     * @param integer $id_item
-     * @param integer $price_item
-     */
-    protected function u_cart_item_price($id_item,$price_item){
-        $sql='UPDATE mc_plugins_cartpay_items SET
-          price_items=:price_item
-          WHERE id_item=:id_item';
-        magixglobal_model_db::layerDB()->update($sql,
-            array(
-                ':id_item' => $id_item,
-                ':price_item'=> $price_item
-            )
-        );
-    }
-    /**
-     * @access protected
-     * Mise à jour de la quantité d'un item
-     * @param integer $id_item
-     * @param integer $quantity_items
-     */
-    protected function u_cart_item_qty($id_item,$quantity_items){
-        $sql='UPDATE mc_plugins_cartpay_items SET
-          quantity_items=:quantity_items
-          WHERE id_item=:id_item';
-        magixglobal_model_db::layerDB()->update($sql,
-            array(
-                ':id_item' => $id_item,
-                ':quantity_items'=> $quantity_items
-            )
-        );
-    }
-
-    /**
-     * Mise à jour des informations du surfeur
-     * @param $id_cart
-     * @param null $idprofil
-     * @param $firstname
-     * @param $lastname
-     * @param $email
-     * @param $phone
-     * @param $street
-     * @param $city
-     * @param $tva
-     * @param $postal
-     * @param $country
-     * @param $message
-     * @param $street_liv
-     * @param $city_liv
-     * @param $postal_liv
-     * @param $country_liv
-     */
-    protected function u_cart_customer_infos($id_cart,$idprofil = null,$firstname,$lastname,$email,$phone,$street,$city,$tva,$postal,$country,$message,$street_liv,$city_liv,$postal_liv,$country_liv,$lastname_liv
-,$firstname_liv){
-        $sql='UPDATE mc_plugins_cartpay SET
-          idprofil=:idprofil, firstname_cart=:firstname_cart, lastname_cart=:lastname_cart, email_cart=:email_cart, phone_cart=:phone_cart,
-          street_cart=:street_cart, city_cart=:city_cart, tva_cart=:tva_cart, postal_cart=:postal_cart, country_cart=:country_cart, message_cart=:message_cart,
-          street_liv_cart=:street_liv_cart, lastname_liv_cart=:lastname_liv_cart, firstname_liv_cart=:firstname_liv_cart, city_liv_cart=:city_liv_cart,
-          postal_liv_cart=:postal_liv_cart, country_liv_cart=:country_liv_cart
-          WHERE id_cart=:id_cart';
-        magixglobal_model_db::layerDB()->update($sql,
-            array(
-                ':id_cart' => $id_cart,
-                ':idprofil' => $idprofil,
-                ':firstname_cart'=> $firstname,
-                ':lastname_cart'=> $lastname,
-                ':email_cart'=> $email,
-                ':phone_cart'=> $phone,
-                ':street_cart'=> $street,
-                ':city_cart'=> $city,
-                ':tva_cart'=> $tva,
-                ':postal_cart'=> $postal,
-                ':country_cart'=> $country,
-                ':message_cart'=> $message,
-                ':street_liv_cart'=> $street_liv,
-                ':firstname_liv_cart'=> $firstname_liv,
-                ':lastname_liv_cart'=> $lastname_liv,
-                ':city_liv_cart'=> $city_liv,
-                ':postal_liv_cart'=> $postal_liv,
-                ':country_liv_cart'=> $country_liv
-            )
-        );
-    }
-
-//u_cart_infos($id_cart,$firstname,$lastname,$email,$phone,$street,$city,$postal,$country,$message)
-    /**
-     * @access protected
-     * Mise à jour du statu de l'envois du panier (transmission_cart)
-     * @param integer $id_cart
-     * @param bool $val_transmission[0,1]
-     */
-    protected function u_transmission_cart($id_cart,$val_transmission){
-        $sql='UPDATE mc_plugins_cartpay SET
-          transmission_cart=:transmission_cart
-          WHERE id_cart=:id_cart';
-        magixglobal_model_db::layerDB()->update($sql,
-            array(
-                ':id_cart' => $id_cart,
-                ':transmission_cart'=> $val_transmission
-            )
-        );
-    }
-
-    /**
-     * @access protected
-     * Supprime un élément du panier
-     * @param integer $id_item
-     * */
-    protected function d_item_cart($id_item){
-        $sql = array('DELETE FROM mc_plugins_cartpay_items
-		WHERE id_item = '.$id_item);
-        magixglobal_model_db::layerDB()->transaction($sql);
-    }
-
-    /**
-     * Return complete data by id_cart
-     * @param $id_cart
-     * @return array
-     */
-    protected function s_complete_data($id_cart){
-        $sql='SELECT ord.id_cart,ord.id_order,ord.transaction_id_order,ord.shipping_price_order,ord.amount_order,ord.date_order,
-        p.*,CATALOG_LIST_ID,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE,conf.amount_tva
-        FROM mc_plugins_cartpay_order AS ord
-        JOIN mc_plugins_cartpay AS p ON(ord.id_cart=p.id_cart)
-        LEFT OUTER JOIN (
-            SELECT catalog.idcatalog,items.id_cart,catalog.titlecatalog,
-            GROUP_CONCAT( CAST(items.idcatalog AS CHAR) ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_ID,
-            GROUP_CONCAT( CAST(items.quantity_items AS CHAR) ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_QUANTITY,
-            GROUP_CONCAT( CAST(items.price_items AS CHAR) ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_PRICE,
-            GROUP_CONCAT( catalog.titlecatalog ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_NAME
-            FROM mc_catalog AS catalog
-            JOIN mc_plugins_cartpay_items as items ON(items.idcatalog = catalog.idcatalog)
-            GROUP BY items.id_cart
-        ) rel_cat ON ( rel_cat.id_cart= p.id_cart)
-        JOIN mc_plugins_cartpay_tva AS t ON(p.country_cart = t.country)
-        JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
-        WHERE p.id_cart = :id_cart';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':id_cart'=>$id_cart
-        ));
-    }
-
-    /**
-     * @param $idprofil
-     * @return array
-     */
-    protected function s_profil_data($idprofil){
-        $sql = 'SELECT ord.id_cart,ord.id_order,ord.transaction_id_order,ord.shipping_price_order,ord.amount_order,ord.date_order,
-        p.*,CATALOG_LIST_ID,CATALOG_LIST_NAME,CATALOG_LIST_QUANTITY,CATALOG_LIST_PRICE,conf.amount_tva
-        FROM mc_plugins_cartpay_order AS ord
-        JOIN mc_plugins_cartpay AS p ON(ord.id_cart=p.id_cart)
-        LEFT OUTER JOIN (
-            SELECT catalog.idcatalog,items.id_cart,catalog.titlecatalog,
-            GROUP_CONCAT( CAST(items.idcatalog AS CHAR) ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_ID,
-            GROUP_CONCAT( CAST(items.quantity_items AS CHAR) ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_QUANTITY,
-            GROUP_CONCAT( CAST(items.price_items AS CHAR) ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_PRICE,
-            GROUP_CONCAT( catalog.titlecatalog ORDER BY items.id_item SEPARATOR "|" ) AS CATALOG_LIST_NAME
-            FROM mc_catalog AS catalog
-            JOIN mc_plugins_cartpay_items as items ON(items.idcatalog = catalog.idcatalog)
-            GROUP BY items.id_cart
-        ) rel_cat ON ( rel_cat.id_cart= p.id_cart)
-        JOIN mc_plugins_cartpay_tva AS t ON(p.country_cart = t.country)
-        JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
-        WHERE p.idprofil = :idprofil
-        GROUP BY p.id_cart ORDER BY p.id_cart DESC';
-        return magixglobal_model_db::layerDB()->select($sql,array(
-            ':idprofil' => $idprofil
-        ));
-    }
-
-    /**
-     * @param $idprofil
-     * @param $idbooking
-     * @return array
-     */
-    protected function s_booking_info($idprofil,$idbooking){
-        $sql = 'SELECT DISTINCT bk.idbooking,bk.quantity_bk,bk.date_bk,pr.idprofil,pr.lastname_pr,pr.firstname_pr,pr.email_pr,catalog.titlecatalog
-        FROM mc_plugins_booking AS bk
-        JOIN mc_catalog_product AS p ON ( bk.idcatalog = p.idcatalog )
-        JOIN mc_plugins_profil AS pr ON(bk.idprofil = pr.idprofil)
-        JOIN mc_catalog AS catalog ON ( catalog.idcatalog = p.idcatalog )
-        LEFT JOIN mc_catalog_c AS c ON ( c.idclc = p.idclc )
-        LEFT JOIN mc_catalog_s AS s ON ( s.idcls = p.idcls )
-        LEFT JOIN mc_lang AS lang ON ( catalog.idlang = lang.idlang )
-        WHERE bk.idprofil = :idprofil AND bk.idbooking = :idbooking';
-        return magixglobal_model_db::layerDB()->selectOne($sql,array(
-            ':idprofil' => $idprofil,
-            ':idbooking' => $idbooking
-        ));
-    }
-    protected function fetchConfig(){
-        $query = "SELECT *
-                      FROM mc_plugins_cartpay_config";
-        return magixglobal_model_db::layerDB()->selectOne($query);
-    }
-    /**
-     * Retourne la configuration de la TVA de base
-     * @param $data
-     * @return array
-     */
-    protected function fetchTva($data){
-        if(is_array($data)) {
-            // Si retourne tous les enregistrements ou un seul
-            if (array_key_exists('fetch', $data)) {
-                $fetch = $data['fetch'];
-            } else {
-                $fetch = 'all';
-            }
-            // Defini le context (configuration, les pays)
-            if (array_key_exists('context', $data)) {
-                $context = $data['context'];
-            } else {
-                $context = 'config';
-            }
-            if($fetch == 'all'){
-
-                if($context == 'config'){
-                    // Configuration
-                    $query = "SELECT *
-                      FROM mc_plugins_cartpay_tva_conf";
-                    return magixglobal_model_db::layerDB()->select($query);
-                }elseif($context == 'country'){
-                    // Liste des pays avec la zone, tva, etc
-                    $query = "SELECT t.*,conf.zone_tva,conf.amount_tva
-                      FROM mc_plugins_cartpay_tva AS t
-                      JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
-                      ORDER BY t.country ASC";
-                    return magixglobal_model_db::layerDB()->select($query);
-                }
-            }elseif($fetch == 'one'){
-                if($context == 'config') {
-                    $query = "SELECT t.*,conf.zone_tva,conf.amount_tva
-                      FROM mc_plugins_cartpay_tva AS t
-                      JOIN mc_plugins_cartpay_tva_conf AS conf ON(t.idtvac=conf.idtvac)
-                      WHERE t.country = :country";
-                    return magixglobal_model_db::layerDB()->selectOne($query,array(':country'=>$data['country']));
                 }
             }
         }

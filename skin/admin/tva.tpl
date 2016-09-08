@@ -72,13 +72,17 @@
                         <div class="col-sm-6">
                             <label for="iso">Pays :</label>
                             <select class="form-control" id="iso" name="iso">
-                                <option value="">Sélectionner un pays</option>
+                                {*<option value="">Sélectionner un pays</option>
                                 {foreach $countryTools as $key => $val nocache}
                                     {$selected  =   ''}
                                     {if $data.country_pr == $key}
                                         {$selected  =   ' selected'}
                                     {/if}
                                     <option{$selected} value="{$key}">{$val|ucfirst}</option>
+                                {/foreach}*}
+                                <option value="">{#select_country#}</option>
+                                {foreach $countryTools as $key => $val}
+                                    <option value="{$val.iso}"{if $data.iso eq $val.iso} selected{/if}>{#$val.iso#|ucfirst}</option>
                                 {/foreach}
                             </select>
                             <input type="hidden" id="country" name="country" value="" />

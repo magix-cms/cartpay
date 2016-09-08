@@ -74,7 +74,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $this->item_to_delete = magixcjquery_form_helpersforms::inputNumeric($_POST['item_to_delete']);
         }
         if(magixcjquery_filter_request::isPost('id_cart_to_send')){
-            $this->cart_to_send = magixcjquery_form_helpersforms::inputClean($_POST['id_cart_to_send']);
+            $this->id_cart_to_send = magixcjquery_form_helpersforms::inputClean($_POST['id_cart_to_send']);
         }
         if(magixcjquery_filter_request::isGet('send_devis')){
             $this->devis_to_send = magixcjquery_form_helpersforms::inputClean($_GET['send_devis']);
@@ -323,12 +323,10 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $amount_pay_with_tax = $cart_amount['amount_products'];
             //Assignation des coordonnée
             if($this->pstring1 === 'payment'){
-
-                //$this->hipayProcess($create->getLanguage(),$session_key,$id_cart,$shipping,$amount_pay_with_tax);
                 if(class_exists('plugins_ogone_public')) {
+                    //@todo Revoir la partie ogone
                     $ogone = new plugins_ogone_public();
                     $lang = frontend_model_template::current_Language() . '_' . strtoupper(frontend_model_template::current_Language());
-
                     $ogoneProcess = $ogone->getData(
                         array(
                             'plugin'    =>  'cartpay',
@@ -352,11 +350,14 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                         array(
                             'plugin'    =>  'cartpay',
                             'key'       =>  $session_key,
-                            'order'     =>  $data_cart['id_cart'],
+                            'order'     =>  $id_cart,
                             'amount'    =>  $amount_pay_with_tax,
-                            'shipping'  =>  $shipping
+                            'shipping'  =>  $shipping,
+                            'locale'    =>  $tva['iso'],
+                            'customerEmail'=> $data_cart['email_cart']
                         )
                     );
+
                     $create->assign('hipayProcess',$hipayProcess);
                 }
 
@@ -461,6 +462,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
         $promo_amount = 0;
         $profil_amount = 0;
         $amount_tva = 0;
+        $shipping_ttc = 0;
         $impact = array();
         $data_cart = parent::s_cart_items($id_cart);
         $getConfigCart = $this->getConfigData();
@@ -591,7 +593,8 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             'amount_promo'      => number_format($promo_amount, 2, '.', ''),
             'amount_profil'     => number_format($profil_amount, 2, '.', ''),
             'amount_to_pay'     => number_format($amount_to_pay, 2, '.', ''),
-            'quantity_total'    => $quantity_total
+            'quantity_total'    => $quantity_total,
+            'shipping_ttc'      => $shipping_ttc
         );
 
         if(isset($impact) && !empty($impact)) {
@@ -812,8 +815,10 @@ class plugins_cartpay_public extends database_plugins_cartpay {
      * @return string
      */
     private function setTitleMail($create){
+        $about = new plugins_about_public();
+        $collection = $about->getData();
         $subject = $create->getConfigVars('subject_mail');
-        $website = $create->getConfigVars('website');
+        $website = $collection['name'];
         return sprintf($subject,$website);
     }
 
@@ -914,12 +919,12 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                         $id_cart = $_POST['orderID'];
                         $shipping_amount = $shipping;
                         $amount = $_POST['amount'];
-                        parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order);
+                        parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order,'ogone');
                         parent::u_transmission_cart($id_cart,1);
                         $this->sendOrder($id_cart, $create);
                     }
                 }else{
-                    parent::u_transmission_cart($this->cart_to_send,1);
+                    parent::u_transmission_cart($this->id_cart_to_send,1);
                 }
             }
             if($getConfigData['hipay'] === '1'){
@@ -941,11 +946,11 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                             $emailClient = $data['email'];
                             $status = $data['status'];
                             if($operation == 'authorization'){
-                                parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order);
+                                parent::i_cart_order($id_cart,$transid,$amount,$shipping_amount,$currency_order,'hipay');
                                 parent::u_transmission_cart($id_cart,1);
                             }elseif($operation == 'capture'){
                                 $this->sendOrder($id_cart, $create);
-                            }elseif($operation == 'rejet'){
+                            }elseif($operation == 'reject'){
                                 $core_mail = new magixglobal_model_mail('mail');
                                 //@todo Rendre global la configuration
                                 $message = $core_mail->body_mail(
@@ -972,12 +977,12 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                         }
                     }
                 }else{
-                    parent::u_transmission_cart($this->cart_to_send,1);
+                    parent::u_transmission_cart($this->id_cart_to_send,1);
                 }
             }
 
         } else{
-            parent::u_transmission_cart($this->cart_to_send,1);
+            parent::u_transmission_cart($this->id_cart_to_send,1);
         }
     }
     /**
@@ -1314,17 +1319,17 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                 }
                 $create->display('payment_statut.tpl');
             }else{
-                if(isset($this->cart_to_send)){
-                    $this->validate_cart($this->cart_to_send,$create);
+                if(isset($this->id_cart_to_send)){
+                    $this->validate_cart($this->id_cart_to_send,$create);
                     $this->load_cart_data($session_key,$create);
-                    $create->assign('getItemCartData',$this->getItemCartData($this->cart_to_send));
-                    $create->assign('getItemPriceData',$this->getItemPriceData($this->cart_to_send));
+                    $create->assign('getItemCartData',$this->getItemCartData($this->id_cart_to_send));
+                    $create->assign('getItemPriceData',$this->getItemPriceData($this->id_cart_to_send));
                     $create->assign('setParamsData',array('remove'=>'false','editQuantity'=>'false'));
                     $create->display('payment_resume.tpl');
                 }else {
                     $this->load_cart_data($session_key, $create);
-                    $create->assign('getItemCartData', $this->getItemCartData($this->cart_to_send));
-                    $create->assign('getItemPriceData', $this->getItemPriceData($this->cart_to_send));
+                    $create->assign('getItemCartData', $this->getItemCartData($this->id_cart_to_send));
+                    $create->assign('getItemPriceData', $this->getItemPriceData($this->id_cart_to_send));
                     $create->assign('setParamsData', array('remove' => 'false', 'editQuantity' => 'false'));
                     $create->display('payment_resume.tpl');
                 }
@@ -1338,8 +1343,19 @@ class plugins_cartpay_public extends database_plugins_cartpay {
         }*/else{
             if (magixcjquery_filter_request::isSession('key_cart')){
                 if(isset($this->devis_to_send)){
-                    $this->validate_cart($this->cart_to_send,$create);
-                    /*$this->sendOrder($this->cart_to_send,$create);*/
+                    //$this->validate_cart($this->id_cart_to_send,$create);
+                    $dataCart = $this->getItemPriceData($this->id_cart_to_send);
+                    parent::i_cart_order(
+                        $this->id_cart_to_send,
+                        magixglobal_model_cryptrsa::uuid_generator(),
+                        $dataCart['amount_products'],
+                        $dataCart['shipping_ttc'],
+                        'EUR',
+                        'bank_wire'
+                    );
+                    $this->sendOrder($this->id_cart_to_send,$create,false);
+                    parent::u_transmission_cart($this->id_cart_to_send,1);
+                    $this->getNotify('success',true);
                     //Supprime la session du panier après envoi du mail si le système de devis est activé
                     unset($_SESSION['key_cart']);
                     //return;
@@ -1378,7 +1394,8 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                         $create->assign('setPaymentType','devis');
                     }
 
-					$this->template->assign('getDataConfig',$this->getConfigData());
+                    $getDataConfig = $this->getConfigData();
+					$this->template->assign('getDataConfig',$getDataConfig);
 					$this->template->assign('getItemsCountryData',$this->getItemsTvaData(
 						array(
 							'fetch'=>'all',
@@ -1388,19 +1405,22 @@ class plugins_cartpay_public extends database_plugins_cartpay {
 
 					$moduleJS = array();
 					$dynamicForm = false;
+
 					if(!empty($this->activeMods)) {
 						foreach ($this->activeMods as $name => $mod) {
 							if(property_exists($mod,'js_impact')) {
 								if($mod->js_impact) $moduleJS[] = $name;
 							}
-							if(property_exists($mod,'dynamicForm')) {
-								if($mod->dynamicForm) {
-									$confdir = magixglobal_model_system::base_path().'plugins/'.$name.'/i18n/';
-									$lang = frontend_model_template::getLanguage();
-									if(file_exists($confdir)) {
-										$translate = !empty($lang) ? $lang : 'fr';
-										frontend_model_smarty::getInstance()->configLoad($confdir . 'public_local_' . $translate . '.conf', null);
-										$dynamicForm = $this->template->fetch('forms/order.tpl', $name);
+							if(($name == 'profil' && $getDataConfig['profil']) || $name != 'profil') {
+								if(property_exists($mod,'dynamicForm')) {
+									if($mod->dynamicForm) {
+										$confdir = magixglobal_model_system::base_path().'plugins/'.$name.'/i18n/';
+										$lang = frontend_model_template::getLanguage();
+										if(file_exists($confdir)) {
+											$translate = !empty($lang) ? $lang : 'fr';
+											frontend_model_smarty::getInstance()->configLoad($confdir . 'public_local_' . $translate . '.conf', null);
+											$dynamicForm = $this->template->fetch('forms/order.tpl', $name);
+										}
 									}
 								}
 							}

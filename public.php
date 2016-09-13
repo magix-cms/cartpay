@@ -37,7 +37,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
     /**
      * @var frontend_controller_plugins
      */
-    protected $template,$modelSystem, $module, $activeMods;
+    protected $template,$modelSystem, $module, $activeMods, $setting;
     public $pstring1,$pstring2;
     /**
      * @var string
@@ -52,6 +52,8 @@ class plugins_cartpay_public extends database_plugins_cartpay {
      *
      */
     function __construct(){
+        $this->setting = frontend_model_setting::select_uniq_setting('css_inliner');
+
         if(magixcjquery_filter_request::isGet('add_cart')){
             $this->add_cart = magixcjquery_form_helpersforms::inputNumeric($_GET['add_cart']);
         }
@@ -889,22 +891,40 @@ class plugins_cartpay_public extends database_plugins_cartpay {
         }
         return $newData;
     }
+    /**
+     * @access private
+     * @return string
+     */
+    private function getBodyMail($debug = false){
+        if($debug) {
+            $bodyMail = $this->template->fetch('mail/admin.tpl');
+
+            if ($this->setting['setting_value']) {
+                $this->mail = new magixglobal_model_mail('mail');
+                print $this->mail->plugin_css_inliner($bodyMail,array('/cartpay/css' => 'foundation-emails.css'));
+            } else {
+                print $bodyMail;
+            }
+        } else {
+            $bodyMail = $this->template->fetch('mail/admin.tpl');
+
+            if ($this->setting['setting_value']) {
+                return $this->mail->plugin_css_inliner($bodyMail,array('/cartpay/css' => 'foundation-emails.css'));
+            } else {
+                return $bodyMail;
+            }
+        }
+    }
 
     /**
      * Setting du mail de commande
      * @param $row
-     * @param $create
-     * @return mixed
+     * @param bool $debug
      */
-    public function setCartData($row,$create,$testmail=false){
+    public function setCartData($row,$debug=false){
        // parse_str($_POST['COMPLUS']);
-        $create->assign('getCartData',$this->setItemOrderData($row));
-        if($testmail){
-            $create->display('mail/admin.tpl');
-        }else{
-            return $create->fetch('mail/admin.tpl');
-        }
-
+        $this->template->assign('getCartData',$this->setItemOrderData($row));
+        $this->getBodyMail($debug);
     }
 
     public function getProcessOrder($create){
@@ -997,9 +1017,9 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             if($data != null){
                 $email_customer = $data['email_cart'];
                 if($testmail){
-                    $itemData = $this->setCartData($data,$create,true);
+                    $itemData = $this->setCartData($data,true);
                 }else{
-                    $itemData = $this->setCartData($data,$create,false);
+                    $itemData = $this->setCartData($data,false);
                     //récupération des e-mail pour envois
                     $core_mail = new magixglobal_model_mail('mail');
                     //@todo Rendre global la configuration

@@ -896,6 +896,8 @@ class plugins_cartpay_public extends database_plugins_cartpay {
      * @return string
      */
     private function getBodyMail($debug = false){
+        $fetchColor = new frontend_db_setting();
+        $this->template->assign('getDataCSSIColor',$fetchColor->fetchCSSIColor());
         if($debug) {
             $bodyMail = $this->template->fetch('mail/admin.tpl');
 

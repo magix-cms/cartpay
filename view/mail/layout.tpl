@@ -4,58 +4,56 @@
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
     <title>{$smarty.config.subject_contact}</title>
-    {literal}
-        <style>
-            .header {
-                background: #f2f2f2;
-            }
+    <style>
+        .header {
+            background: {$getDataCSSIColor[0].color_cssi};
+        }
 
-            .header .columns {
-                padding-bottom: 0;
-            }
+        .header .columns {
+            padding-bottom: 0;
+        }
 
-            .header p {
-                color: #fff;
-                margin-bottom: 0;
-            }
+        .header p {
+            color: {$getDataCSSIColor[1].color_cssi};
+            margin-bottom: 0;
+        }
 
-            .header .wrapper-inner {
-                padding: 0;
-                /*controls the height of the header*/
-            }
+        .header .wrapper-inner {
+            padding: 0;
+            /*controls the height of the header*/
+        }
 
-            .header .container {
-                background: #f2f2f2;
-            }
+        .header .container {
+            background: {$getDataCSSIColor[0].color_cssi};
+        }
 
-            .header .container td {
-                padding: 15px;
-            }
+        .header .container td {
+            padding: 15px;
+        }
 
-            .spacer.spacer-hr td{
-                border-top: 1px solid #eeeeee;
-            }
-            .footer{
-                background: #333333;
-            }
-            .footer p{
-                color: #fff;
-                margin-bottom: 0;
-            }
-            .footer ul{
-                list-style: none;
-            }
-            .footer ul li{
-                color: #fff;
-            }
-            .footer .container {
-                background: #333333;
-            }
-            .footer .container td{
-                padding: 15px;
-            }
-        </style>
-    {/literal}
+        .spacer.spacer-hr td{
+            border-top: 1px solid #eeeeee;
+        }
+        .footer{
+            background: {$getDataCSSIColor[2].color_cssi};
+        }
+        .footer p{
+            color: {$getDataCSSIColor[3].color_cssi};
+            margin-bottom: 0;
+        }
+        .footer ul{
+            list-style: none;
+        }
+        .footer ul li{
+            color: {$getDataCSSIColor[3].color_cssi};
+        }
+        .footer .container {
+            background: {$getDataCSSIColor[2].color_cssi};
+        }
+        .footer .container td{
+            padding: 15px;
+        }
+    </style>
 </head>
 <body>
 <!-- <style> -->

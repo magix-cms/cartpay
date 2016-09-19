@@ -51,15 +51,15 @@
         </div>
     </fieldset>
     <fieldset>
-        <legend class="h3">Informations complémentaires</legend>
+        <legend class="h3">{#more_information#}</legend>
         <div class="row">
             <div class="form-group col-sm-6">
-                <label class="control-label" for="society_cart">{#pn_cartpay_society#|ucfirst} :</label>
-                <input class="form-control" type="text" id="society_cart" name="society_cart"  value="" size="30" />
+                <label class="control-label" for="company_cart">{#pn_cartpay_society#|ucfirst} :</label>
+                <input class="form-control" type="text" id="company_cart" name="company_cart"  value="" size="30" />
             </div>
             <div class="form-group col-sm-6">
-                <label class="control-label" for="tva_cart">{#pn_cartpay_tva#|ucfirst} :</label>
-                <input class="form-control" type="text" id="tva_cart" name="tva_cart"  value="" size="30" />
+                <label class="control-label" for="vat_cart">{#pn_cartpay_tva#|ucfirst} :</label>
+                <input class="form-control" type="text" id="vat_cart" name="vat_cart"  value="" size="30" />
             </div>
         </div>
         <div class="row">

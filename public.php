@@ -787,8 +787,8 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $city       =   magixcjquery_form_helpersforms::inputClean($_POST['city_cart']);
             $postal     =   magixcjquery_form_helpersforms::inputClean($_POST['postal_cart']);
             $country    =   magixcjquery_form_helpersforms::inputClean($_POST['country_cart']);
-            $tva        =   magixcjquery_form_helpersforms::inputClean($_POST['tva_cart']);
-            $society    =   magixcjquery_form_helpersforms::inputClean($_POST['society_cart']);
+            $vat        =   magixcjquery_form_helpersforms::inputClean($_POST['vat_cart']);
+            $company    =   magixcjquery_form_helpersforms::inputClean($_POST['company_cart']);
             $message    =   $_POST['message_cart'] != null ? magixcjquery_form_helpersforms::inputClean($_POST['message_cart']) : '';
 
             //$adressliv  =   $_POST['adressliv'] != null ? magixcjquery_form_helpersforms::inputClean($_POST['adressliv']) : '';
@@ -805,7 +805,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             }
 
             // Enregistrer les données du formulaire en DB
-            parent::u_cart_customer_infos($id_cart,$idprofil,$firstname,$lastname,$email,$phone,$street,$city,$tva,$postal,$country,$message,$street_liv,$city_liv,$postal_liv,$country_liv,$lastname_liv
+            parent::u_cart_customer_infos($id_cart,$idprofil,$firstname,$lastname,$email,$phone,$street,$city,$vat,$company,$postal,$country,$message,$street_liv,$city_liv,$postal_liv,$country_liv,$lastname_liv
 ,$firstname_liv);
         }
 
@@ -857,7 +857,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
         $newData['city_cart'] = $row['city_cart'];
         $newData['postal_cart'] = $row['postal_cart'];
         $newData['country_cart'] = $row['country_cart'];
-        $newData['tva_cart'] = $row['tva_cart'];
+        $newData['vat_cart'] = $row['vat_cart'];
         $newData['message_cart'] = $row['message_cart'];
         $newData['transmission_cart'] = $row['transmission_cart'];
         $newData['lastname_liv_cart'] = $row['lastname_liv_cart'];
@@ -1219,7 +1219,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $newData[$key]['city_cart'] = $value['city_cart'];
             $newData[$key]['postal_cart'] = $value['postal_cart'];
             $newData[$key]['country_cart'] = $value['country_cart'];
-            $newData[$key]['tva_cart'] = $value['tva_cart'];
+            $newData[$key]['vat_cart'] = $value['vat_cart'];
             $newData[$key]['message_cart'] = $value['message_cart'];
             $newData[$key]['transmission_cart'] = $value['transmission_cart'];
             $newData[$key]['lastname_liv_cart'] = $value['lastname_liv_cart'];

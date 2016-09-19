@@ -152,7 +152,7 @@ class database_plugins_cartpay
 	protected function s_customer_info($id_cart)
 	{
 		$sql = ' SELECT cart.id_cart, cart.firstname_cart, cart.lastname_cart, cart.email_cart, cart.phone_cart,
-        cart.street_cart, cart.city_cart, cart.tva_cart, cart.postal_cart, cart.country_cart,cart.message_cart
+        cart.street_cart, cart.city_cart, cart.vat_cart, cart.postal_cart, cart.country_cart,cart.message_cart
         FROM mc_plugins_cartpay AS cart
         WHERE cart.id_cart = :id_cart';
 		return magixglobal_model_db::layerDB()->selectOne($sql, array(
@@ -447,6 +447,7 @@ class database_plugins_cartpay
 	 * @param $street
 	 * @param $city
 	 * @param $tva
+     * @param $company
 	 * @param $postal
 	 * @param $country
 	 * @param $message
@@ -455,10 +456,10 @@ class database_plugins_cartpay
 	 * @param $postal_liv
 	 * @param $country_liv
 	 */
-	protected function u_cart_customer_infos($id_cart, $idprofil = null, $firstname, $lastname, $email, $phone, $street, $city, $tva, $postal, $country, $message, $street_liv, $city_liv, $postal_liv, $country_liv, $lastname_liv, $firstname_liv){
+	protected function u_cart_customer_infos($id_cart, $idprofil = null, $firstname, $lastname, $email, $phone, $street, $city, $vat, $company, $postal, $country, $message, $street_liv, $city_liv, $postal_liv, $country_liv, $lastname_liv, $firstname_liv){
 		$sql = 'UPDATE mc_plugins_cartpay SET
           idprofil=:idprofil, firstname_cart=:firstname_cart, lastname_cart=:lastname_cart, email_cart=:email_cart, phone_cart=:phone_cart,
-          street_cart=:street_cart, city_cart=:city_cart, tva_cart=:tva_cart, postal_cart=:postal_cart, country_cart=:country_cart, message_cart=:message_cart,
+          street_cart=:street_cart, city_cart=:city_cart, vat_cart=:vat_cart, postal_cart=:postal_cart, country_cart=:country_cart, message_cart=:message_cart,
           street_liv_cart=:street_liv_cart, lastname_liv_cart=:lastname_liv_cart, firstname_liv_cart=:firstname_liv_cart, city_liv_cart=:city_liv_cart,
           postal_liv_cart=:postal_liv_cart, country_liv_cart=:country_liv_cart
           WHERE id_cart=:id_cart';
@@ -472,7 +473,8 @@ class database_plugins_cartpay
 				':phone_cart' => $phone,
 				':street_cart' => $street,
 				':city_cart' => $city,
-				':tva_cart' => $tva,
+				':vat_cart' => $vat,
+                ':company_cart' => $company,
 				':postal_cart' => $postal,
 				':country_cart' => $country,
 				':message_cart' => $message,

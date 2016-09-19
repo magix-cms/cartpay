@@ -15,10 +15,14 @@
         <strong>{#pn_cartpay_phone#|ucfirst}: </strong>
         {$phone_cart}
     </p>
-    {*<p>
-        <strong>{#pn_cartpay_tva#|ucfirst}: </strong>
+    <p>
+        <strong>{#pn_cartpay_company#|ucfirst}: </strong>
+        {$company_cart}
+    </p>
+    <p>
+        <strong>{#pn_cartpay_vat#|ucfirst}: </strong>
         {$tva_cart}
-    </p>*}
+    </p>
 </div>
 <div class="col-sm-6">
     <p>

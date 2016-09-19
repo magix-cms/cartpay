@@ -1219,6 +1219,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $newData[$key]['city_cart'] = $value['city_cart'];
             $newData[$key]['postal_cart'] = $value['postal_cart'];
             $newData[$key]['country_cart'] = $value['country_cart'];
+            $newData[$key]['company_cart'] = $value['company_cart'];
             $newData[$key]['vat_cart'] = $value['vat_cart'];
             $newData[$key]['message_cart'] = $value['message_cart'];
             $newData[$key]['transmission_cart'] = $value['transmission_cart'];

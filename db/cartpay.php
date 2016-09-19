@@ -459,7 +459,7 @@ class database_plugins_cartpay
 	protected function u_cart_customer_infos($id_cart, $idprofil = null, $firstname, $lastname, $email, $phone, $street, $city, $vat, $company, $postal, $country, $message, $street_liv, $city_liv, $postal_liv, $country_liv, $lastname_liv, $firstname_liv){
 		$sql = 'UPDATE mc_plugins_cartpay SET
           idprofil=:idprofil, firstname_cart=:firstname_cart, lastname_cart=:lastname_cart, email_cart=:email_cart, phone_cart=:phone_cart,
-          street_cart=:street_cart, city_cart=:city_cart, vat_cart=:vat_cart, postal_cart=:postal_cart, country_cart=:country_cart, message_cart=:message_cart,
+          street_cart=:street_cart, city_cart=:city_cart, vat_cart=:vat_cart, company_cart=:company_cart, postal_cart=:postal_cart, country_cart=:country_cart, message_cart=:message_cart,
           street_liv_cart=:street_liv_cart, lastname_liv_cart=:lastname_liv_cart, firstname_liv_cart=:firstname_liv_cart, city_liv_cart=:city_liv_cart,
           postal_liv_cart=:postal_liv_cart, country_liv_cart=:country_liv_cart
           WHERE id_cart=:id_cart';

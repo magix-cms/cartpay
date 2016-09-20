@@ -37,7 +37,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
     /**
      * @var frontend_controller_plugins
      */
-    protected $template,$modelSystem, $module, $activeMods, $setting;
+    protected $template,$modelSystem, $module, $activeMods, $setting, $mail;
     public $pstring1,$pstring2;
     /**
      * @var string
@@ -53,7 +53,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
      */
     function __construct(){
         $this->setting = frontend_model_setting::select_uniq_setting('css_inliner');
-
+        $this->mail = new magixglobal_model_mail('mail');
         if(magixcjquery_filter_request::isGet('add_cart')){
             $this->add_cart = magixcjquery_form_helpersforms::inputNumeric($_GET['add_cart']);
         }
@@ -346,7 +346,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                     //"&amount_profil=".$cart_amount['amount_profil']
                 }
 
-                if(class_exists('plugins_hipay_public')){
+                /*if(class_exists('plugins_hipay_public')){
                     $hipay = new plugins_hipay_public();
                     $hipayProcess = $hipay->getData(
                         array(
@@ -361,7 +361,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                     );
 
                     $create->assign('hipayProcess',$hipayProcess);
-                }
+                }*/
 
 
             }
@@ -858,6 +858,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
         $newData['postal_cart'] = $row['postal_cart'];
         $newData['country_cart'] = $row['country_cart'];
         $newData['vat_cart'] = $row['vat_cart'];
+        $newData['company_cart'] = $row['company_cart'];
         $newData['message_cart'] = $row['message_cart'];
         $newData['transmission_cart'] = $row['transmission_cart'];
         $newData['lastname_liv_cart'] = $row['lastname_liv_cart'];
@@ -902,7 +903,6 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $bodyMail = $this->template->fetch('mail/admin.tpl');
 
             if ($this->setting['setting_value']) {
-                $this->mail = new magixglobal_model_mail('mail');
                 print $this->mail->plugin_css_inliner($bodyMail,array('/cartpay/css' => 'foundation-emails.css'));
             } else {
                 print $bodyMail;
@@ -926,7 +926,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
     public function setCartData($row,$debug=false){
        // parse_str($_POST['COMPLUS']);
         $this->template->assign('getCartData',$this->setItemOrderData($row));
-        $this->getBodyMail($debug);
+        return $this->getBodyMail($debug);
     }
 
     public function getProcessOrder($create){
@@ -1011,14 +1011,14 @@ class plugins_cartpay_public extends database_plugins_cartpay {
      * Envoi du formulaire de commande sur base de la méthode (payment/devis)
      * @param $id_cart
      * @param $create
-     * @param bool $testmail
+     * @param bool $debug
      */
-    public function sendOrder($id_cart,$create,$testmail=false){
+    public function sendOrder($id_cart,$create,$debug=false){
         //if($this->getProcessOrder($params)){
             $data = parent::s_complete_data($id_cart);
             if($data != null){
                 $email_customer = $data['email_cart'];
-                if($testmail){
+                if($debug){
                     $itemData = $this->setCartData($data,true);
                 }else{
                     $itemData = $this->setCartData($data,false);
@@ -1410,14 +1410,15 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                     $create->assign('getItemCartData',$this->getItemCartData($id_cart));
                     $create->assign('getItemPriceData',$this->getItemPriceData($id_cart));
                     $create->assign('setParamsData',array('remove'=>'true','editQuantity'=>'true'));
-                    if(class_exists('plugins_ogone_public')
-                        OR class_exists('plugins_hipay_public')){
+                    // getDataConfig
+                    $getDataConfig = $this->getConfigData();
+
+                    if($getDataConfig['online_payment'] === '1'){
                         $create->assign('setPaymentType','secure');
                     }else{
                         $create->assign('setPaymentType','devis');
                     }
 
-                    $getDataConfig = $this->getConfigData();
 					$this->template->assign('getDataConfig',$getDataConfig);
 					$this->template->assign('getItemsCountryData',$this->getItemsTvaData(
 						array(

@@ -83,6 +83,14 @@
                                                                 <td>{#pn_cartpay_phone#|ucfirst}</td>
                                                                 <td><strong>{if !empty($data.phone_cart)}{$data.phone_cart}{else}-{/if}</strong></td>
                                                             </tr>
+                                                            <tr>
+                                                                <td>{#pn_cartpay_vat#|ucfirst}</td>
+                                                                <td><strong>{if !empty($data.vat_cart)}{$data.vat_cart}{else}-{/if}</strong></td>
+                                                            </tr>
+                                                            <tr>
+                                                                <td>{#pn_cartpay_company#|ucfirst}</td>
+                                                                <td><strong>{if !empty($data.company_cart)}{$data.company_cart}{else}-{/if}</strong></td>
+                                                            </tr>
                                                             </tbody>
                                                         </table>
 

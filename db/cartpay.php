@@ -171,13 +171,13 @@ class database_plugins_cartpay
 		$joint = '';
 		$sj = '';
 		$pre = 'items';
-		if(is_array($ext)) {
+		/*if(is_array($ext)) {
 			foreach ($ext as $i => $j) {
 				$joint .= " LEFT JOIN `".$j['t']."` AS `t$i` ON $pre.".$j['k']." = t$i.".$j['k'];
 				$pre = "t$i";
 				$sj .= ",t$i.*";
 			}
-		}
+		}*/
 		$sql = "SELECT items.*, p.idproduct, catalog.urlcatalog, catalog.titlecatalog, catalog.idlang, catalog.imgcatalog, p.idclc, p.idcls,
         catalog.price,c.pathclibelle, s.pathslibelle, lang.iso$sj
 		FROM mc_plugins_cartpay_items AS items
@@ -189,6 +189,7 @@ class database_plugins_cartpay
 		LEFT JOIN mc_lang AS lang ON ( catalog.idlang = lang.idlang )
         WHERE items.id_cart = :id_cart
         GROUP BY items.id_item";
+
 		return magixglobal_model_db::layerDB()->select($sql, array(
 			':id_cart' => $id_cart
 		));

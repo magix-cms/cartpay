@@ -16,12 +16,8 @@
         {$phone_cart}
     </p>
     <p>
-        <strong>{#pn_cartpay_company#|ucfirst}: </strong>
-        {$company_cart}
-    </p>
-    <p>
         <strong>{#pn_cartpay_vat#|ucfirst}: </strong>
-        {$tva_cart}
+        {$vat_cart}
     </p>
 </div>
 <div class="col-sm-6">
@@ -40,6 +36,10 @@
     <p>
         <strong>{#pn_cartpay_country#|ucfirst}: </strong>
         {$country_cart}
+    </p>
+    <p>
+        <strong>{#pn_cartpay_company#|ucfirst}: </strong>
+        {$company_cart}
     </p>
 </div>
 <div class="clearfix"></div>
@@ -94,6 +94,14 @@
         <p>
             <strong>{#pn_cartpay_country#|ucfirst}: </strong>
             {$country_cart}
+        </p>
+        <p>
+            <strong>{#pn_cartpay_vat#|ucfirst}: </strong>
+            {$vat_cart}
+        </p>
+        <p>
+            <strong>{#pn_cartpay_company#|ucfirst}: </strong>
+            {$company_cart}
         </p>
     {/if}
 </div>

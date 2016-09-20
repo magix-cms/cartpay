@@ -103,6 +103,7 @@
     {/if}
     </tfoot>
     <tbody>
+
     {foreach $dataCart as $key => $value nocache}
         <tr>
             <td>

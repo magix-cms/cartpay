@@ -174,11 +174,11 @@ var cartProduct =(function($, undefined){
                              $.nicenotify.initbox(e,{
                                  display:true
                              });
-                             /*$.redirect({
+                             $.redirect({
                                  lang: iso,
                                  url: '/',
-                                 time:100
-                             });*/
+                                 time:200
+                             });
                          }
                      });
                      return false;

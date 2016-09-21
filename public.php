@@ -302,7 +302,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $amount_to_pay = ($id_cart != null) ? $this->load_cart_amount($id_cart) : 0;
             $amount_to_pay = $amount_to_pay['amount_to_pay'];
             $cart_amount = $this->load_cart_amount($id_cart);
-            
+            $getConfigCart = $this->getConfigData();
             $shipping =  $cart_amount['shipping_ttc'];
             if($data_cart['country_cart']!=null){
                 $tva = $this->getItemTvaData(
@@ -325,7 +325,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $amount_pay_with_tax = $cart_amount['amount_products'];
             //Assignation des coordonnée
             if($this->pstring1 === 'payment'){
-                if(class_exists('plugins_ogone_public')) {
+                if($getConfigCart['online_payment']=== '1' && $getConfigCart['ogone'] === '1') {
                     //@todo Revoir la partie ogone
                     $ogone = new plugins_ogone_public();
                     $lang = frontend_model_template::current_Language() . '_' . strtoupper(frontend_model_template::current_Language());
@@ -346,7 +346,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                     //"&amount_profil=".$cart_amount['amount_profil']
                 }
 
-                /*if(class_exists('plugins_hipay_public')){
+                if($getConfigCart['online_payment']=== '1' && $getConfigCart['hipay'] === '1'){
                     $hipay = new plugins_hipay_public();
                     $hipayProcess = $hipay->getData(
                         array(
@@ -361,7 +361,7 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                     );
 
                     $create->assign('hipayProcess',$hipayProcess);
-                }*/
+                }
 
 
             }
@@ -672,9 +672,12 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $newData[$key]['quantity']        = $value['quantity_items'];
             $newData[$key]['price']           = $value['price_items'];
             $newData[$key]['idattr']          = $value['idattr'];
-            if($value['idattr'] && $value['idattr'] != null) {
-                $newData[$key]['title_attr'] = $value['title_attribute'];
-                $newData[$key]['idgroup']    = $value['idgroup'];
+            if(isset($value['idattr'])) {
+                $newData[$key]['idattr'] = $value['idattr'];
+                if ($value['idattr'] && $value['idattr'] != null) {
+                    $newData[$key]['title_attr'] = $value['title_attribute'];
+                    $newData[$key]['idgroup'] = $value['idgroup'];
+                }
             }
             //$newData[$key]['fixed_costs']     = $value['fixed_costs'];
             //$newData[$key]['weight']          = !is_null($value['weight']) ? ($value['weight']*$value['quantity_items']) : null;
@@ -872,20 +875,31 @@ class plugins_cartpay_public extends database_plugins_cartpay {
         $newData['tax_amount'] = number_format($newData['tax_amount'], 2, '.', '');
 
         $catalog = array();
-        $catalog = array_map(
-            null,
-            explode('|', $row['CATALOG_LIST_ID']),
-            explode('|', $row['CATALOG_LIST_NAME']),
-            explode('|', $row['CATALOG_LIST_QUANTITY']),
-            explode('|', $row['CATALOG_LIST_PRICE']),
-            explode('|', $row['CATALOG_LIST_ATTR'])
-        );
+        if(isset($row['CATALOG_LIST_ATTR'])){
+            $catalog = array_map(
+                null,
+                explode('|', $row['CATALOG_LIST_ID']),
+                explode('|', $row['CATALOG_LIST_NAME']),
+                explode('|', $row['CATALOG_LIST_QUANTITY']),
+                explode('|', $row['CATALOG_LIST_PRICE']),
+                explode('|', $row['CATALOG_LIST_ATTR'])
+            );
+        }else{
+            $catalog = array_map(
+                null,
+                explode('|', $row['CATALOG_LIST_ID']),
+                explode('|', $row['CATALOG_LIST_NAME']),
+                explode('|', $row['CATALOG_LIST_QUANTITY']),
+                explode('|', $row['CATALOG_LIST_PRICE'])
+            );
+        }
+
         foreach($catalog as $key => $value){
             $newData['catalog'][$key]['CATALOG_LIST_ID'] = $value[0];
             $newData['catalog'][$key]['CATALOG_LIST_NAME'] = $value[1];
             $newData['catalog'][$key]['CATALOG_LIST_QUANTITY'] = $value[2];
             $newData['catalog'][$key]['CATALOG_LIST_PRICE'] = $value[3];
-            if($value[4] != null && key_exists('attribute',$this->activeMods)) {
+            if(isset($value[4]) && $value[4] != null && key_exists('attribute',$this->activeMods)) {
                 $attr = $this->activeMods['attribute']->g_attr($value[4]);
                 $newData['catalog'][$key]['CATALOG_LIST_ATTR'] = $attr['title_attribute'];
             }
@@ -1232,20 +1246,31 @@ class plugins_cartpay_public extends database_plugins_cartpay {
             $newData[$key]['amount_tax'] = number_format(($newData[$key]['tax_amount'] + $shipping_tax), 2, '.', '');
             $newData[$key]['tax_amount'] = number_format($newData[$key]['tax_amount'], 2, '.', '');
 
-            $catalog[$key]['catalog'] = array_map(
-                null,
-                explode('|', $value['CATALOG_LIST_ID']),
-                explode('|', $value['CATALOG_LIST_NAME']),
-                explode('|', $value['CATALOG_LIST_QUANTITY']),
-                explode('|', $value['CATALOG_LIST_PRICE']),
-                explode('|', $value['CATALOG_LIST_ATTR'])
-            );
+            if(isset($value['CATALOG_LIST_ATTR'])){
+                $catalog[$key]['catalog'] = array_map(
+                    null,
+                    explode('|', $value['CATALOG_LIST_ID']),
+                    explode('|', $value['CATALOG_LIST_NAME']),
+                    explode('|', $value['CATALOG_LIST_QUANTITY']),
+                    explode('|', $value['CATALOG_LIST_PRICE']),
+                    explode('|', $value['CATALOG_LIST_ATTR'])
+                );
+            }else{
+                $catalog[$key]['catalog'] = array_map(
+                    null,
+                    explode('|', $value['CATALOG_LIST_ID']),
+                    explode('|', $value['CATALOG_LIST_NAME']),
+                    explode('|', $value['CATALOG_LIST_QUANTITY']),
+                    explode('|', $value['CATALOG_LIST_PRICE'])
+                );
+            }
+
             foreach($catalog[$key]['catalog'] as $key1 => $value1){
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_ID'] = $value1[0];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_NAME'] = $value1[1];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_QUANTITY'] = $value1[2];
                 $newData[$key]['catalog'][$key1]['CATALOG_LIST_PRICE'] = $value1[3];
-                if($value1[4] != null && key_exists('attribute',$this->activeMods)) {
+                if(isset($value1[4]) && $value1[4] != null && key_exists('attribute',$this->activeMods)) {
                     $attr = $this->activeMods['attribute']->g_attr($value1[4]);
                     $newData['catalog'][$key1]['CATALOG_LIST_ATTR'] = $attr['title_attribute'];
                 }

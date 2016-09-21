@@ -177,7 +177,7 @@ var cartProduct =(function($, undefined){
                              $.redirect({
                                  lang: iso,
                                  url: '/',
-                                 time:200
+                                 time:400
                              });
                          }
                      });

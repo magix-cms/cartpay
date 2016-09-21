@@ -81,6 +81,10 @@ var MC_cartPay = (function($, window, document, undefined){
             });
         }else{
             $(id).on('submit',function(){
+                $.nicenotify.notifier = {
+                    box:"",
+                    elemclass : '.mc-message'
+                };
                 $.nicenotify({
                     ntype: "submit",
                     uri: setAjaxUrlLoad(baseadmin,tab, action),
@@ -180,7 +184,7 @@ var MC_cartPay = (function($, window, document, undefined){
      */
     function selectCountry(){
         $('select#iso').on('change',function(){
-            var $currentOption = $(this).find('option:selected').text().toLowerCase();
+            var $currentOption = $(this).find('option:selected').data("country").toLowerCase();
             if($currentOption != ''){
                 $('#country').val($currentOption);
             }

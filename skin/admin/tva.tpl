@@ -82,7 +82,7 @@
                                 {/foreach}*}
                                 <option value="">{#select_country#}</option>
                                 {foreach $countryTools as $key => $val}
-                                    <option value="{$val.iso}"{if $data.iso eq $val.iso} selected{/if}>{#$val.iso#|ucfirst}</option>
+                                    <option value="{$val.iso}"{if $data.iso eq $val.iso} selected{/if} data-country="{$val.country}">{#$val.iso#|ucfirst}</option>
                                 {/foreach}
                             </select>
                             <input type="hidden" id="country" name="country" value="" />

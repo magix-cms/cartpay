@@ -34,6 +34,7 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_config` (
   `bank_wire` smallint(1) unsigned NOT NULL DEFAULT '1',
   `hipay` smallint(1) unsigned NOT NULL DEFAULT '0',
   `ogone` smallint(1) unsigned NOT NULL DEFAULT '0',
+  `atos` smallint(1) unsigned NOT NULL DEFAULT '0',
   `shipping` smallint(1) unsigned NOT NULL DEFAULT '0',
   `account_owner` varchar(30) DEFAULT NULL,
   `contact_details` text,
@@ -43,8 +44,8 @@ CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_config` (
 
 TRUNCATE `mc_plugins_cartpay_config`;
 
-INSERT INTO `mc_plugins_cartpay_config` (`idconfig`, `mail_order`, `mail_order_from`, `profil`, `online_payment`, `bank_wire`, `hipay`, `ogone`, `shipping`, `account_owner`, `contact_details`, `bank_address`) VALUES
-(1, NULL, NULL, 0, 0, 1, 0, 0, 0, NULL, NULL, NULL);
+INSERT INTO `mc_plugins_cartpay_config` (`idconfig`, `mail_order`, `mail_order_from`, `profil`, `online_payment`, `bank_wire`, `hipay`, `ogone`, `atos`, `shipping`, `account_owner`, `contact_details`, `bank_address`) VALUES
+(1, NULL, NULL, 0, 0, 1, 0, 0, 0, 0, NULL, NULL, NULL);
 
 CREATE TABLE IF NOT EXISTS `mc_plugins_cartpay_items` (
   `id_item` int(6) unsigned NOT NULL AUTO_INCREMENT,

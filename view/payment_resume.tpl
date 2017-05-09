@@ -31,6 +31,11 @@
                     {$ogoneProcess}
                 </div>
                 {/if}
+                {if $getDataConfig.atos eq '1'}
+                    <div class="col-xs-6">
+                        {$atosProcess}
+                    </div>
+                {/if}
             {else}
                 <div class="col-xs-6">
                     <form action="" method="post" id="form-cart-devis">
@@ -68,6 +73,12 @@
     <div class="mc-message"></div>
 {/block}
 {block name="foot" append}
+    {script src="/min/?g=form" concat=$concat type="javascript"}
+    {capture name="formjs"}{strip}
+        /min/?f=skin/{template}/js/form.min.js,
+        libjs/vendor/redirect.js
+    {/strip}{/capture}
+    {script src=$smarty.capture.formjs concat=$concat type="javascript" load='async'}
     {capture name="scriptProduct"}{strip}
         /min/?f=
         libjs/vendor/localization/messages_{getlang}.js,

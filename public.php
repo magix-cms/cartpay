@@ -362,7 +362,27 @@ class plugins_cartpay_public extends database_plugins_cartpay {
 
                     $create->assign('hipayProcess',$hipayProcess);
                 }
-
+                if($getConfigCart['online_payment']=== '1' && $getConfigCart['atos'] === '1') {
+                    $brand = $_POST['brand'];
+                    $atos = new plugins_atos_public();
+                    if(isset($brand)){
+                        $getPaymentRequest = $atos->getPaymentRequest(array(
+                            'returnUrl'           =>  'cartpay/payment/process/',
+                            'iso'                 =>  frontend_model_template::current_Language(),
+                            'brand'               =>  $brand,
+                            'amount'              =>  ($amount_pay_with_tax*100),
+                            'orderId'             =>  $id_cart,
+                            'customerId'          =>  '0',
+                            'customerEmail'       =>  $data_cart['email_cart'],
+                            'returnContext'       =>  !empty($shipping) ? $shipping : '0'
+                        ));
+                        $this->template->assign('getItemData', $getPaymentRequest, true);
+                    }else{
+                        $atos->getPaymentBrand();
+                    }
+                    $atosProcess = $this->template->fetch('payment.tpl', 'atos');
+                    $create->assign('atosProcess',$atosProcess);
+                }
 
             }
             $assign_exclude = array(
@@ -1016,9 +1036,36 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                     parent::u_transmission_cart($this->id_cart_to_send,1);
                 }
             }
-
-        } else{
-            parent::u_transmission_cart($this->id_cart_to_send,1);
+            if($getConfigData['atos'] === '1'){
+                if(class_exists('plugins_atos_public')) {
+                    $atos = new plugins_atos_public();
+                    if (isset($_POST['Encode'])) {
+                        $setData = $atos->fetchData(array('context'=>'unique'));
+                        $getPaymentResponse = $atos->getPaymentResponse($setData);
+                        if ($getPaymentResponse) {
+                            $operation = $getPaymentResponse['response'];
+                            $id_cart = $getPaymentResponse['orderId'];
+                            $shipping_amount = $getPaymentResponse['returnContext'];
+                            $transid = $getPaymentResponse['transactionReference'];
+                            $amount = $getPaymentResponse['getAmount'];
+                            $emailClient = $getPaymentResponse['customerEmail'];
+                            $currency_order = $getPaymentResponse['currencyCode'];
+                            if ($operation == 'true') {
+                                parent::i_cart_order($id_cart, $transid, $amount, $shipping_amount, $currency_order, 'atos');
+                                parent::u_transmission_cart($id_cart, 1);
+                                $this->sendOrder($id_cart, $create);
+                                $this->getNotify('success',false);
+                                unset($_SESSION['key_cart']);
+                            } elseif ($operation == 'false') {
+                                $this->getNotify('refused',false);
+                                unset($_SESSION['key_cart']);
+                            }
+                        }
+                    }
+                   // $this->getNotify('success',false);
+                    $create->display('payment_statut.tpl');
+                }
+            }
         }
     }
     /**

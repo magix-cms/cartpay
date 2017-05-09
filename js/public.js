@@ -305,7 +305,7 @@ var cartProduct =(function($, undefined){
                 }
                 $('.'+id_cible).html(e);
                 $('.'+id_cible).parent().stop(true,true);
-                $('.'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
+                //$('.'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
             }
         });
         return false;
@@ -325,7 +325,7 @@ var cartProduct =(function($, undefined){
             successParams:function(e){
                 $('.'+id_cible).html(e);
                 $('.'+id_cible).parent().stop(true,true);
-                $('.'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
+                //$('.'+id_cible).parent().effect("pulsate", { times:1 }, 1000);
             }
         });
         return false;
@@ -348,6 +348,7 @@ var cartProduct =(function($, undefined){
                 $('#'+id_cible_hidden).val(e);
             }
         });
+        return false;
     }
 
     /**

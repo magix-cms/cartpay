@@ -6,11 +6,13 @@
 {block name="article:content"}
     <h1>{#order_resume#|firststring}</h1>
     <div id="resume_cart">
+        {if !$smarty.post.brand}
         <div id="cart_container">
             <h2>{#recap_cart#|ucfirst}</h2>
             {*{$table_products}*}
             {include file="cartpay/loop/cart.tpl"}
         </div>
+        {/if}
         <div class="col-sm-12">
             <p>
                 <strong>{#pn_cartpay_message#|firststring}: </strong><br />
@@ -21,6 +23,7 @@
         {include file="cartpay/brick/resume.tpl"}
         <div class="clearfix">
             {if $getDataConfig.online_payment eq '1'}
+                {if !$smarty.post.brand}
                 {if $getDataConfig.hipay eq '1'}
                 <div class="col-xs-6">
                 {$hipayProcess}
@@ -30,6 +33,7 @@
                 <div class="col-xs-6">
                     {$ogoneProcess}
                 </div>
+                {/if}
                 {/if}
                 {if $getDataConfig.atos eq '1'}
                     <div class="col-xs-6">
@@ -48,6 +52,7 @@
             {/if}
         </div>
         {if $getDataConfig.bank_wire eq '1'}
+        {if !$smarty.post.brand}
         <div  class="clearfix" id="bank-wire">
             <div class="col-xs-6">
                 <h3>
@@ -68,6 +73,7 @@
             </table>
             </div>
         </div>
+        {/if}
         {/if}
     </div>
     <div class="mc-message"></div>

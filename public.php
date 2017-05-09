@@ -1058,7 +1058,11 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                                 $this->getNotify('success',false);
                                 unset($_SESSION['key_cart']);
                             } elseif ($operation == 'false') {
-                                $this->getNotify('refused',false);
+                                if($getPaymentResponse['responseCode'] === '17'){
+                                    $this->getNotify('cancel',false);
+                                }else{
+                                    $this->getNotify('refused',false);
+                                }
                                 unset($_SESSION['key_cart']);
                             }
                         }

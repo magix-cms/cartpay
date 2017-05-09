@@ -816,8 +816,8 @@ class database_plugins_cartpay
 				$fetch = 'config';
 			}
 			if($fetch == 'config') {
-				$sql = 'INSERT INTO mc_plugins_cartpay_config (mail_order,mail_order_from,profil,online_payment,bank_wire,hipay,ogone,shipping,account_owner,contact_details,bank_address)
-		        VALUE(:mail_order,:mail_order_from,:profil,:online_payment,:bank_wire,:hipay,:ogone,:shipping,:account_owner,:contact_details,:bank_address)';
+				$sql = 'INSERT INTO mc_plugins_cartpay_config (mail_order,mail_order_from,profil,online_payment,bank_wire,hipay,ogone,atos,shipping,account_owner,contact_details,bank_address)
+		        VALUE(:mail_order,:mail_order_from,:profil,:online_payment,:bank_wire,:hipay,:ogone,:atos,:shipping,:account_owner,:contact_details,:bank_address)';
 				magixglobal_model_db::layerDB()->insert($sql,
 					array(
 						':mail_order'        => $data['mail_order'],
@@ -827,6 +827,7 @@ class database_plugins_cartpay
 						':bank_wire'         => $data['bank_wire'],
 						':hipay'             => $data['hipay'],
 						':ogone'             => $data['ogone'],
+                        ':atos'              => $data['atos'],
 						':shipping'          => $data['shipping'],
 						':account_owner'     => $data['account_owner'],
 						':contact_details'   => $data['contact_details'],
@@ -868,7 +869,7 @@ class database_plugins_cartpay
 			}
 			if($fetch == 'config') {
 				$sql = 'UPDATE mc_plugins_cartpay_config
-                SET mail_order=:mail_order,mail_order_from=:mail_order_from,profil=:profil,online_payment=:online_payment,bank_wire=:bank_wire,hipay=:hipay,ogone=:ogone,shipping=:shipping,
+                SET mail_order=:mail_order,mail_order_from=:mail_order_from,profil=:profil,online_payment=:online_payment,bank_wire=:bank_wire,hipay=:hipay,ogone=:ogone,atos=:atos,shipping=:shipping,
                 account_owner=:account_owner,contact_details=:contact_details,bank_address=:bank_address
                 WHERE idconfig=:edit';
 				magixglobal_model_db::layerDB()->update($sql,
@@ -881,6 +882,7 @@ class database_plugins_cartpay
 						':bank_wire'         => $data['bank_wire'],
 						':hipay'             => $data['hipay'],
 						':ogone'             => $data['ogone'],
+                        ':atos'              => $data['atos'],
 						':shipping'          => $data['shipping'],
 						':account_owner'     => $data['account_owner'],
 						':contact_details'   => $data['contact_details'],

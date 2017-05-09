@@ -50,16 +50,16 @@
             Moyens de paiement
         </h3>
         <div class="form-group">
-            <label for="bank_wire" class="col-sm-3 control-label">{#bank_wire#}</label>
-            <div class="col-sm-4">
-                <div class="checkbox">
-                    <label>
-                        <input {if $data.bank_wire eq '1'} checked{/if} type="checkbox" name="bank_wire" id="bank_wire" value="1" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default">
-                    </label>
+            <div class="col-sm-6">
+                <label for="bank_wire" class="col-sm-6 control-label">{#bank_wire#}</label>
+                <div class="col-sm-4">
+                    <div class="checkbox">
+                        <label>
+                            <input {if $data.bank_wire eq '1'} checked{/if} type="checkbox" name="bank_wire" id="bank_wire" value="1" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default">
+                        </label>
+                    </div>
                 </div>
             </div>
-        </div>
-        <div class="form-group">
             <div class="col-sm-6">
                 <label for="hipay" class="col-sm-6 control-label">{#hipay#}</label>
                 <div class="col-sm-4">
@@ -70,12 +70,24 @@
                     </div>
                 </div>
             </div>
+        </div>
+        <div class="form-group">
             <div class="col-sm-6">
                 <label for="ogone" class="col-sm-6 control-label">{#ogone#}</label>
                 <div class="col-sm-4">
                     <div class="checkbox">
                         <label>
                             <input {if $data.ogone eq '1'} checked{/if} type="checkbox" name="ogone" id="ogone" value="1" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default">
+                        </label>
+                    </div>
+                </div>
+            </div>
+            <div class="col-sm-6">
+                <label for="atos" class="col-sm-6 control-label">{#atos#}</label>
+                <div class="col-sm-4">
+                    <div class="checkbox">
+                        <label>
+                            <input {if $data.atos eq '1'} checked{/if} type="checkbox" name="atos" id="atos" value="1" data-toggle="toggle" type="checkbox" data-on="oui" data-off="non" data-onstyle="primary" data-offstyle="default">
                         </label>
                     </div>
                 </div>

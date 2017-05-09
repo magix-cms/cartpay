@@ -1051,7 +1051,8 @@ class plugins_cartpay_public extends database_plugins_cartpay {
                             $emailClient = $getPaymentResponse['customerEmail'];
                             $currency_order = $getPaymentResponse['currencyCode'];
                             if ($operation == 'true') {
-                                parent::i_cart_order($id_cart, $transid, $amount, $shipping_amount, $currency_order, 'atos');
+                                $paymentMeanBrand = $getPaymentResponse['paymentMeanBrand'];
+                                parent::i_cart_order($id_cart, $transid, $amount, $shipping_amount, $currency_order, $paymentMeanBrand);
                                 parent::u_transmission_cart($id_cart, 1);
                                 $this->sendOrder($id_cart, $create);
                                 $this->getNotify('success',false);

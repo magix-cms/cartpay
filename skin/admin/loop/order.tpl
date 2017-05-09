@@ -10,7 +10,7 @@
         {*<td>{$value.date_order|date_format:" %d%m%Y%H%M%S"}</td>*}
         <td>{$value.lastname_cart}</td>
         <td>{$value.firstname_cart}</td>
-        <td>{#$value.payment_order#|ucfirst}</td>
+        <td>{if $value.payment_order eq 'bank_wire' OR $value.payment_order eq 'hipay' OR $value.payment_order eq 'ogone'}{#$value.payment_order#|ucfirst}{else}{$value.payment_order}{/if}</td>
         <td>{$value.amount_tva}%</td>
         <td>{$value.shipping_price_order} {$value.currency_order}</td>
         <td>{($value.amount_order-$value.amount_tax)} {$value.currency_order}</td>

@@ -43,7 +43,7 @@ class plugins_cartpay_admin extends database_plugins_cartpay {
     public $getpage;
     public $tab,$edit,$action,$plugin;
 
-    public $mail_order,$mail_order_from,$profil,$online_payment,$bank_wire,$hipay,$ogone,$shipping,$account_owner,$contact_details,$bank_address;
+    public $mail_order,$mail_order_from,$profil,$online_payment,$bank_wire,$hipay,$ogone,$atos,$shipping,$account_owner,$contact_details,$bank_address;
     public $zone_tva_1,$zone_tva_2,$amount_tva_1,$amount_tva_2,$remove_tva;
     public $iso,$country,$idtvac;
     /**
@@ -104,6 +104,9 @@ class plugins_cartpay_admin extends database_plugins_cartpay {
         }
         if (magixcjquery_filter_request::isPost('shipping')) {
             $this->shipping = 1;
+        }
+        if (magixcjquery_filter_request::isPost('atos')) {
+            $this->atos = 1;
         }
         if (magixcjquery_filter_request::isPost('account_owner')) {
             $this->account_owner = magixcjquery_form_helpersforms::inputClean($_POST['account_owner']);
@@ -371,6 +374,11 @@ class plugins_cartpay_admin extends database_plugins_cartpay {
         }else{
             $ogone = $this->ogone;
         }
+        if(!isset($this->atos)){
+            $atos = '0';
+        }else{
+            $atos = $this->atos;
+        }
         if(!isset($this->shipping)){
             $shipping = '0';
         }else{
@@ -386,6 +394,7 @@ class plugins_cartpay_admin extends database_plugins_cartpay {
             'bank_wire'      =>  $bank_wire,
             'hipay'          =>  $hipay,
             'ogone'          =>  $ogone,
+            'atos'           =>  $atos,
             'shipping'       =>  $shipping,
             'account_owner'  =>  (!empty($this->account_owner))? $this->account_owner: NULL,
             'contact_details'=>  (!empty($this->contact_details))? $this->contact_details: NULL,

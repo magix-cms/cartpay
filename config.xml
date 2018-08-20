@@ -1,37 +1,30 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <!-- /*
- * MAGIX CMS Copyright (c) 2008 - 2016 Gerits Aurelien,
- * http://www.magix-dev.be
+ * MAGIX CMS Copyright (c) 2018 Gerits Aurelien,
  * Dual licensed under the MIT AND GPL Version 3 licenses.
  *
- * Date: January 21 19:00 2016
+ * Date: January 31 13:34 2017
  */-->
 <config>
-	<acl>
-		<admin>
-			<authorized>
-				<allow_access>*</allow_access>
-			</authorized>
-			<infos>
-				<authors>
-					<author>
-						<name>Aurélien Gérits</name>
-						<link>
-							<website href="http://www.magix-cms.com" />
-						</link>
-					</author>
-				</authors>
-                <version>
-                    <date_create>21/01/2014</date_create>
-                    <date_update>09/05/2017</date_update>
-                    <number>2.1</number>
-                    <phase>Stable</phase>
-                    <support>
-                        <ticket href="https://github.com/magix-cms/magixcms/issues"></ticket>
-                        <git href="https://github.com/magix-cms/magixcms"></git>
-                    </support>
-                </version>
-			</infos>
-		</admin>
-	</acl>
+	<authorized>
+		<allow_access>*</allow_access>
+	</authorized>
+	<data>
+		<authors>
+			<author>
+				<name>Gerits Aurelien</name>
+				<website href="http://www.magix-cms.com" />
+			</author>
+		</authors>
+		<release>
+			<date_create>21/01/2014</date_create>
+			<date_update>20/08/2018</date_update>
+			<version>3.0</version>
+			<phase>Beta</phase>
+		</release>
+		<support>
+			<ticket href="https://github.com/magix-cms/issues"></ticket>
+			<git href="https://github.com/magix-cms/"></git>
+		</support>
+	</data>
 </config>

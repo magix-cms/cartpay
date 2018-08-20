@@ -1,1 +1,0 @@
-{headlink rel="stylesheet" href="/{baseadmin}/min/?f=plugins/{$pluginName}/css/admin.css" concat={$concat} media="screen"}

@@ -3,7 +3,7 @@
  * MAGIX CMS Copyright (c) 2018 Gerits Aurelien,
  * Dual licensed under the MIT AND GPL Version 3 licenses.
  *
- * Date: January 31 13:34 2017
+ * Date: August 20 10:34 2018
  */-->
 <config>
 	<authorized>
@@ -23,8 +23,8 @@
 			<phase>Beta</phase>
 		</release>
 		<support>
-			<ticket href="https://github.com/magix-cms/issues"></ticket>
-			<git href="https://github.com/magix-cms/"></git>
+			<ticket href="https://github.com/magix-cms/cartpay/issues"></ticket>
+			<git href="https://github.com/magix-cms/cartpay/"></git>
 		</support>
 	</data>
 </config>

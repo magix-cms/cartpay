@@ -279,14 +279,14 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                                 'quantity' => ['title' => 'name', 'input' => null],
                                 'price_p' => ['type' => 'price', 'input' => null]
                             );
-                            $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_product', 'name_p', 'price_p'), $assign);
+                            $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p', 'price_p'), $assign);
                         }else{
                             $assign = array(
                                 'id_items',
                                 'name_p' => ['title' => 'name'],
                                 'quantity' => ['title' => 'name', 'input' => null]
                             );
-                            $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_product', 'name_p'), $assign);
+                            $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p'), $assign);
                         }
                         /*$country = new component_collections_country();
                         $this->template->assign('countries',$country->getCountries());*/

@@ -12,7 +12,9 @@
                     {$debug}
                 {/if}
                 <header class="panel-header {*panel-nav*}">
-                    <h2 class="panel-heading h5">{#edit_account#|ucfirst}</h2>
+                    <h2 class="panel-heading h5">
+                        {$type_cart = "type_"|cat:$cart.type_cart}
+                        {#edit_cartpay#|sprintf:#$type_cart#} {$cart.date_cart|date_format:"%d-%m-%Y %H:%M:%S"}</h2>
                 </header>
                 <div class="panel-body panel-body-form">
                     <div class="mc-message-container clearfix">

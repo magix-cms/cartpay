@@ -61,7 +61,8 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         $collectionLanguage,
         $header,
         $settings,
-        $setting;
+        $setting,
+        $tableaction,$tableform;
 
     /**
      * Les variables globales
@@ -84,9 +85,21 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         $cartpay = array(),
         $address = array(),
         $config = array(),
-        $id = 0;
+        $id = 0,
+        $status_order;
 
-
+    public $tableconfig = array(
+        'all' => array(
+            'id_cart',
+            'email' => ['title' => 'name'],
+            'firstname' => ['title' => 'name'],
+            'lastname' => ['title' => 'name'],
+            'type_cart' => ['type' => 'enum', 'enum' => 'type_', 'input' => null, 'class' => ''],
+            'nbr_product' => ['title' => 'name', 'input' => null],
+            'nbr_quantity' => ['title' => 'name', 'input' => null],
+            'date_register'
+        )
+    );
     /**
      * Modules
      * @var $module
@@ -113,6 +126,10 @@ class plugins_cartpay_admin extends plugins_cartpay_db
 
         $formClean = new form_inputEscape();
 
+        if (http_request::isGet('tableaction')) {
+            $this->tableaction = $formClean->simpleClean($_GET['tableaction']);
+            $this->tableform = new backend_controller_tableform($this,$this->template);
+        }
         // --- GET
         if (http_request::isGet('controller')) {
             $this->controller = $formClean->simpleClean($_GET['controller']);
@@ -151,16 +168,20 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         if (http_request::isPost('id')) {
             $this->id = (int)$formClean->simpleClean($_POST['id']);
         }
+        if (http_request::isPost('status_order')) {
+            $this->status_order = $formClean->simpleClean($_POST['status_order']);
+        }
+        //
     }
 
     /**
      * Method to override the name of the plugin in the admin menu
      * @return string
      */
-    /*public function getExtensionName()
+    public function getExtensionName()
     {
         return $this->template->getConfigVars('cartpay_plugin');
-    }*/
+    }
 
     /**
      * Assign data to the defined variable or return the data
@@ -168,13 +189,48 @@ class plugins_cartpay_admin extends plugins_cartpay_db
      * @param string|int|null $id
      * @param string $context
      * @param boolean $assign
+     * @param boolean $pagination
      * @return mixed
      */
-    private function getItems($type, $id = null, $context = null, $assign = true)
-    {
-        return $this->data->getItems($type, $id, $context, $assign);
+    private function getItems($type, $id = null, $context = null, $assign = true, $pagination = false) {
+        return $this->data->getItems($type, $id, $context, $assign, $pagination);
     }
+    /**
+     * @param $ajax
+     * @return mixed
+     * @throws Exception
+     */
+    public function tableSearch($ajax = false)
+    {
 
+        $results = $this->getItems('carts',null,null,true,true);
+        $params = array();
+
+        if($ajax) {
+            $params['section'] = 'pages';
+            $params['idcolumn'] = 'id_cart';
+            $params['activation'] = false;
+            $params['sortable'] = false;
+            $params['checkbox'] = true;
+            $params['edit'] = true;
+            $params['dlt'] = true;
+            $params['readonly'] = array();
+            $params['cClass'] = 'plugins_cartpay_admin';
+        }
+
+        $this->data->getScheme(
+            array('mc_cartpay', 'mc_profil', 'mc_cartpay_buyer'),
+            array('id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'date_register'),
+            $this->tableconfig['all']
+        );
+
+        return array(
+            'data' => $results,
+            'var' => 'carts',
+            'tpl' => 'index.tpl',
+            'params' => $params
+        );
+    }
     /**
      * Update data
      * @param array $config
@@ -188,6 +244,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             case 'cartConfig':
             case 'pwd':
             case 'config':
+            case 'status_order':
                 parent::update(
                     array('type' => $config['type']),
                     $config['data']
@@ -195,152 +252,163 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                 break;
         }
     }
-    public function run(){
-        if($this->action) {
-            switch ($this->action) {
-                /*case 'add':
-                    if(is_array($this->account) && !empty($this->account)) {
-                        if($this->account['passwd'] === $this->account['repeat_passwd']) {
-                            $this->account['passcrypt_ac'] = password_hash($this->account['passwd'], PASSWORD_DEFAULT);
-                            $this->account['keyuniqid_ac'] = filter_rsa::uniqID();
-                            $this->account['active_ac'] = isset($this->account['active_ac']) ? 1 : 0;
-                            unset($this->account['passwd']);
-                            unset($this->account['repeat_passwd']);
+    public function run()
+    {
+        if (isset($this->tableaction)) {
+            $this->tableform->run();
+        } else {
+            if ($this->action) {
+                switch ($this->action) {
+                    /*case 'add':
+                        if(is_array($this->account) && !empty($this->account)) {
+                            if($this->account['passwd'] === $this->account['repeat_passwd']) {
+                                $this->account['passcrypt_ac'] = password_hash($this->account['passwd'], PASSWORD_DEFAULT);
+                                $this->account['keyuniqid_ac'] = filter_rsa::uniqID();
+                                $this->account['active_ac'] = isset($this->account['active_ac']) ? 1 : 0;
+                                unset($this->account['passwd']);
+                                unset($this->account['repeat_passwd']);
 
-                            $this->add(array(
-                                    'type' => 'account',
-                                    'data' => $this->account
-                                )
-                            );
-                            $this->message->json_post_response(true,'add_redirect');
+                                $this->add(array(
+                                        'type' => 'account',
+                                        'data' => $this->account
+                                    )
+                                );
+                                $this->message->json_post_response(true,'add_redirect');
+                            }
                         }
-                    }
-                    else {
-                        $this->modelLanguage->getLanguage();
+                        else {
+                            $this->modelLanguage->getLanguage();
 
-                        $this->template->display('add.tpl');
-                    }
-                    break;*/
-                case 'edit':
-                    $status = false;
-                    $notify = 'error';
-                    if(!empty($this->tabs)) {
-                        switch ($this->tabs) {
-                            /*case 'account':
-                                $this->account['id'] = $this->id;
-                                $this->address['id'] = $this->id;
+                            $this->template->display('add.tpl');
+                        }
+                        break;*/
+                    case 'edit':
+                        $status = false;
+                        $notify = 'error';
+                        if (!empty($this->tabs)) {
+                            switch ($this->tabs) {
+                                /*case 'account':
+                                    $this->account['id'] = $this->id;
+                                    $this->address['id'] = $this->id;
 
+                                    $this->upd(array(
+                                        'type' => 'account',
+                                        'data' => array_map(function($v) { return $v === '' ? null : $v; }, $this->account)
+                                    ));
+                                    $this->upd(array(
+                                        'type' => 'address',
+                                        'data' => array_map(function($v) { return $v === '' ? null : $v; }, $this->address)
+                                    ));
+                                    $status = true;
+                                    $notify = 'update';
+                                    break;*/
+                                case 'config':
+                                    $config = $this->getItems('config', $this->edit, 'one', false);
+                                    $this->config['id'] = $config['id_config'];
+                                    $this->config['bank_wire'] = isset($this->config['bank_wire']) ? 1 : 0;
+                                    $this->config['type_order'] = $this->config['type_order'];
+                                    $this->config['account_owner'] = $this->config['account_owner'] === '' ? null : $this->config['account_owner'];
+                                    $this->config['bank_account'] = $this->config['bank_account'] === '' ? null : $this->config['bank_account'];
+                                    $this->config['bank_address'] = $this->config['bank_address'] === '' ? null : $this->config['bank_address'];
+
+                                    $this->config['email_config'] = $this->config['email_config'] === '' ? null : $this->config['email_config'];
+                                    $this->config['email_config_from'] = $this->config['email_config_from'] === '' ? null : $this->config['email_config_from'];
+
+                                    $this->upd(array(
+                                        'type' => 'config',
+                                        'data' => $this->config
+                                    ));
+
+                                    $status = true;
+                                    $notify = 'update';
+                                    break;
+                            }
+                            $this->message->json_post_response($status, $notify);
+                        } else {
+                            if(isset($this->status_order)){
                                 $this->upd(array(
-                                    'type' => 'account',
-                                    'data' => array_map(function($v) { return $v === '' ? null : $v; }, $this->account)
-                                ));
-                                $this->upd(array(
-                                    'type' => 'address',
-                                    'data' => array_map(function($v) { return $v === '' ? null : $v; }, $this->address)
+                                    'type' => 'status_order',
+                                    'data' => array(
+                                        'status_order'  =>  $this->status_order,
+                                        'id'=>$this->id
+                                    )
                                 ));
                                 $status = true;
                                 $notify = 'update';
-                                break;*/
-                            case 'config':
-                                $config = $this->getItems('config',$this->edit,'one',false);
-                                $this->config['id'] = $config['id_config'];
-                                $this->config['bank_wire'] = isset($this->config['bank_wire']) ? 1 : 0;
-                                $this->config['type_order'] = $this->config['type_order'];
-                                $this->config['account_owner'] = $this->config['account_owner'] === '' ? null : $this->config['account_owner'];
-                                $this->config['bank_account'] = $this->config['bank_account'] === '' ? null : $this->config['bank_account'];
-                                $this->config['bank_address'] = $this->config['bank_address'] === '' ? null : $this->config['bank_address'];
+                                $this->message->json_post_response($status, $notify);
 
-                                $this->config['email_config'] = $this->config['email_config'] === '' ? null : $this->config['email_config'];
-                                $this->config['email_config_from'] = $this->config['email_config_from'] === '' ? null : $this->config['email_config_from'];
+                            }else {
 
-                                $this->upd(array(
-                                    'type' => 'config',
-                                    'data' => $this->config
-                                ));
+                                //$this->modelLanguage->getLanguage();
+                                $defaultLanguage = $this->collectionLanguage->fetchData(array('context' => 'one', 'type' => 'default'));
+                                if(class_exists('plugins_account_admin')) {
+                                    $cart = $this->getItems('cart_account', $this->edit, 'one', false);
+                                }else{
+                                    $cart = $this->getItems('cart', $this->edit, 'one', false);
+                                }
+                                $this->template->assign('cart', $cart);
 
-                                $status = true;
-                                $notify = 'update';
-                                break;
+                                $this->getItems('product', array(':id' => $this->edit, ':default_lang' => $defaultLanguage['id_lang']), 'all');
+                                if ($cart['type_cart'] == 'sale') {
+                                    $assign = array(
+                                        'id_items',
+                                        'name_p' => ['title' => 'name'],
+                                        'quantity' => ['title' => 'name', 'input' => null],
+                                        'price_p' => ['type' => 'price', 'input' => null]
+                                    );
+                                    $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p', 'price_p'), $assign);
+                                } else {
+                                    $assign = array(
+                                        'id_items',
+                                        'name_p' => ['title' => 'name'],
+                                        'quantity' => ['title' => 'name', 'input' => null]
+                                    );
+                                    $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p'), $assign);
+                                }
+                                /*$country = new component_collections_country();
+                                $this->template->assign('countries',$country->getCountries());*/
+
+                                $this->template->display('edit.tpl');
+                            }
                         }
-                        $this->message->json_post_response($status,$notify);
-                    }
-                    else {
-                        //$this->modelLanguage->getLanguage();
-                        $defaultLanguage = $this->collectionLanguage->fetchData(array('context'=>'one','type'=>'default'));
-
-                        $cart = $this->getItems('cart',$this->edit,'one',false);
-                        $this->template->assign('cart',$cart);
-
-                        $this->getItems('product',array(':id'=>$this->edit,':default_lang'=>$defaultLanguage['id_lang']),'all');
-                        if($cart['type_cart'] == 'sale') {
-                            $assign = array(
-                                'id_items',
-                                'name_p' => ['title' => 'name'],
-                                'quantity' => ['title' => 'name', 'input' => null],
-                                'price_p' => ['type' => 'price', 'input' => null]
-                            );
-                            $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p', 'price_p'), $assign);
-                        }else{
-                            $assign = array(
-                                'id_items',
-                                'name_p' => ['title' => 'name'],
-                                'quantity' => ['title' => 'name', 'input' => null]
-                            );
-                            $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p'), $assign);
-                        }
-                        /*$country = new component_collections_country();
-                        $this->template->assign('countries',$country->getCountries());*/
-
-                        $this->template->display('edit.tpl');
-                    }
-                    break;
-                case 'delete':
-                    if(isset($this->id) && !empty($this->id)) {
-                        $this->del(
-                            array(
-                                'type' => 'account',
-                                'data' => array(
-                                    'id' => $this->id
+                        break;
+                    case 'delete':
+                        if (isset($this->id) && !empty($this->id)) {
+                            $this->del(
+                                array(
+                                    'type' => 'account',
+                                    'data' => array(
+                                        'id' => $this->id
+                                    )
                                 )
-                            )
-                        );
-                    }
-                    break;
-            }
-        }
-        else {
-            /*$this->modelLanguage->getLanguage();
-            $langs = $this->modelLanguage->setLanguage();
-            $opts = array();
-            foreach ($langs as $id => $iso) {
-                $opts[] = array(
-                    'v' => $id,
-                    'name' => $iso
+                            );
+                        }
+                        break;
+                }
+            } else {
+                /*$this->modelLanguage->getLanguage();
+                $langs = $this->modelLanguage->setLanguage();
+                $opts = array();
+                foreach ($langs as $id => $iso) {
+                    $opts[] = array(
+                        'v' => $id,
+                        'name' => $iso
+                    );
+                }*/
+                if(class_exists('plugins_account_admin')){
+                    $carts = $this->getItems('carts_account',null,null,true,true);
+                }else{
+                    $carts = $this->getItems('carts',null,null,true,true);
+                }
+                $this->template->assign('carts',$carts);
+                $this->getItems('config', $this->edit, 'one');
+
+                $this->data->getScheme(array('mc_cartpay', 'mc_profil', 'mc_cartpay_buyer'),
+                    array('id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'date_register'),
+                    $this->tableconfig['all']
                 );
-            }*/
-            $this->getItems('carts');
-            $this->getItems('config', $this->edit, 'one');
-            $assign = array(
-                'id_cart',
-                /*'iso_lang' => array(
-                    'title' => 'lang',
-                    'class' => 'fixed-td-md',
-                    'input' => array(
-                        'type' => 'select',
-                        'var' => false,
-                        'values' => $opts
-                    )
-                ),*/
-                'email_ac',
-                'firstname_ac',
-                'lastname_ac',
-                'type_cart' => ['type' => 'enum', 'enum' => 'type_', 'input' => null, 'class' => ''],
-                'nbr_product' => ['title' => 'name', 'input' => null],
-                'nbr_quantity' => ['title' => 'name', 'input' => null],
-                'date_register'
-            );
-            $this->data->getScheme(array('mc_cartpay', 'mc_profil'), array('id_cart', 'email_ac', 'firstname_ac', 'lastname_ac', 'type_cart', 'nbr_product', 'nbr_quantity', 'date_register'), $assign);
-            $this->template->display('index.tpl');
+                $this->template->display('index.tpl');
+            }
         }
     }
 }

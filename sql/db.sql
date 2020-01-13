@@ -56,6 +56,18 @@ CREATE TABLE IF NOT EXISTS `mc_cartpay_config` (
   PRIMARY KEY (`id_config`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
+CREATE TABLE IF NOT EXISTS `mc_cartpay_buyer` (
+  `id_buyer` int(11) UNSIGNED NOT NULL AUTO_INCREMENT,
+  `email_buyer` varchar(150) DEFAULT NULL,
+  `lastname_buyer` varchar(40) DEFAULT NULL,
+  `firstname_buyer` varchar(40) DEFAULT NULL,
+  `company_buyer` varchar(50) DEFAULT NULL,
+  `phone_buyer` varchar(45) DEFAULT NULL,
+  `vat_buyer` varchar(50) DEFAULT NULL,
+  `date_register` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  PRIMARY KEY (`id_buyer`)
+) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
+
 TRUNCATE `mc_cartpay_config`;
 
 INSERT INTO `mc_cartpay_config` (`id_config`, `type_order`, `bank_wire`, `account_owner`, `bank_account`, `bank_address`, `email_config`, `email_config_from`)

@@ -76,6 +76,12 @@
                     <input id="amount_q" type="text" name="cart[amount_q]" value="{$cart.amount_q}" placeholder="{#amount_order#}" disabled class="form-control" />
                 </div>
             </div>
+            <div class="col-xs-12 col-md-6">
+                <div class="form-group">
+                    <label for="currency_q">{#currency_order#|ucfirst} :</label>
+                    <input id="currency_q" type="text" name="cart[currency_q]" value="{$cart.currency_q}" placeholder="{#currency_order#}" disabled class="form-control" />
+                </div>
+            </div>
         </div>
     </fieldset>
 </form>

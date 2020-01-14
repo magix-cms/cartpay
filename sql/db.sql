@@ -40,6 +40,8 @@ CREATE TABLE IF NOT EXISTS `mc_cartpay_order` (
 CREATE TABLE IF NOT EXISTS `mc_cartpay_quotation` (
   `id_quot` int(7) UNSIGNED NOT NULL AUTO_INCREMENT,
   `id_cart` int(7) UNSIGNED NOT NULL,
+  `amount_q` decimal(12,0) DEFAULT NULL,
+  `currency_q` varchar(20) DEFAULT NULL,
   `date_register` timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY (`id_quot`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;

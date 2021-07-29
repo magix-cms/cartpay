@@ -168,25 +168,27 @@ class plugins_cartpay_db
                         }
                     }
 
-                    $sql = 'SELECT
- 								cart.id_cart,
- 								b.email_buyer AS email,
- 								b.firstname_buyer AS firstname,
- 								b.lastname_buyer AS lastname,
- 								(CASE 
- 								  WHEN o.id_cart IS NOT NULL THEN "sale"
- 								  WHEN q.id_cart IS NOT NULL THEN "quotation"
- 								  END) AS type_cart,
-                                count(items.id_items) AS nbr_product,
-                                SUM(items.quantity) AS nbr_quantity,
- 								cart.date_register
-							FROM `mc_cartpay` as cart
-							LEFT JOIN `mc_cartpay_buyer` as b USING (id_buyer)
-							JOIN `mc_cartpay_items` as items USING (id_cart)
-							LEFT JOIN `mc_cartpay_order` as o USING (id_cart)
-							LEFT JOIN `mc_cartpay_quotation` as q USING (id_cart)
-							WHERE cart.transmission_cart = 1 AND cart.id_account IS NULL ' . $cond.
-                        ' GROUP BY cart.id_cart DESC'.$limit;
+                    $sql = 'SELECT * FROM (
+                                SELECT
+                                    cart.id_cart,
+                                    b.email_buyer AS email,
+                                    b.firstname_buyer AS firstname,
+                                    b.lastname_buyer AS lastname,
+                                    (CASE 
+                                      WHEN o.id_cart IS NOT NULL THEN "sale"
+                                      WHEN q.id_cart IS NOT NULL THEN "quotation"
+                                      END) AS type_cart,
+                                    count(items.id_items) AS nbr_product,
+                                    SUM(items.quantity) AS nbr_quantity,
+                                    cart.date_register
+                                FROM `mc_cartpay` as cart
+                                LEFT JOIN `mc_cartpay_buyer` as b USING (id_buyer)
+                                JOIN `mc_cartpay_items` as items USING (id_cart)
+                                LEFT JOIN `mc_cartpay_order` as o USING (id_cart)
+                                LEFT JOIN `mc_cartpay_quotation` as q USING (id_cart)
+                                WHERE cart.transmission_cart = 1 AND cart.id_account IS NULL ' . $cond.
+                        ' ORDER BY cart.id_cart DESC) carts WHERE carts.id_cart IS NOT NULL AND carts.id_cart > 0
+                         GROUP BY carts.id_cart '.$limit;
                     break;
                 case 'product':
                     $sql = 'SELECT item.id_items,item.quantity,p.price_p,c.name_p
@@ -197,7 +199,40 @@ class plugins_cartpay_db
                             WHERE c.id_lang = :default_lang AND item.id_cart = :id';
                     break;
                 case 'catalog':
-                    $sql = 'SELECT 
+					$sql = 'SELECT 
+       							c.id_cat,
+								cat.name_cat, 
+								cat.url_cat, 
+								p.id_product, 
+								p.reference_p, 
+								p.price_p, 
+								pc.name_p, 
+								pc.longname_p, 
+								pc.resume_p, 
+								pc.content_p, 
+								pc.url_p, 
+								pc.id_lang,
+								lang.iso_lang, 
+								pc.last_update, 
+								img.name_img,
+								COALESCE(imgc.alt_img, pc.longname_p, pc.name_p) as alt_img,
+								COALESCE(imgc.title_img, imgc.alt_img, pc.longname_p, pc.name_p) as title_img,
+								COALESCE(imgc.caption_img, imgc.title_img, imgc.alt_img, pc.longname_p, pc.name_p) as caption_img,
+								pc.seo_title_p,
+								pc.seo_desc_p
+                            FROM mc_cartpay_items AS item 
+                            JOIN mc_catalog_product AS p ON(item.id_product = p.id_product)
+                            JOIN mc_catalog_product_content AS pc ON ( p.id_product = pc.id_product )
+							JOIN mc_catalog catalog ON(catalog.id_product = p.id_product and catalog.default_c = 1)
+							JOIN mc_catalog_cat AS c ON ( catalog.id_cat = c.id_cat )
+							JOIN mc_catalog_cat_content AS cat ON ( c.id_cat = cat.id_cat and pc.id_lang = cat.id_lang)
+							LEFT JOIN mc_catalog_product_img img ON (p.id_product = img.id_product AND img.default_img = 1)
+							LEFT JOIN mc_catalog_product_img_content imgc ON (img.id_img = imgc.id_img and pc.id_lang = imgc.id_lang)
+							JOIN mc_lang AS lang ON ( pc.id_lang = lang.id_lang )
+                            WHERE pc.id_lang = :default_lang 
+						  	AND item.id_cart = :id
+						  	ORDER BY item.date_register';
+                    /*$sql = 'SELECT
 								item.id_items,
 								item.quantity,
 								p.price_p,
@@ -219,8 +254,11 @@ class plugins_cartpay_db
                     		LEFT JOIN mc_catalog_product_img AS img ON (img.id_product = p.id_product and img.default_img = 1)
                         	LEFT JOIN mc_catalog_product_img_content AS ic ON (img.id_img = ic.id_img AND ic.id_lang = pc.id_lang)
                     		JOIN mc_lang AS lang ON ( pc.id_lang = lang.id_lang )
-                    		WHERE pc.id_lang = :default_lang AND item.id_cart = :id GROUP BY item.id_items';
+                    		WHERE pc.id_lang = :default_lang AND item.id_cart = :id GROUP BY item.id_items';*/
                     break;
+				case 'account_cart_items':
+					$sql = 'SELECT * FROM `mc_cartpay_items` WHERE id_cart = :id';
+					break;
 			}
 
 			return $sql ? component_routing_db::layer()->fetchAll($sql, $params) : null;
@@ -231,9 +269,15 @@ class plugins_cartpay_db
                     $sql = 'SELECT *
 							FROM `mc_account` as a
 							JOIN `mc_account_address` as aa USING(`id_account`)
-							JOIN `mc_account_social` as asos USING(`id_account`)
 							JOIN `mc_lang` as l USING(`id_lang`)
 							WHERE `id_account` = :id';
+                    break;
+                case 'buyer':
+                    $sql = 'SELECT 
+       							b.*
+							FROM `mc_cartpay` c  
+							LEFT JOIN `mc_cartpay_buyer` b using (id_buyer)
+							WHERE c.id_cart = :id';
                     break;
 				case 'config':
 					$sql = 'SELECT * FROM `mc_cartpay_config` ORDER BY id_config DESC LIMIT 0,1';
@@ -293,13 +337,64 @@ class plugins_cartpay_db
 				case 'session':
 					$sql = 'SELECT *
 							FROM mc_cartpay
-							WHERE session_key_cart = :session_key_cart';
+							WHERE session_key_cart = :session_key_cart
+							AND transmission_cart = 0';
+					break;
+				case 'account_session':
+					$sql = "SELECT * 
+							FROM `mc_cartpay`
+							WHERE id_account = :id
+							AND id_cart NOT IN (
+								SELECT id_cart FROM mc_cartpay_order WHERE status_order = 'paid' OR status_order = 'failed'
+							)
+							AND transmission_cart = 0
+							ORDER BY id_cart DESC
+							LIMIT 1";
 					break;
                 case 'product':
                     $sql = 'SELECT *
 							FROM mc_cartpay_items
 							WHERE id_cart = :id AND id_product = :id_product';
                     break;
+				case 'product_price':
+					$sql = 'SELECT price_p FROM `mc_catalog_product` WHERE id_product = :id';
+					break;
+				case 'item':
+					$sql = 'SELECT 
+								item.id_items,
+								item.quantity,
+								catalog.* ,
+								cat.name_cat, 
+								cat.url_cat, 
+								p.*, 
+								pc.name_p, 
+								pc.longname_p, 
+								pc.resume_p, 
+								pc.content_p, 
+								pc.url_p, 
+								pc.id_lang,
+								lang.iso_lang, 
+								pc.last_update, 
+								img.name_img,
+								COALESCE(imgc.alt_img, pc.longname_p, pc.name_p) as alt_img,
+								COALESCE(imgc.title_img, imgc.alt_img, pc.longname_p, pc.name_p) as title_img,
+								COALESCE(imgc.caption_img, imgc.title_img, imgc.alt_img, pc.longname_p, pc.name_p) as caption_img,
+								pc.seo_title_p,
+								pc.seo_desc_p
+                            FROM mc_cartpay_items AS item 
+                            JOIN mc_catalog_product AS p ON(item.id_product = p.id_product)
+                            JOIN mc_catalog_product_content AS pc ON ( p.id_product = pc.id_product )
+							JOIN mc_catalog catalog ON(catalog.id_product = p.id_product and catalog.default_c = 1)
+							JOIN mc_catalog_cat AS c ON ( catalog.id_cat = c.id_cat )
+							JOIN mc_catalog_cat_content AS cat ON ( c.id_cat = cat.id_cat and pc.id_lang = cat.id_lang)
+							LEFT JOIN mc_catalog_product_img img ON (p.id_product = img.id_product AND img.default_img = 1)
+							LEFT JOIN mc_catalog_product_img_content imgc ON (img.id_img = imgc.id_img and pc.id_lang = imgc.id_lang)
+							JOIN mc_lang AS lang ON ( pc.id_lang = lang.id_lang )
+                            WHERE pc.id_lang = :default_lang 
+						  	AND item.id_cart = :id
+							AND item.id_product = :id_product
+						  	ORDER BY item.date_register';
+					break;
 				case 'idFromIso':
 					$sql = 'SELECT `id_lang` FROM `mc_lang` WHERE `iso_lang` = :iso';
 					break;
@@ -308,6 +403,9 @@ class plugins_cartpay_db
 							FROM mc_cartpay_items
 							WHERE id_cart = :id';
                     break;
+				case 'order':
+				case 'quotation':
+					$sql = 'SELECT * FROM `mc_cartpay_'.$config['type'].'` WHERE id_cart = :id_cart ORDER BY date_register DESC LIMIT 0,1';
 			}
 
 			return $sql ? component_routing_db::layer()->fetch($sql, $params) : null;
@@ -326,22 +424,24 @@ class plugins_cartpay_db
 		$sql = '';
 
 		switch ($config['type']) {
-			case 'account':
-				$queries = array(
-					array('request' => 'INSERT INTO `mc_account` (`id_lang`, `email_ac`, `passcrypt_ac`, `keyuniqid_ac`, `firstname_ac`, `lastname_ac`, `active_ac`, `date_create`) VALUES (:id_lang, :email_ac, :passcrypt_ac, :keyuniqid_ac, :firstname_ac, :lastname_ac, :active_ac, NOW())', 'params' => $params),
-					array('request' => 'SET @account_id = LAST_INSERT_ID()', 'params' => array()),
-					array('request' => 'INSERT INTO `mc_account_address` (`id_account`) VALUE (@account_id)', 'params' => array()),
-					array('request' => 'INSERT INTO `mc_account_social` (`id_account`) VALUE (@account_id)', 'params' => array())
-				);
+            case 'buyer':
+                $id_cart = $params['id_cart'];
+                unset($params['id_cart']);
+                $queries = array(
+                    array('request' => 'INSERT INTO `mc_cartpay_buyer` (`email_buyer`, `lastname_buyer`, `firstname_buyer`, `company_buyer`, `phone_buyer`, `vat_buyer`, `date_register`) 
+                    VALUES (:email_buyer, :lastname_buyer, :firstname_buyer, :company_buyer, :phone_buyer, :vat_buyer, NOW())', 'params' => $params),
+                    array('request' => 'SET @buyer_id = LAST_INSERT_ID()', 'params' => array()),
+                    array('request' => 'UPDATE `mc_cartpay` SET `id_buyer` = @buyer_id WHERE `mc_cartpay`.`id_cart` = :id_cart', 'params' => array('id_cart'=>$id_cart))
+                );
 
-				try {
-					component_routing_db::layer()->transaction($queries);
-					return true;
-				}
-				catch (Exception $e) {
-					return 'Exception reçue : '.$e->getMessage();
-				}
-				break;
+                try {
+                    component_routing_db::layer()->transaction($queries);
+                    return true;
+                }
+                catch (Exception $e) {
+                    return 'Exception reçue : '.$e->getMessage();
+                }
+                break;
 			case 'session':
 				$sql = 'INSERT INTO `mc_cartpay` (`id_account`,`session_key_cart`)
 						VALUES (:id_account,:session_key_cart)';
@@ -351,9 +451,13 @@ class plugins_cartpay_db
 						VALUES (:id_cart,:id_product,:quantity)';
                 break;
             case 'quotation':
-                $sql = 'INSERT INTO `mc_cartpay_quotation` (id_cart)
-						VALUES (:id_cart)';
+                $sql = 'INSERT INTO `mc_cartpay_quotation` (id_cart, step_quotation, amount_quotation, currency_quotation)
+						VALUES (:id_cart, :step_quotation, :amount_quotation, :currency_quotation)';
                 break;
+			case 'order':
+				$sql = 'INSERT INTO `mc_cartpay_order` (id_cart, step_order, amount_order, currency_order, transaction_id, payment_order, status_order)
+						VALUES (:id_cart, :step_order, :amount_order, :currency_order, :transaction_id, :payment_order, :status_order)';
+				break;
 		}
 
 		if($sql === '') return 'Unknown request asked';
@@ -382,21 +486,39 @@ class plugins_cartpay_db
 			case 'config':
 				$sql = 'UPDATE `mc_cartpay_config`
 						SET 
-							`type_order` = :type_order,
+							`quotation_enabled` = :quotation_enabled,
+							`order_enabled` = :order_enabled,
 							`bank_wire` = :bank_wire,
 							`account_owner` = :account_owner,
 							`bank_account` = :bank_account,
 							`bank_address` = :bank_address,
 							`email_config` = :email_config,
-							`email_config_from` = :email_config_from
+							`email_config_from` = :email_config_from,
+							`billing_address` = :billing_address,
+							`show_price` = :show_price
 						WHERE id_config = :id';
 				break;
-            case 'quantity':
+            case 'product':
                 $sql = 'UPDATE `mc_cartpay_items` 
                 SET 
                   quantity = :quantity
                 WHERE `id_cart` = :id_cart AND id_product = :id_product';
                 break;
+			case 'buyer':
+				$sql = "UPDATE `mc_cartpay_buyer`
+						SET `firstname_buyer` = :firstname_buyer,
+							`lastname_buyer` = :lastname_buyer,
+							`email_buyer` = :email_buyer,
+							`phone_buyer` = :phone_buyer,
+							`company_buyer` = :company_buyer,
+							`vat_buyer` = :vat_buyer
+						WHERE `id_buyer` = :id";
+				break;
+			case 'cart_account':
+				$sql = "UPDATE `mc_cartpay`
+						SET `id_account` = :id_account
+						WHERE `id_cart` = :id_cart";
+				break;
             case 'session':
                 $sql = 'UPDATE `mc_cartpay`
 						SET `id_account` = :id_account
@@ -412,6 +534,28 @@ class plugins_cartpay_db
 						SET `status_order` = :status_order
 						WHERE `id_cart` = :id';
                 break;
+            case 'billing':
+            case 'billing_address':
+                $sql = 'UPDATE `mc_cartpay_buyer`
+						SET `street_billing` = :street_billing,
+						`postcode_billing` = :postcode_billing,
+						`city_billing` = :city_billing,
+						`country_billing` = :country_billing
+						WHERE `id_buyer` = :id';
+                break;
+			case 'order_payment':
+				$sql = "UPDATE `mc_cartpay_order` SET payment_order = :payment_order WHERE id_order = :id";
+				break;
+			case 'order_step':
+			case 'quotation_step':
+			    $type = substr($config['type'], 0, -5);
+				$sql = 'UPDATE `mc_cartpay_'.$type.'` SET step_'.$type.' = :step WHERE id_'.$type.' = :id';
+				break;
+			case 'order_info':
+			case 'quotation_info':
+			    $type = substr($config['type'], 0, -5);
+				$sql = 'UPDATE `mc_cartpay_'.$type.'` SET info_'.$type.' = :info WHERE id_'.$type.' = :id';
+				break;
 		}
 
 		if($sql === '') return 'Unknown request asked';
@@ -452,6 +596,9 @@ class plugins_cartpay_db
 			case 'currentSession':
 				$sql = 'DELETE FROM `mc_account_session`
 						WHERE `id_account` = :id_account';
+				break;
+			case 'product':
+				$sql = 'DELETE FROM `mc_cartpay_items` WHERE id_cart = :id_cart AND id_product = :id_product';
 				break;
 		}
 

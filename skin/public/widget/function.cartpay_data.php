@@ -44,38 +44,24 @@
  * Name: cartpay_data
  * Purpose:
  * USAGE: {cartpay_data}
- * Output:   
+ * Output:
  * @link http://www.magix-dev.be
  * @author Gerits Aurelien
  * @version 1.5
- * @param array
- * @param Smarty
+ * @param $params
+ * @param $template
  * @return string
+ * @throws Exception
  */
-function smarty_function_cartpay_data($params, $template){
-    $settings = new frontend_model_setting();
-    $set = $settings->getSetting('ssl');
-    $session = new http_session($set['ssl']);
-	$cart = new plugins_cartpay_public();
-
-	$modelTemplate = new frontend_model_template();
+function smarty_function_cartpay_data($params, $smarty){
+    $modelTemplate = $smarty->tpl_vars['modelTemplate']->value instanceof frontend_model_template ? $smarty->tpl_vars['modelTemplate']->value : new frontend_model_template();
+	$cart = new plugins_cartpay_public($modelTemplate);
 	$modelTemplate->addConfigFile(
 		array(component_core_system::basePath().'/plugins/cartpay/i18n/'),
 		array('public_local_'),
 		false
 	);
 	$modelTemplate->configLoad();
-
-    $session->start('mc_cartpay');
-    $array_sess = array(
-        'session_key_cart'     => session_id()
-    );
-    $session->run($array_sess);
-    //$session->debug();
-
-    $template->assign('cart',$cart->cartData());
-    $template->assign('config_cart',$cart->getConfig());
-
-	/*$template->assign('hashurl',$member->hashUrl());
-	$template->assign('account',$member->accountData());*/
+	$smarty->assign('cart',$cart->cartData());
+    $smarty->assign('config_cart',$cart->getConfig());
 }

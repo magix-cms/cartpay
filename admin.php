@@ -306,13 +306,17 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                                     $config = $this->getItems('config', $this->edit, 'one', false);
                                     $this->config['id'] = $config['id_config'];
                                     $this->config['bank_wire'] = isset($this->config['bank_wire']) ? 1 : 0;
-                                    $this->config['type_order'] = $this->config['type_order'];
+                                    $this->config['quotation_enabled'] = isset($this->config['quotation_enabled']) ? 1 : 0;
+                                    $this->config['order_enabled'] = isset($this->config['order_enabled']) ? 1 : 0;
+                                    //$this->config['type_order'] = $this->config['type_order'];
                                     $this->config['account_owner'] = $this->config['account_owner'] === '' ? null : $this->config['account_owner'];
                                     $this->config['bank_account'] = $this->config['bank_account'] === '' ? null : $this->config['bank_account'];
                                     $this->config['bank_address'] = $this->config['bank_address'] === '' ? null : $this->config['bank_address'];
 
                                     $this->config['email_config'] = $this->config['email_config'] === '' ? null : $this->config['email_config'];
                                     $this->config['email_config_from'] = $this->config['email_config_from'] === '' ? null : $this->config['email_config_from'];
+                                    $this->config['billing_address'] = isset($this->config['billing_address']) ? 1 : 0;
+                                    $this->config['show_price'] = isset($this->config['show_price']) ? 1 : 0;
 
                                     $this->upd(array(
                                         'type' => 'config',

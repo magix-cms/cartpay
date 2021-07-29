@@ -14,6 +14,18 @@ var cartpay = (function($, window, document, undefined){
                     $('#bank_account').rules('remove');
                 }
             });
+            /*$("#edit_config").validate({
+                rules: {
+                    "acConfig[quotation_enabled]": {
+                        require_from_group: [1, ".type_order"]
+                    },
+                    "acConfig[order_enabled]": {
+                        require_from_group: [1, ".type_order"]
+                    },
+                }
+            });*/
+            $("#quotation_enabled").rules('add',{require_from_group: [1, ".type_order"]});
+            $("#order_enabled").rules('add',{require_from_group: [1, ".type_order"]});
         }
     };
 })(jQuery, window, document);

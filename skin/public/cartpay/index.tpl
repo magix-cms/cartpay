@@ -1,104 +1,79 @@
 {extends file="layout.tpl"}
-{block name="title"}{seo_rewrite conf=['level'=>'root','type'=>'title','default'=>#seo_cartpay_title#]}{/block}
-{block name="description"}{seo_rewrite conf=['level'=>'root','type'=>'description','default'=>#seo_cartpay_desc#]}{/block}
-{block name='body:id'}private{/block}
+{block name="title"}{seo_rewrite conf=['level'=>'root','type'=>'title','default'=>{#seo_cartpay_title#}]}{/block}
+{block name="description"}{seo_rewrite conf=['level'=>'root','type'=>'description','default'=>{#seo_cartpay_desc#}]}{/block}
+{block name='body:id'}cart-resume{/block}
 
 {block name="article:content"}
-    <header>
-        <h1 class="text-center">{#my_cart#|ucfirst}</h1>
-    </header>
-    {*<pre>
-        {$config_cart|print_r}
-    {$product_cart|print_r}
-    {$session_cart|print_r}
-    {$account|print_r}
-    </pre>*}
-    {if $config_cart.type_order eq "quotation"}
-    <table class="table table-striped table-hover">
-    <thead>
-        <tr>
-            <th>
-                {#product#|ucfirst}
-            </th>
-            <th>
-                {#quantity#|ucfirst}
-            </th>
-        </tr>
-    </thead>
-        <tbody>
-        {foreach $product_cart as $key}
-        <tr>
-            <td>
-                <a href="{$key.url}">{$key.name_p}</a>
-            </td>
-            <td>
-                {$key.quantity}
-            </td>
-        </tr>
-        {/foreach}
-        </tbody>
-    </table>
-        {if $account}
-        <ul class="list-unstyled">
-            <li>
-                {#lastname_ac#|ucfirst} : {$account.lastname_ac}
-            </li>
-            <li>
-                {#firstname_ac#|ucfirst} : {$account.firstname_ac}
-            </li>
-            <li>
-                {#email_ac#|ucfirst} : {$account.email_ac}
-            </li>
+    <h1 class="text-center">{#my_cart#}</h1>
+    <div id="shopping-cart"{if !$cart.nb_items} class="empty-cart"{/if}>
+        <ul class="shopping-cart-items">
+            {include file="cartpay/loop/cart-item.tpl" data=$cart.items}
         </ul>
-            {if $product_cart != null}
-                <form id="cartpay-form" class="validate_form cartpay_refresh" method="post" action="{geturl}/{getlang}/cartpay/?action=send">
-                    {*<div class="row">
-                        <fieldset class="col-ph-12 col-md-6">
-                            <legend>{#particulars#|ucfirst}</legend>
-                            <div class="row">
-                                <div class="col-ph-12 col-sm-6">
-                                    <div class="form-group">
-                                        <label for="firstname_ac">{#firstname_ac#|ucfirst} :</label>
-                                        <input id="firstname_ac" type="text" name="cart[firstname_ac]" value="{$account.firstname_ac}" placeholder="{#ph_firstname#|ucfirst}" class="form-control" />
-                                    </div>
-                                </div>
-                                <div class="col-ph-12 col-sm-6">
-                                    <div class="form-group">
-                                        <label for="lastname_ac">{#lastname_ac#|ucfirst} :</label>
-                                        <input id="lastname_ac" type="text" name="cart[lastname_ac]" value="{$account.lastname_ac}" placeholder="{#ph_lastname#|ucfirst}" class="form-control"  />
-                                    </div>
-                                </div>
+        <div class="cart-total">
+            <div class="tot row">
+                <div class="col-6 text-right">{#total_products#}</div>
+                <div class="col-6"><span class="tot_products">{if $setting.price_display.value === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
+            </div>
+            <div class="tot row">
+                <div class="col-6 text-right">{#total_exc#}</div>
+                <div class="col-6"><span class="tot_exc">{$cart.total.exc|string_format:"%.2f"}</span>&nbsp;€</div>
+            </div>
+            {foreach $cart.total.vat as $rate => $vat}
+                <div class="tot row">
+                    <div class="col-6 text-right">{#total_vat#}&nbsp;<small>({$rate}%)</small></div>
+                    <div class="col-6"><span class="tot_vat_{$rate}">{$vat|string_format:"%.2f"}</span>&nbsp;€</div>
+                </div>
+            {/foreach}
+            <div class="tot row">
+                <div class="col-6 text-right">{#total_inc#}</div>
+                <div class="col-6"><span class="tot_inc">{if $setting.price_display.value === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
+            </div>
+        </div>
+        <div class="actions">
+            <div class="row row-center">
+                {if $config_cart.quotation_enabled}
+                    <div class="col-12 col-xs-6 col-lg-4">
+                        <div class="action quotation">
+                            <div class="icon">
+                                <i class="material-icons">assignment</i>
                             </div>
-                            <div class="form-group">
-                                <label for="email_ac">{#email_ac#|ucfirst}&nbsp;*</label>
-                                <input id="email_ac" type="email" name="cart[email_ac]" value="{$account.email_ac}" placeholder="{#ph_email#}" class="form-control required" required/>
+                            <div class="text">
+                                <p class="h3">{#title_quotation#}</p>
+                                <p class="help-block">
+                                    {#txt_quotation#}
+                                </p>
                             </div>
-                        </fieldset>
-                    </div>*}
-                    <button type="submit" class="btn btn-box btn-invert btn-main-theme">{#pn_cartpay_send#|ucfirst}</button>
-                </form>
-            {/if}
-            {else}
-            {#connect_to_quotation#} {#connection#}
-        {/if}
-    {/if}
+                            <a href="{$quotationFirstStep}" title="{#continue_quotation#}"><span class="sr-only">{#continue_quotation#}</span><i class="material-icons">keyboard_arrow_right</i></a>
+                        </div>
+                    </div>
+                {/if}
+                {if $config_cart.order_enabled && !empty($available_payment_methods)}
+                    <div class="col-12 col-xs-6 col-lg-4">
+                        <div class="action order">
+                            <div class="icon">
+                                <i class="material-icons">credit_card</i>
+                                <i class="material-icons">verified_user</i>
+                            </div>
+                            <div class="text">
+                                <p class="h3">{#title_order#}</p>
+                                <p class="help-block">
+                                    {#txt_order#}
+                                </p>
+                            </div>
+                            <a href="{$orderFirstStep}" title="{#continue_order#}"><span class="sr-only">{#continue_order#}</span><i class="material-icons">keyboard_arrow_right</i></a>
+                        </div>
+                    </div>
+                {/if}
+            </div>
+        </div>
+        <p class="cart-empty">{#empty_cart#}</p>
+    </div>
 {/block}
 
 {block name="foot"}
 
-    {script src="/min/?g=form" concat=$concat type="javascript"}
-    {script src="/min/?f=skin/{template}/js/form.min.js" concat=$concat type="javascript"}
-    {if {getlang} !== "en"}
-        {script src="/min/?f=libjs/vendor/localization/messages_{getlang}.js" concat=$concat type="javascript"}
-    {/if}
-    <script type="text/javascript">
-        $(function(){
-            if (typeof globalForm == "undefined")
-            {
-                console.log("globalForm is not defined");
-            }else{
-                globalForm.run();
-            }
-        });
-    </script>
+    {capture name="formVendors"}/min/?g=form{/capture}
+    <script src="{if $setting.concat.value}{$smarty.capture.formVendors|concat_url:'js'}{else}{$smarty.capture.formVendors}{/if}"></script>
+    {capture name="globalForm"}/min/?f=skin/{$theme}/js/form.min.js{if {$lang} !== "en"},libjs/vendor/localization/messages_{$lang}.js{/if}{/capture}
+    <script src="{if $setting.concat.value}{$smarty.capture.globalForm|concat_url:'js'}{else}{$smarty.capture.globalForm}{/if}" async defer></script>
 {/block}

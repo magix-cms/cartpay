@@ -17,7 +17,7 @@
                 </div>
             </div>
         </div>
-        <div class="row">
+        {*<div class="row">
             <div class="col-xs-12 col-md-6">
                 <div class="form-group">
                     <label for="type_order">{#select_type#|ucfirst}&nbsp;*:</label>
@@ -27,6 +27,44 @@
                     </select>
                 </div>
             </div>
+        </div>*}
+        <hr>
+        <div class="form-group">
+            <div class="switch">
+                <input type="checkbox" id="quotation_enabled" name="acConfig[quotation_enabled]" class="switch-native-control type_order"{if $config.quotation_enabled || (!$config.quotation_enabled && !$config.order_enabled)} checked{/if} />
+                <div class="switch-bg">
+                    <div class="switch-knob"></div>
+                </div>
+            </div>
+            <label for="quotation_enabled">{#quotation_enabled#}&nbsp;?</label>
+        </div>
+        <div class="form-group">
+            <div class="switch">
+                <input type="checkbox" id="order_enabled" name="acConfig[order_enabled]" class="switch-native-control type_order"{if $config.order_enabled} checked{/if} />
+                <div class="switch-bg">
+                    <div class="switch-knob"></div>
+                </div>
+            </div>
+            <label for="order_enabled">{#order_enabled#}&nbsp;?</label>
+        </div>
+        <hr>
+        <div class="form-group">
+            <div class="switch">
+                <input type="checkbox" id="billing_address" name="acConfig[billing_address]" class="switch-native-control"{if $config.billing_address} checked{/if} />
+                <div class="switch-bg">
+                    <div class="switch-knob"></div>
+                </div>
+            </div>
+            <label for="billing_address">{#billing_address#}&nbsp;?</label>
+        </div>
+        <div class="form-group">
+            <div class="switch">
+                <input type="checkbox" id="show_price" name="acConfig[show_price]" class="switch-native-control"{if $config.show_price} checked{/if} />
+                <div class="switch-bg">
+                    <div class="switch-knob"></div>
+                </div>
+            </div>
+            <label for="show_price">{#show_price#}&nbsp;?</label>
         </div>
         <div class="form-group">
             <div class="switch">
@@ -37,7 +75,7 @@
             </div>
             <label for="bank_wire">{#bank_wire#}&nbsp;?</label>
         </div>
-        <div id="bank" class="collapse">
+        <div id="bank" class="collapse{if $config.bank_wire} in{/if}">
             <div class="row">
                 <div class="col-xs-12 col-md-6">
                     <div class="form-group">

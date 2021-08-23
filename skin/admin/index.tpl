@@ -41,7 +41,7 @@
 {/block}
 
 {block name="foot" append}
-    {capture name="scriptForm"}/{baseadmin}/min/?f=plugins/cartpay/js/admin.min.js{/capture}
+    {capture name="scriptForm"}/{baseadmin}/min/?f=libjs/vendor/additional-methods.1.17.0.min.js,plugins/cartpay/js/admin.min.js{/capture}
     {script src=$smarty.capture.scriptForm type="javascript"}
     <script type="text/javascript">
         $(function() {

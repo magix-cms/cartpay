@@ -1,5 +1,5 @@
 <div class="row">
-<form id="edit_config" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;action=edit&amp;tabs=config" method="post" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-6">
+<form id="edit_config" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;tabs=config&amp;action=edit" method="post" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-6">
     <fieldset>
         <div class="row">
             <div class="col-xs-12 col-md-6">

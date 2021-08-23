@@ -294,6 +294,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
             case 'billing':
             case 'session':
             case 'product':
+            case 'status_order':
             case 'status':
                 parent::update(
                     ['type' => $config['type']],
@@ -1061,8 +1062,10 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
 				if(!empty($data)) {
 					$contacts = $contact->getContact();
-					$from = $contact->getSender();
-
+					//$from = $contact->getSender();
+                    $mail_settings = new frontend_model_setting($this->template);
+                    $from = $mail_settings->getSetting('mail_sender');
+                    $file = null;
 					if($contacts) {
 						//Initialisation du contenu du message
 						$send = false;
@@ -1073,7 +1076,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 								$data,
 								'',
 								$buyer['email'],
-								$from['mail_sender']
+                                $from['value'],//$from['mail_sender'],
+                                $file
 							);
 						}
 						//$this->getNotify($send ? 'success' : 'error');
@@ -1090,7 +1094,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 						$data,
 						'',
 						$noreply,
-						$from['mail_sender']
+                        $from['value'],//$from['mail_sender'],
+                        $file
 					);
 					//if(!$send) $send = $isSend;
 					//$this->getNotify($send ? 'success' : 'error');
@@ -1311,6 +1316,47 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 												}
 											}
 
+
+                                            if(isset($this->status)) {
+                                                if($this->action === 'order') {
+                                                    $this->loadModules();
+                                                    if($record['payment_order'] !== 'bank_wire' && isset($this->mods[$record['payment_order']])){
+                                                        $log = new debug_logger(MP_LOG_DIR);
+                                                        $log->tracelog('start payment');
+                                                        $log->tracelog(json_encode(array('id'=>$record['id_order'],'payment_status'=>$this->mods[$record['payment_order']]->getPaymentStatus())));
+                                                        //$log->tracelog('sleep');
+
+                                                        if(method_exists($this->mods[$record['payment_order']],'getPaymentStatus')){
+                                                            //$log->tracelog('start payment');
+                                                            $log->tracelog(json_encode(array(
+                                                                'id' => $record['id_order'],
+                                                                'status_order' => $this->mods[$record['payment_order']]->getPaymentStatus(),
+                                                                'tc' => 1
+                                                            )));
+
+                                                            $log->tracelog('sleep');
+
+                                                            $this->upd([
+                                                                'type' => 'status_order',
+                                                                'data' => [
+                                                                    'id' => $this->current_cart['id_cart'],
+                                                                    'status_order' => $this->mods[$record['payment_order']]->getPaymentStatus()
+                                                                ]
+                                                            ]);
+                                                            if($this->mods[$record['payment_order']]->getPaymentStatus() === "paid") {
+                                                                $this->upd([
+                                                                    'type' => 'status',
+                                                                    'data' => [
+                                                                        'id' => $this->current_cart['id_cart'],
+                                                                        'tc' => 1
+                                                                    ]
+                                                                ]);
+                                                                $this->cart->emptyCart();
+                                                            }
+                                                        }
+                                                    }
+                                                }
+                                            }
 											// Set the done step data based on the action type and the status of the process
 											$this->done = $this->getDoneStepStatus($this->action, $this->status);
 											$this->template->assign('done',$this->done);

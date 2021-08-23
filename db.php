@@ -297,7 +297,7 @@ class plugins_cartpay_db
  								  WHEN a.id_account IS NOT NULL THEN a.lastname_ac
  								  WHEN b.id_buyer IS NOT NULL THEN b.lastname_buyer
  								  END) AS lastname,
- 								o.*,q.id_quot,
+ 								o.*,q.id_quotation,
                           (CASE 
                           WHEN o.id_cart IS NOT NULL THEN "sale"
                           WHEN q.id_cart IS NOT NULL THEN "quotation"
@@ -319,7 +319,7 @@ class plugins_cartpay_db
                                 b.email_buyer AS email,
  								b.firstname_buyer AS firstname,
  								b.lastname_buyer AS lastname,
- 								o.*,q.id_quot,
+ 								o.*,q.id_quotation,
                           (CASE 
                           WHEN o.id_cart IS NOT NULL THEN "sale"
                           WHEN q.id_cart IS NOT NULL THEN "quotation"

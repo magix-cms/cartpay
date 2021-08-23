@@ -1,4 +1,4 @@
-var cartpay = (function($, window, document, undefined){
+const cartpay = (function ($) {
     'use strict';
 
     return {
@@ -28,4 +28,4 @@ var cartpay = (function($, window, document, undefined){
             $("#order_enabled").rules('add',{require_from_group: [1, ".type_order"]});
         }
     };
-})(jQuery, window, document);
+})(jQuery);

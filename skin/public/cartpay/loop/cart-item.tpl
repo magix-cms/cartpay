@@ -28,7 +28,7 @@
             </div>
             <div class="item-remove">
                 <form action="{$url}/{$lang}/cartpay/?action=edit" class="edit-product-quantity">
-                    <button type="submit" class="btn btn-box btn-invert btn-main-theme" title="{#remove_product_cart#}"><i class="material-icons">close</i></button>
+                    <button type="submit" class="btn btn-box btn-invert btn-main-theme" title="{#remove_product_cart#}"><i class="material-icons ico ico-close"></i></button>
                     <input type="hidden" name="id_product" value="{$item.id}" />
                     <input type="hidden" name="quantity" value="0" />
                 </form>

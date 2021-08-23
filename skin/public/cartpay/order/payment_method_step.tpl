@@ -1,10 +1,10 @@
 {extends file="cartpay/step.tpl"}
 
 {block name="step:formclass"} actions{/block}
-{block name="step:name"}{#payment_mehtod#}{/block}
+{block name="step:name"}{#choose_payment_mehtod#}{/block}
 {block name="step:content"}
     <div class="row row-center">
-        <div class="col-12 col-sm-10 col-md-8 col-lg-6 col-xl-4">
+        <div class="col-4 col-xs-6 col-sm-6 col-md-8 col-lg-6">
             {foreach $available_payment_methods as $key => $pma}
                 <div class="action quotation">
                     <input type="radio" name="payment_method" id="payment_{$key}" value="{$key}" class="not-nice"/>
@@ -23,7 +23,7 @@
                     </div>
                     <label for="payment_{$key}" title="{#choose_this_payment_mehtod#}">
                         <span class="sr-only">{#choose_this_payment_mehtod#}</span>
-                        <span class="material-icons">keyboard_arrow_right</span>
+{*                        <span class="material-icons ico ico-keyboard_arrow_right"></span>*}
                     </label>
                 </div>
             {/foreach}

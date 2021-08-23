@@ -23,7 +23,7 @@
     <label for="vat" class="is_empty">{#buyer_vat#}&nbsp;:</label>
 </div>
 <div class="form-group">
-    <textarea id="info" name="coor[info]" rows="5" class="form-control" placeholder="{#ph_buyer_info#}"></textarea>
+    <textarea id="info" name="coor[info]" rows="5" class="form-control" placeholder="{#ph_buyer_info#}">{$buyer.info}</textarea>
     <label for="info" class="is_empty">{#buyer_info#}&nbsp;:</label>
 </div>{strip}
 {capture name="cond_gen"}

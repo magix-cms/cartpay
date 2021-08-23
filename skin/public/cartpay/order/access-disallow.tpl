@@ -6,10 +6,10 @@
 {block name="article:content"}
     <h1 class="text-center">{#order#}</h1>
     <div class="alert alert-danger">
-        <p class="text-center"><span class="material-icons">warning</span>&nbsp;{#order_access_disallow#}</p>
+        <p class="text-center"><span class="material-icons ico ico-warning"></span>&nbsp;{#order_access_disallow#}</p>
     </div>
     <p class="text-center">
-        <a href="{$url}/{$lang}/cartpay/" title=""><span class="material-icons">keyboard_backspace</span>&nbsp;{#back_to_cart#}</a>
+        <a href="{$url}/{$lang}/cartpay/" title=""><span class="material-icons ico ico-keyboard_backspace"></span>&nbsp;{#back_to_cart#}</a>
     </p>
 {/block}
 

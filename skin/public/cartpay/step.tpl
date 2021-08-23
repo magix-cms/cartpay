@@ -13,7 +13,7 @@
         <div class="mc-message"></div>
         {block name="step:submit"}
         <div class="cart-next-step">
-            <button type="submit" class="btn btn-main-invert">{#order_next_step#}&nbsp;<span class="material-icons">keyboard_arrow_right</span></button>
+            <button type="submit" class="btn btn-main-invert">{#order_next_step#}&nbsp;<span class="material-icons ico ico-keyboard_arrow_right"></span></button>
             {block name="step:submit:hidden"}{/block}
         </div>
         {/block}

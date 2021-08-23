@@ -44,9 +44,19 @@
         Order ID
     </mj-text>
     <mj-text mj-class="lightext" padding-top="0">
-        {$data['record']['transaction_id']}
+        {$data['record']['id_order']}
     </mj-text>
 </mj-column>
+<mj-raw>{if $data['buyer']['info']}</mj-raw>
+    <mj-column width="100%">
+        <mj-text mj-class="smalltitle" align="center">
+            {#info_comp#}
+        </mj-text>
+        <mj-text mj-class="lightext" padding-top="0">
+            {$data['buyer']['info']}
+        </mj-text>
+    </mj-column>
+<mj-raw>{/if}</mj-raw>
 </mj-section>
 <mj-section padding="0">
 <mj-column width="100%" padding="0">
@@ -102,8 +112,51 @@
     </mj-raw>
 </mj-column>
 </mj-section>
-<mj-raw>{if $data['record']['payment_order'] === 'bank_wire'}</mj-raw>
 <mj-section>
+<mj-column width="100%">
+    <mj-text mj-class="smalltitle" align="center">
+        {#order_shipping#}
+    </mj-text>
+    <mj-table mj-class="lightext">
+        <tr style="border-bottom:1px solid #ecedee;text-align:left;padding:15px 0;">
+            <th style="padding: 0 15px 0 0;">{#mail_table_caption#}</th>
+            <th style="padding: 0 15px;">{#mail_table_to100#}</th>
+            <th style="padding: 0 15px;">{#mail_table_to300#}</th>
+            <th style="padding: 0 0 0 15px;">{#mail_table_over300#}</th>
+        </tr>
+        <tr>
+            <td style="padding: 0 15px 0 0;">{#mail_country_1#}</td>
+            <td style="padding: 0 15px;">{#to100_1#}</td>
+            <td style="padding: 0 15px;">{#to300_1#}</td>
+            <td style="padding: 0 0 0 15px;">{#over300_1#}</td>
+        </tr>
+        <tr>
+            <td style="padding: 0 15px 0 0;">{#mail_country_2#}</td>
+            <td style="padding: 0 15px;">{#to100_2#}</td>
+            <td style="padding: 0 15px;">{#to300_2#}</td>
+            <td style="padding: 0 0 0 15px;">{#over300_2#}</td>
+        </tr>
+        <tr>
+            <td style="padding: 0 15px 0 0;">{#mail_country_3#}</td>
+            <td style="padding: 0 15px;">{#to100_3#}</td>
+            <td style="padding: 0 15px;">{#to300_3#}</td>
+            <td style="padding: 0 0 0 15px;">{#over300_3#}</td>
+        </tr>
+        <tr>
+            <td style="padding: 0 15px 0 0;">{#mail_country_4#}</td>
+            <td style="padding: 0 15px;">{#to100_4#}</td>
+            <td style="padding: 0 15px;">{#to300_4#}</td>
+            <td style="padding: 0 0 0 15px;">{#over300_4#}</td>
+        </tr>
+        <tr>
+            <td style="padding: 0 15px 0 0;">{#mail_country_5#}</td>
+            <td style="padding: 0 15px;">{#to100_5#}</td>
+            <td style="padding: 0 15px;">{#to300_5#}</td>
+            <td style="padding: 0 0 0 15px;">{#over300_5#}</td>
+        </tr>
+    </mj-table>
+</mj-column>
+<mj-raw>{if $data['record']['payment_order'] === 'bank_wire'}</mj-raw>
 <mj-column width="100%">
     <mj-divider/>
     <mj-text mj-class="smalltitle" align="center">
@@ -112,11 +165,25 @@
     <mj-text mj-class="lightext" padding-top="0">
         {#order_bank_wire#}
     </mj-text>
+    <mj-text mj-class="smalltitle">
+        {#order_iban#}
+    </mj-text>
     <mj-text mj-class="lightext" padding-top="0">
-        {$data['config']['bank_account']}<br/>
+        {$data['config']['bank_account']}
+    </mj-text>
+    <mj-text mj-class="smalltitle">
+        {#order_owner#}
+    </mj-text>
+    <mj-text mj-class="lightext" padding-top="0">
         {$data['config']['account_owner']}<br/>
         {$data['config']['bank_address']|nl2br}
     </mj-text>
+    <mj-text mj-class="smalltitle">
+        {#order_ref_commu#}
+    </mj-text>
+    <mj-text mj-class="lightext" padding-top="0">
+        {$data['record']['id_order']}
+    </mj-text>
 </mj-column>
-</mj-section>
 <mj-raw>{/if}</mj-raw>
+</mj-section>

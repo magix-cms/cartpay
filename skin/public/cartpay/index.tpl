@@ -11,22 +11,22 @@
         </ul>
         <div class="cart-total">
             <div class="tot row">
-                <div class="col-6 text-right">{#total_products#}</div>
-                <div class="col-6"><span class="tot_products">{if $setting.price_display.value === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
+                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_products#}</div>
+                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_products">{if $setting.price_display.value === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
             </div>
             <div class="tot row">
-                <div class="col-6 text-right">{#total_exc#}</div>
-                <div class="col-6"><span class="tot_exc">{$cart.total.exc|string_format:"%.2f"}</span>&nbsp;€</div>
+                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_exc#}</div>
+                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_exc">{$cart.total.exc|string_format:"%.2f"}</span>&nbsp;€</div>
             </div>
             {foreach $cart.total.vat as $rate => $vat}
                 <div class="tot row">
-                    <div class="col-6 text-right">{#total_vat#}&nbsp;<small>({$rate}%)</small></div>
-                    <div class="col-6"><span class="tot_vat_{$rate}">{$vat|string_format:"%.2f"}</span>&nbsp;€</div>
+                    <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_vat#}&nbsp;<small>({$rate}%)</small></div>
+                    <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_vat_{$rate}">{$vat|string_format:"%.2f"}</span>&nbsp;€</div>
                 </div>
             {/foreach}
             <div class="tot row">
-                <div class="col-6 text-right">{#total_inc#}</div>
-                <div class="col-6"><span class="tot_inc">{if $setting.price_display.value === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
+                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_inc#}</div>
+                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_inc">{if $setting.price_display.value === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
             </div>
         </div>
         <div class="actions">
@@ -35,7 +35,7 @@
                     <div class="col-12 col-xs-6 col-lg-4">
                         <div class="action quotation">
                             <div class="icon">
-                                <i class="material-icons">assignment</i>
+                                <i class="material-icons ico ico-assignment"></i>
                             </div>
                             <div class="text">
                                 <p class="h3">{#title_quotation#}</p>
@@ -43,7 +43,7 @@
                                     {#txt_quotation#}
                                 </p>
                             </div>
-                            <a href="{$quotationFirstStep}" title="{#continue_quotation#}"><span class="sr-only">{#continue_quotation#}</span><i class="material-icons">keyboard_arrow_right</i></a>
+                            <a href="{$quotationFirstStep}" title="{#continue_quotation#}"><span class="sr-only">{#continue_quotation#}</span><i class="material-icons ico ico-keyboard_arrow_right"></i></a>
                         </div>
                     </div>
                 {/if}
@@ -51,8 +51,8 @@
                     <div class="col-12 col-xs-6 col-lg-4">
                         <div class="action order">
                             <div class="icon">
-                                <i class="material-icons">credit_card</i>
-                                <i class="material-icons">verified_user</i>
+                                <i class="material-icons ico ico-credit_card"></i>
+                                <i class="material-icons ico ico-verified_user"></i>
                             </div>
                             <div class="text">
                                 <p class="h3">{#title_order#}</p>
@@ -60,7 +60,7 @@
                                     {#txt_order#}
                                 </p>
                             </div>
-                            <a href="{$orderFirstStep}" title="{#continue_order#}"><span class="sr-only">{#continue_order#}</span><i class="material-icons">keyboard_arrow_right</i></a>
+                            <a href="{$orderFirstStep}" title="{#continue_order#}"><span class="sr-only">{#continue_order#}</span><i class="material-icons ico ico-keyboard_arrow_right"></i></a>
                         </div>
                     </div>
                 {/if}

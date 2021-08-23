@@ -28,6 +28,16 @@
         {if $data['buyer']['phone']}{$data['buyer']['phone']}<br/>{/if}
     </mj-text>
 </mj-column>
+<mj-raw>{if $data['buyer']['info']}</mj-raw>
+<mj-column width="100%">
+    <mj-text mj-class="smalltitle" align="center">
+        {#info_comp#}
+    </mj-text>
+    <mj-text mj-class="lightext" padding-top="0">
+        {$data['buyer']['info']}
+    </mj-text>
+</mj-column>
+<mj-raw>{/if}</mj-raw>
 </mj-section>
 <mj-section padding="0">
 <mj-column width="100%" padding="0">

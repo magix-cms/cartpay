@@ -124,15 +124,17 @@ const Cart = {
 window.addEventListener('load',function(){
     let cartButton = document.getElementById('shopping-cart-btn');
 
-    floatCart.container = document.getElementById('shopping-float-cart');
-    floatCart.elem = floatCart.container.querySelector('.float-cart');
-    floatCart.list = floatCart.elem.querySelector('.shopping-cart-items');
+    if(cartButton !== undefined && cartButton !== null) {
+        floatCart.container = document.getElementById('shopping-float-cart');
+        floatCart.elem = floatCart.container.querySelector('.float-cart');
+        floatCart.list = floatCart.elem.querySelector('.shopping-cart-items');
 
-    cartButton.addEventListener('click',function(e){
-        e.preventDefault();
-        floatCart.open(e);
-        return false;
-    });
+        cartButton.addEventListener('click',function(e){
+            e.preventDefault();
+            floatCart.open(e);
+            return false;
+        });
+    }
 
     $('.add-to-cart').each(function(){
         $(this).removeData();

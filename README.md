@@ -42,16 +42,32 @@ Ouvrez le fichier catalog/product.tpl de votre skin et ajouter les lignes suivan
 {include file="cartpay/brick/add-to-cart.tpl"}
 ````
 
-Ouvrez le fichier catalog/product.tpl de votre skin et ajouter les lignes suivantes a la fin du fichier : 
+Ajouter a la fin du fichier :
+
 ```smarty
-{block name="foot"}
-    {capture name="formVendors"}/min/?g=form{/capture}
-    <script src="{if $setting.concat.value}{$smarty.capture.formVendors|concat_url:'js'}{else}{$smarty.capture.formVendors}{/if}"></script>
-    {capture name="globalForm"}/min/?f=skin/{$theme}/js/form.min.js{if {$lang} !== "en"},libjs/vendor/localization/messages_{$lang}.js{/if},plugins/cartpay/js/public.min.js{/capture}
-    <script src="{if $setting.concat.value}{$smarty.capture.globalForm|concat_url:'js'}{else}{$smarty.capture.globalForm}{/if}" async defer></script>
+{block name="scripts"}
+{$jquery = true}
+{$js_files = [
+'group' => [
+'form'
+],
+'normal' => [
+],
+'defer' => [
+"/skin/{$theme}/js/{if $setting.mode.value === 'dev'}src/{/if}form{if !$setting.mode.value === 'dev'}.min{/if}.js",
+"/skin/{$theme}/js/vendor/localization/messages_{$lang}.js"
+]
+]}
+{if {$lang} !== "en"}{$js_files['defer'][] = "/libjs/vendor/localization/messages_{$lang}.js"}{/if}
 {/block}
 ````
-Ouvrez le fichier section/scripts.tpl de votre skin et ajouter les lignes suivantes :
+
+Ouvrez le fichier layout.tpl de votre skin et ajouter les lignes suivantes: 
+#### JS
 ```smarty
-/skin/{$theme}/js/{if $dev}src/{/if}cart{if !$dev}.min{/if}.js
+"/skin/{$theme}/js/{if $setting.mode.value === 'dev'}src/{/if}cart{if $setting.mode.value !== 'dev'}.min{/if}.js"
+````
+#### CSS
+```smarty
+"/skin/{$theme}/css/cartpay{if $setting.mode.value !== 'dev'}.min{/if}.css"
 ````

@@ -70,10 +70,18 @@
     </div>
 {/block}
 
-{block name="foot"}
-
-    {capture name="formVendors"}/min/?g=form{/capture}
-    <script src="{if $setting.concat.value}{$smarty.capture.formVendors|concat_url:'js'}{else}{$smarty.capture.formVendors}{/if}"></script>
-    {capture name="globalForm"}/min/?f=skin/{$theme}/js/form.min.js{if {$lang} !== "en"},libjs/vendor/localization/messages_{$lang}.js{/if}{/capture}
-    <script src="{if $setting.concat.value}{$smarty.capture.globalForm|concat_url:'js'}{else}{$smarty.capture.globalForm}{/if}" async defer></script>
+{block name="scripts"}
+    {$jquery = true}
+    {$js_files = [
+    'group' => [
+    'form'
+    ],
+    'normal' => [
+    ],
+    'defer' => [
+    "/skin/{$theme}/js/{if $setting.mode.value === 'dev'}src/{/if}form{if $setting.mode.value !== 'dev'}.min{/if}.js",
+    "/skin/{$theme}/js/vendor/localization/messages_{$lang}.js"
+    ]
+    ]}
+    {if {$lang} !== "en"}{$js_files['defer'][] = "/libjs/vendor/localization/messages_{$lang}.js"}{/if}
 {/block}

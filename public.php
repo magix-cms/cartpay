@@ -481,7 +481,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				$logger->log('php','error','Reflection Exception : '.$e->getMessage(),debug_logger::LOG_MONTH);
 				return false;
 			}
-			$reflectionMethod->invoke($mod);
+			$reflectionMethod->invoke($mod, $this->current_cart);
 		}
 	}
 	// --------------------

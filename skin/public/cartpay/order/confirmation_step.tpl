@@ -25,6 +25,14 @@
                     <h3>{#payment_mehtod#}</h3>
                     <p>{$pma[$order.payment_order]['name']}</p>
                 </div>
+                {if is_array($additionnalResume) && !empty($additionnalResume)}
+                {foreach $additionnalResume as $resume}
+                    <div class="col-4 col-xs-6 col-sm-8 col-md-10 col-lg-4">
+                        <h3>{$resume.name}</h3>
+                        {$resume.desc}
+                    </div>
+                {/foreach}
+                {/if}
             </div>
         </div>
         <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-3 mini-cart">

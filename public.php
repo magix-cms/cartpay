@@ -484,6 +484,22 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			$reflectionMethod->invoke($mod, $this->current_cart);
 		}
 	}
+
+    private function getAdditionnalResume(){
+        $this->loadModules();
+
+        $arb = [];
+
+        if(!empty($this->mods)) {
+            foreach ($this->mods as $name => $mod){
+                if(method_exists($mod,'orderResumeInfos')) {
+                    $arb[] = $mod->orderResumeInfos($this->current_cart);
+                }
+            }
+        }
+
+        return $arb;
+    }
 	// --------------------
 
 	// --- Cartpay actions
@@ -1288,6 +1304,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 										// --- Order confirmation page specific process
 										if($this->action === 'order' && $current_step === array_key_last($steps) - 1) {
 											$temp = $steps[$current_step]['step'];
+
+                                            $this->template->assign('additionnalResume', $this->getAdditionnalResume());
 
 											// If the payment method chosen is a payment plugin we change the next step url
 											if($record['payment_order'] !== 'bank_wire') {

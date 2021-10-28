@@ -19,7 +19,8 @@ class Cart
 			'exc' => 0,
 			'inc' => 0,
 			'vat' => []
-		];
+		],
+        $fees = [];
 
 	/**
 	 * Cart constructor.
@@ -157,26 +158,89 @@ class Cart
 		if($current_sess !== $this->cart_name) $this->session->start($current_sess);
 	}
 
+    /**
+     * @param $cart
+     * @param $id
+     * @return boolean
+     */
+    public function inCartFee($id) {
+        return key_exists($id, $this->fees);
+    }
+
+    public function addFee($item, $price = null, $vat = null){
+
+
+        if($this->inCartFee($item)) {
+            $nb = $this->fees[$item]['q'];
+            $this->updFee($item, $price, $vat);
+        }
+
+        $this->fees[$item] = [
+            'price' => (float)$price,
+            'vat' => (float)$vat
+        ];
+
+        $this->saveCart();
+        return $this->fees[$item];
+    }
+
+    /**
+     * @param int $item
+     * @param int|null $quantity
+     * @param float|null $price
+     * @param float|null $vat
+     * @return array
+     */
+    public function updFee($item, $price = null, $vat = null) {
+        if(!$this->inCartFee($item)) $this->addFee($item, $price, $vat);
+
+        $this->fees[$item]['price'] = $price === null ? $this->fees[$item]['price'] : $price;
+        $this->fees[$item]['vat'] = $vat === null ? $this->fees[$item]['vat'] : $vat;
+
+        $this->saveCart();
+        return isset($this->fees[$item]) ? $this->fees[$item] : null;
+    }
+
+    public function getTotalProduct() {
+        if(!empty($this->items)) {
+            foreach ($this->items as $item) {
+                $rate = 1 + (floatval($item['vat']) / 100);
+                $exc = intval($item['q']) * floatval($item['unit_price']);
+                $inc = $exc * $rate;
+                $vat = $inc - $exc;
+                $this->total['exc'] += $exc;
+                $this->total['inc'] += $inc;
+                if(isset($this->total['vat'][$item['vat']]))
+                    $this->total['vat'][$item['vat']] += $vat;
+                else
+                    $this->total['vat'][$item['vat']] = $vat;
+            }
+        }
+        return $this->total;
+    }
+
 	/**
 	 * Calculate the total price, tax excluded, tax included and tax amount
 	 * @return array
 	 */
 	public function getTotal() {
-		if(!empty($this->items)) {
-			foreach ($this->items as $item) {
-				$rate = 1 + (floatval($item['vat']) / 100);
-				$exc = intval($item['q']) * floatval($item['unit_price']);
-				$inc = $exc * $rate;
-				$vat = $inc - $exc;
-				$this->total['exc'] += $exc;
-				$this->total['inc'] += $inc;
-				if(isset($this->total['vat'][$item['vat']]))
-                    $this->total['vat'][$item['vat']] += $vat;
-				else
-                    $this->total['vat'][$item['vat']] = $vat;
-			}
-		}
-		return $this->total;
+        $this->getTotalProduct();
+        if(!empty($this->fees)) {
+            foreach ($this->fees as $fee) {
+                $rate = 1 + (floatval($fee['vat']) / 100);
+                $exc = floatval($fee['price']);
+                $inc = $exc * $rate;
+                $vat = $inc - $exc;
+                $this->total['exc'] += $exc;
+                $this->total['inc'] += $inc;
+                if(isset($this->total['vat'][$fee['vat']]))
+                    $this->total['vat'][$fee['vat']] += $vat;
+                else
+                    $this->total['vat'][$fee['vat']] = $vat;
+            }
+        }
+        return $this->total;
+
 	}
 
 	/**
@@ -187,6 +251,7 @@ class Cart
 		return [
 			'items' => $this->items,
 			'nb_items' => $this->nb_items,
+            'fees' => $this->fees,
 			'total' => $this->getTotal()
 		];
 	}

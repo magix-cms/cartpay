@@ -112,6 +112,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
     public
 		$id_product,
 		$quantity,
+		$param,
 		$coor,
 		$billing,
 		$payment_method,
@@ -172,7 +173,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		}
 
         // Start cart session
-        $this->cart = new Cart('mc_cart');
+        //$this->cart = new Cart('mc_cart');
+		$this->cart = Cart::getInstance('mc_cart');
 
         // Get the key of the cart
         $this->session_key_cart = $this->cart->getKey();
@@ -191,6 +193,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                 if(!$cart['nb_items']) {
                     // - create new cart session with this key and retreive items of the cart
                     $this->current_cart = $account_cart;
+                    //$this->cart = new Cart('mc_cart', $account_cart['session_key_cart']);
                     $this->cart = new Cart('mc_cart', $account_cart['session_key_cart']);
                     $this->session_key_cart = $account_cart['session_key_cart'];
                     $this->retreiveAccountCart();
@@ -539,7 +542,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param $quantity
 	 * @param $return
 	 */
-    private function addToCart($cart, $product, $quantity){
+    private function addToCart($cart, $product, $quantity, $param){
     	// Check if the product is already in the cart
     	$inCart = $this->cart->inCart($product);
 
@@ -547,18 +550,20 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		$unit_price = $this->getProductPrice([
 			'id_product' => $product,
 			'quantity' => $quantity,
-			'id_account' => $this->id_account
+			'id_account' => $this->id_account,
+			'param' => $param
 		]);
 
 		// Get the product vat rate
 		$pVat = $this->getProductVatRate([
 			'id_product' => $product,
 			'quantity' => $quantity,
-			'id_account' => $this->id_account
+			'id_account' => $this->id_account,
+			'param' => $param
 		]);
 
 		// Insert into cart
-        $item = $this->cart->addItem($product, $quantity, $unit_price ,$pVat);
+        $item = $this->cart->addItem($product, $quantity, $unit_price ,$pVat, $param);
 
 		$conf = [
 			'type' => 'product',
@@ -601,7 +606,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param $product
 	 * @param $quantity
 	 */
-    private function updCart($cart, $product, $quantity){
+    private function updCart($cart, $product, $quantity, $param){
     	// Update in db
 		if($quantity > 0){
 			$this->upd([
@@ -679,20 +684,30 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			$langData = $this->getItems('idFromIso',['iso' => $this->lang],'one',false);
             $cart_items = $this->getItems('catalog',['id' => $key_cart['id_cart'],'default_lang' => $langData['id_lang']],'all',false);
 
+			$products = [];
+			foreach ($cart_items as $item) {
+				$products[$item['id_product']] = $item;
+			}
+
 			if(!empty($cart_items)) {
 				$mc = new frontend_model_catalog($this->template);
 				$ms = new frontend_model_core();
 				$current = $ms->setCurrentId();
 
-				foreach ($cart_items as $item) {
-					$product = $mc->setItemData($item,$current);
-					$itemDetails = $cart['items'][$product['id']];
-					$rate = 1 + $itemDetails['vat']/100;
-					$product['unit_price'] = round($itemDetails['unit_price'], 2);
-					$product['unit_price_inc'] = round($itemDetails['unit_price'] * $rate, 2);
-					$product['total'] = round($itemDetails['unit_price'] * $itemDetails['q'], 2);
-					$product['total_inc'] = round($itemDetails['unit_price'] * $itemDetails['q'] * $rate, 2);
-					$cart['items'][$product['id']] = array_merge($itemDetails,$product);
+				foreach ($cart['items'] as &$item) {
+					$product = $mc->setItemData($products[$item['id']],$current);
+					$rate = 1 + $item['vat']/100;
+					$product['unit_price'] = round($item['unit_price'], 2);
+					$product['unit_price_inc'] = round($item['unit_price'] * $rate, 2);
+					$product['total'] = round($item['unit_price'] * $item['q'], 2);
+					$product['total_inc'] = round($item['unit_price'] * $item['q'] * $rate, 2);
+					$item = array_merge($item,$product);
+				}
+
+				foreach ($cart['fees'] as &$fee) {
+					$rate = 1 + $fee['vat']/100;
+					$fee['price'] = round($fee['price'], 2);
+					$fee['price_inc'] = round($fee['price'] * $rate, 2);
 				}
 
 				$cart['total']['exc'] = round($cart['total']['exc'], 2);
@@ -1144,9 +1159,10 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					case 'edit':
 						if (http_request::isPost('id_product')) $this->id_product = (int)$this->clean->numeric($_POST['id_product']);
 						if (http_request::isPost('quantity')) $this->quantity = (int)$this->clean->numeric($_POST['quantity']);
+						$this->param = http_request::isPost('param') ? $this->clean->arrayClean($_POST['param']) : [];
 
 						if(isset($this->id_product) && isset($this->quantity)) {
-							$this->action === 'add' ? $this->addToCart($key_cart['id_cart'], $this->id_product, $this->quantity) : $this->updCart($key_cart['id_cart'], $this->id_product, $this->quantity);
+							$this->action === 'add' ? $this->addToCart($key_cart['id_cart'], $this->id_product, $this->quantity, $this->param) : $this->updCart($key_cart['id_cart'], $this->id_product, $this->quantity, $this->param);
 						}
 						break;
 					case 'quotation':

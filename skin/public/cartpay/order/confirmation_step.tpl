@@ -42,6 +42,9 @@
             <ul class="shopping-cart-items">
                 {include file="cartpay/loop/float-cart-item.tpl" data=$cart.items}
             </ul>
+            <ul class="shopping-cart-fees">
+                {include file="cartpay/loop/float-cart-fee.tpl" data=$cart.fees}
+            </ul>
             <div class="shopping-cart-total">
                 <span class="lighter-text">{#total#}&thinsp;:</span>&nbsp;<span class="main-color-text"><span class="total_cart">{if $setting.price_display.value === 'tinc'}{$cart.total.inc}{else}{$cart.total.exc}{/if}</span>&nbsp;<span class=currency">€</span></span>
             </div>

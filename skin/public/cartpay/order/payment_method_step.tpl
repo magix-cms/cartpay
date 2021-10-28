@@ -7,7 +7,7 @@
         <div class="col-4 col-xs-6 col-sm-6 col-md-8 col-lg-6">
             {foreach $available_payment_methods as $key => $pma}
                 <div class="action quotation">
-                    <input type="radio" name="payment_method" id="payment_{$key}" value="{$key}" class="not-nice"/>
+                    <input type="radio" name="payment_method" id="payment_{$key}" value="{$key}" class="not-nice"{if $pma@first} required{/if}/>
                     <div class="icon">
                         {if isset($pma.img)}
                             <img src="{$pma.img}" class="img-responsive" />

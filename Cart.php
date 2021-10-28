@@ -4,6 +4,11 @@
  */
 class Cart
 {
+	/**
+	 * @var $instance
+	 */
+	public static $instance;
+
 	protected
 		$settingComp,
 		$settings,
@@ -15,12 +20,12 @@ class Cart
 	private
 		$items = [],
 		$nb_items = 0,
+		$fees = [],
 		$total = [
 			'exc' => 0,
 			'inc' => 0,
 			'vat' => []
-		],
-        $fees = [];
+		];
 
 	/**
 	 * Cart constructor.
@@ -44,7 +49,9 @@ class Cart
 			$cart = $_SESSION['cart'];
 			$this->items = $cart['items'];
 			$this->nb_items = $cart['nb_items'];
+			$this->fees = $cart['fees'];
 		}
+		self::$instance = $this;
 	}
 
 	/**
@@ -56,12 +63,23 @@ class Cart
 	}
 
 	/**
-	 * @param $cart
 	 * @param $id
+	 * @param $param
 	 * @return boolean
 	 */
-	public function inCart($id) {
-		return key_exists($id, $this->items);
+	public function inCart($id, $param = []) {
+		foreach ($this->items as $i => $item) {
+			if($item['id'] === $id) {
+				if(!empty($param) && !empty($item['param'])) {
+					$same = true;
+					foreach ($param as $k => $v) {
+						if(!key_exists($k,$item['param']) || $v !== $item['param'][$k]) $same = false;
+					}
+					if($same) return $i;
+				}
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -69,27 +87,30 @@ class Cart
 	 * @param int $quantity
 	 * @param float|null $price
 	 * @param float|null $vat
+	 * @param array $param
 	 * @return void|array
 	 */
-	public function addItem($item, int $quantity, $price = null, $vat = null) {
+	public function addItem($item, int $quantity, $price = null, $vat = null, $param = []) {
 		if($quantity < 0) return;
 
-		if($this->inCart($item)) {
+		if($this->inCart($item, $param)) {
 			$nb = $quantity + $this->items[$item]['q'];
-			$this->updItem($item, $nb, $price, $vat);
+			$this->updItem($item, $nb, $price, $vat, $param);
 		}
 		else {
 			$this->nb_items += $quantity;
 		}
-
-		$this->items[$item] = [
+		$newItem = [
+			'id' => $item,
 			'q' => $quantity,
 			'unit_price' => (float)$price,
-			'vat' => (float)$vat
+			'vat' => (float)$vat,
+			'param' => $param
 		];
+		$this->items[] = $newItem;
 
 		$this->saveCart();
-		return $this->items[$item];
+		return $newItem;
 	}
 
 	/**
@@ -97,45 +118,94 @@ class Cart
 	 * @param int|null $quantity
 	 * @param float|null $price
 	 * @param float|null $vat
+	 * @param array $param
 	 * @return array
 	 */
-	public function updItem($item, $quantity = null, $price = null, $vat = null) {
-		if(!$this->inCart($item)) $this->addItem($item, $quantity, $price, $vat);
+	public function updItem($item, $quantity = null, $price = null, $vat = null, $param = []) {
+		$key = $this->inCart($item, $param);
+		if($key === false) $this->addItem($item, $quantity, $price, $vat);
 
-		$this->items[$item]['unit_price'] = $price === null ? $this->items[$item]['unit_price'] : $price;
-		$this->items[$item]['vat'] = $vat === null ? $this->items[$item]['vat'] : $vat;
+		$this->items[$key]['unit_price'] = $price === null ? $this->items[$key]['unit_price'] : $price;
+		$this->items[$key]['vat'] = $vat === null ? $this->items[$key]['vat'] : $vat;
 
 		if($quantity !== null) {
-			if($quantity <= $this->items[$item]['q']) {
-				$this->removeItem($item,$this->items[$item]['q'] - $quantity);
+			if($quantity <= $this->items[$key]['q']) {
+				$this->removeItem($key,$this->items[$key]['q'] - $quantity);
 			}
 			else {
-				$this->nb_items -= ($this->items[$item]['q'] - $quantity);
-				$this->items[$item]['q'] = $quantity;
+				$this->nb_items -= ($this->items[$key]['q'] - $quantity);
+				$this->items[$key]['q'] = $quantity;
+			}
+		}
+		if(!empty($param)) {
+			foreach ($param as $k => $v) {
+				$this->items[$key]['param'][$k] = $v;
 			}
 		}
 
 		$this->saveCart();
-		return isset($this->items[$item]) ? $this->items[$item] : null;
+		return $this->items[$key] ?? null;
 	}
 
 	/**
-	 * @param int $item
+	 * @param int $index
 	 * @param int|string $quantity
 	 * @return void|array
 	 */
-	public function removeItem($item, $quantity) {
-		if(!$this->inCart($item)) return;
+	public function removeItem($index, $quantity) {
 		if(is_int($quantity) && $quantity < 0) return;
 		if(is_string($quantity) && $quantity !== 'all') return;
 
 		$this->nb_items -= $quantity;
 
-		if($quantity === $this->items[$item]['q'] || $quantity === 'all') unset($this->items[$item]);
-		else $this->items[$item]['q'] = ($this->items[$item]['q'] - $quantity);
+		if($quantity === $this->items[$index]['q'] || $quantity === 'all') unset($this->items[$index]);
+		else $this->items[$index]['q'] = ($this->items[$index]['q'] - $quantity);
 
 		$this->saveCart();
-		return isset($this->items[$item]) ? $this->items[$item] : null;
+		return $this->items[$index] ?? null;
+	}
+
+	/**
+	 * @param $cart
+	 * @param $id
+	 * @return boolean
+	 */
+	public function inCartFee($id) {
+		return key_exists($id, $this->fees);
+	}
+
+	/**
+	 * @param int|string $fee
+	 * @param float|null $price
+	 * @param float|null $vat
+	 * @return array
+	 */
+	public function addFee($fee, $price = null, $vat = null){
+		if($this->inCartFee($fee)) $this->updFee($fee, $price, $vat);
+
+		$this->fees[$fee] = [
+			'price' => (float)$price,
+			'vat' => (float)$vat
+		];
+
+		$this->saveCart();
+		return $this->fees[$fee];
+	}
+
+	/**
+	 * @param int $fee
+	 * @param float|null $price
+	 * @param float|null $vat
+	 * @return array
+	 */
+	public function updFee($fee, $price = null, $vat = null) {
+		if(!$this->inCartFee($fee)) $this->addFee($fee, $price, $vat);
+
+		$this->fees[$fee]['price'] = $price === null ? $this->fees[$fee]['price'] : $price;
+		$this->fees[$fee]['vat'] = $vat === null ? $this->fees[$fee]['vat'] : $vat;
+
+		$this->saveCart();
+		return $this->fees[$fee] ?? null;
 	}
 
 	/**
@@ -153,54 +223,16 @@ class Cart
 		if($current_sess !== $this->cart_name) $this->session->start($this->cart_name);
 		$this->session->run(['cart' => [
 			'items' => $this->items,
-			'nb_items' => $this->nb_items
+			'nb_items' => $this->nb_items,
+			'fees' => $this->fees
 		]]);
 		if($current_sess !== $this->cart_name) $this->session->start($current_sess);
 	}
 
-    /**
-     * @param $cart
-     * @param $id
-     * @return boolean
-     */
-    public function inCartFee($id) {
-        return key_exists($id, $this->fees);
-    }
-
-    public function addFee($item, $price = null, $vat = null){
-
-
-        if($this->inCartFee($item)) {
-            $nb = $this->fees[$item]['q'];
-            $this->updFee($item, $price, $vat);
-        }
-
-        $this->fees[$item] = [
-            'price' => (float)$price,
-            'vat' => (float)$vat
-        ];
-
-        $this->saveCart();
-        return $this->fees[$item];
-    }
-
-    /**
-     * @param int $item
-     * @param int|null $quantity
-     * @param float|null $price
-     * @param float|null $vat
-     * @return array
-     */
-    public function updFee($item, $price = null, $vat = null) {
-        if(!$this->inCartFee($item)) $this->addFee($item, $price, $vat);
-
-        $this->fees[$item]['price'] = $price === null ? $this->fees[$item]['price'] : $price;
-        $this->fees[$item]['vat'] = $vat === null ? $this->fees[$item]['vat'] : $vat;
-
-        $this->saveCart();
-        return isset($this->fees[$item]) ? $this->fees[$item] : null;
-    }
-
+	/**
+	 * Calculate the product total price, tax excluded, tax included and tax amount
+	 * @return array
+	 */
     public function getTotalProduct() {
         if(!empty($this->items)) {
             foreach ($this->items as $item) {
@@ -254,6 +286,15 @@ class Cart
             'fees' => $this->fees,
 			'total' => $this->getTotal()
 		];
+	}
+
+	/**
+	 * @return Cart
+	 */
+	public static function getInstance($session_name, $key = null)
+	{
+		if(!self::$instance instanceof self) new self($session_name, $key);
+		return self::$instance;
 	}
 }
 

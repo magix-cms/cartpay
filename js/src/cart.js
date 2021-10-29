@@ -101,7 +101,7 @@ const Cart = {
     elem: null,
     list: null,
     upd: function(cart){
-        let item = document.getElementById('product_'+cart.id);
+        let item = document.getElementById('product_'+cart.id_item);
         if(item !== undefined && cart.nb > 0) {
             //item.querySelector('.quantity').innerHTML = cart.nb;
             item.querySelector('.product-total').innerHTML = cart.product_tot;
@@ -239,7 +239,7 @@ window.addEventListener('load',function(){
 
                         if(typeof d.extend === 'object') {
                             let cart = d.extend;
-                            floatCart.upd(cart.id, cart.nb, cart.nb_items, cart.total.tot);
+                            floatCart.upd(cart.id_item, cart.nb, cart.nb_items, cart.total.tot);
                             Cart.upd(cart);
                         }
                     }

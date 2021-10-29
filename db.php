@@ -200,6 +200,7 @@ class plugins_cartpay_db
                     break;
                 case 'catalog':
 					$sql = 'SELECT 
+       							item.id_items,
        							c.id_cat,
 								cat.name_cat, 
 								cat.url_cat, 
@@ -502,7 +503,7 @@ class plugins_cartpay_db
                 $sql = 'UPDATE `mc_cartpay_items` 
                 SET 
                   quantity = :quantity
-                WHERE `id_cart` = :id_cart AND id_product = :id_product';
+                WHERE `id_cart` = :id_cart AND id_items = :id_items';
                 break;
 			case 'buyer':
 				$sql = "UPDATE `mc_cartpay_buyer`
@@ -598,7 +599,7 @@ class plugins_cartpay_db
 						WHERE `id_account` = :id_account';
 				break;
 			case 'product':
-				$sql = 'DELETE FROM `mc_cartpay_items` WHERE id_cart = :id_cart AND id_product = :id_product';
+				$sql = 'DELETE FROM `mc_cartpay_items` WHERE id_cart = :id_cart AND id_items = :id_items';
 				break;
 		}
 

@@ -79,7 +79,7 @@ class Cart
 				}
 			}
 		}
-		return false;
+		return -1;
 	}
 
 	/**
@@ -93,24 +93,26 @@ class Cart
 	public function addItem($item, int $quantity, $price = null, $vat = null, $param = []) {
 		if($quantity < 0) return;
 
-		if($this->inCart($item, $param)) {
-			$nb = $quantity + $this->items[$item]['q'];
-			$this->updItem($item, $nb, $price, $vat, $param);
+		$key = $this->inCart($item, $param);
+
+		if($key > -1) {
+			$nb = $quantity + $this->items[$key]['q'];
+			return $this->updItem($item, $nb, $price, $vat, $param);
 		}
 		else {
 			$this->nb_items += $quantity;
-		}
-		$newItem = [
-			'id' => $item,
-			'q' => $quantity,
-			'unit_price' => (float)$price,
-			'vat' => (float)$vat,
-			'param' => $param
-		];
-		$this->items[] = $newItem;
+			$newItem = [
+				'id' => $item,
+				'q' => $quantity,
+				'unit_price' => (float)$price,
+				'vat' => (float)$vat,
+				'param' => $param
+			];
+			$this->items[] = $newItem;
 
-		$this->saveCart();
-		return $newItem;
+			$this->saveCart();
+			return $newItem;
+		}
 	}
 
 	/**
@@ -123,10 +125,16 @@ class Cart
 	 */
 	public function updItem($item, $quantity = null, $price = null, $vat = null, $param = []) {
 		$key = $this->inCart($item, $param);
-		if($key === false) $this->addItem($item, $quantity, $price, $vat);
+		if($key === -1) $this->addItem($item, $quantity, $price, $vat);
 
 		$this->items[$key]['unit_price'] = $price === null ? $this->items[$key]['unit_price'] : $price;
 		$this->items[$key]['vat'] = $vat === null ? $this->items[$key]['vat'] : $vat;
+
+		if(!empty($param)) {
+			foreach ($param as $k => $v) {
+				$this->items[$key]['param'][$k] = $v;
+			}
+		}
 
 		if($quantity !== null) {
 			if($quantity <= $this->items[$key]['q']) {
@@ -135,11 +143,6 @@ class Cart
 			else {
 				$this->nb_items -= ($this->items[$key]['q'] - $quantity);
 				$this->items[$key]['q'] = $quantity;
-			}
-		}
-		if(!empty($param)) {
-			foreach ($param as $k => $v) {
-				$this->items[$key]['param'][$k] = $v;
 			}
 		}
 

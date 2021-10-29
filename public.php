@@ -111,6 +111,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
      */
     public
 		$id_product,
+		$id_items,
 		$quantity,
 		$param,
 		$coor,
@@ -544,7 +545,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 */
     private function addToCart($cart, $product, $quantity, $param){
     	// Check if the product is already in the cart
-    	$inCart = $this->cart->inCart($product);
+    	$inCart = $this->cart->inCart($product, $param);
 
 		// Get the product unit price
 		$unit_price = $this->getProductPrice([
@@ -574,14 +575,14 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			]
 		];
 		// if the product is already in the cart : Yes - update quantity | No - insert in db
-		$inCart ? $this->upd($conf) : $this->add($conf);
+		$inCart > -1 ? $this->upd($conf) : $this->add($conf);
 
         // Get full cart info
 		$cart = $this->cartData();
 
 		$html = null;
 		// If the item wasn't in the cart, prepare the line to be inserted in the float cart
-		if(!$inCart){
+		if($inCart === -1){
 			$this->template->assign('setting',$this->settings);
 			$this->template->assign('data',[$cart['items'][$product]]);
 			$html = $this->template->fetch('cartpay/loop/float-cart-item.tpl');
@@ -606,14 +607,15 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param $product
 	 * @param $quantity
 	 */
-    private function updCart($cart, $product, $quantity, $param){
+    private function updCart($cart, $product, $item, $quantity, $param){
     	// Update in db
+		$id = $item;
 		if($quantity > 0){
 			$this->upd([
 				'type' => 'product',
 				'data' => [
 					'id_cart' => $cart,
-					'id_product' => $product,
+					'id_items' => $item,
 					'quantity' => $quantity
 				]
 			]);
@@ -622,14 +624,16 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			$unit_price = $this->getProductPrice([
 				'id_product' => $product,
 				'quantity' => $quantity,
-				'id_account' => $this->id_account
+				'id_account' => $this->id_account,
+				'param' => $this->param
 			]);
 
 			// Get the product vat rate
 			$pVat = $this->getProductVatRate([
 				'id_product' => $product,
 				'quantity' => $quantity,
-				'id_account' => $this->id_account
+				'id_account' => $this->id_account,
+				'param' => $this->param
 			]);
 		}
 		else {
@@ -637,7 +641,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				'type' => 'product',
 				'data' => [
 					'id_cart' => $cart,
-					'id_product' => $product
+					'id_items' => $item
 				]
 			]);
 			$unit_price = null;
@@ -645,7 +649,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		}
 
 		// Update item in cart
-		$item = $this->cart->updItem($product,$quantity,$unit_price,$pVat);
+		$item = $this->cart->updItem($product,$quantity,$unit_price,$pVat,$param);
 
 		// Get full cart info
 		$cart = $this->cartData();
@@ -665,6 +669,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
         	'result' => null,
 			'extend' => [
 				'id' => $product,
+				'id_item' => $id,
 				'nb' => $quantity,
 				'product_tot' => $product_tot,
 				'nb_items' => $cart['nb_items'],
@@ -686,7 +691,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
 			$products = [];
 			foreach ($cart_items as $item) {
-				$products[$item['id_product']] = $item;
+				$products[$item['id_product']][] = $item;
 			}
 
 			if(!empty($cart_items)) {
@@ -694,8 +699,13 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				$ms = new frontend_model_core();
 				$current = $ms->setCurrentId();
 
+				$usedIndexes = [];
 				foreach ($cart['items'] as &$item) {
-					$product = $mc->setItemData($products[$item['id']],$current);
+					$i = isset($usedIndexes[$item['id']]) ? $usedIndexes[$item['id']] + 1 : 0;
+					$product = $mc->setItemData($products[$item['id']][$i],$current);
+					$product['id_items'] = $products[$item['id']][$i]['id_items'];
+					$usedIndexes[$item['id']] = $i;
+
 					$rate = 1 + $item['vat']/100;
 					$product['unit_price'] = round($item['unit_price'], 2);
 					$product['unit_price_inc'] = round($item['unit_price'] * $rate, 2);
@@ -1088,7 +1098,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					'record' => $record,
 					'cart' => $this->cartData(),
 					'pma' => $this->getPaymentMethodAvailable(),
-					'config' => $this->getConfig()
+					'config' => $this->getConfig(),
+                    'additionnalResume' => $this->getAdditionnalResume()
 				];
 
 				if(!empty($data)) {
@@ -1158,11 +1169,12 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					case 'add':
 					case 'edit':
 						if (http_request::isPost('id_product')) $this->id_product = (int)$this->clean->numeric($_POST['id_product']);
+						if (http_request::isPost('id_items')) $this->id_items = (int)$this->clean->numeric($_POST['id_items']);
 						if (http_request::isPost('quantity')) $this->quantity = (int)$this->clean->numeric($_POST['quantity']);
 						$this->param = http_request::isPost('param') ? $this->clean->arrayClean($_POST['param']) : [];
 
 						if(isset($this->id_product) && isset($this->quantity)) {
-							$this->action === 'add' ? $this->addToCart($key_cart['id_cart'], $this->id_product, $this->quantity, $this->param) : $this->updCart($key_cart['id_cart'], $this->id_product, $this->quantity, $this->param);
+							$this->action === 'add' ? $this->addToCart($key_cart['id_cart'], $this->id_product, $this->quantity, $this->param) : $this->updCart($key_cart['id_cart'], $this->id_product, $this->id_items, $this->quantity, $this->param);
 						}
 						break;
 					case 'quotation':
@@ -1340,16 +1352,27 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 												if($this->action === 'order') {
 													// If the action type is order and the purchased information had been given and the method payment is bank wire
 													if(isset($this->purchase['amount'])
-														&& isset($this->purchase['email'])
+														&& isset($this->custom['email'])
 														&& $record['payment_order'] === 'bank_wire') {
 														$this->status = 'pending';
+                                                        /*$data = [
+                                                            //'type' => $tpl,
+                                                            'buyer' => $buyer,
+                                                            'record' => $record,
+                                                            'cart' => $this->cartData(),
+                                                            'pma' => $this->getPaymentMethodAvailable(),
+                                                            'config' => $this->getConfig(),
+                                                            'additionnalResume' => $this->getAdditionnalResume()
+                                                        ];
+                                                        print '<pre>';
+                                                        print_r($data);
+                                                        print '</pre>';*/
 													}
 												}
 												elseif($this->action === 'quotation') {
 													$this->status = 'success';
 												}
 											}
-
 
                                             if(isset($this->status)) {
                                                 if($this->action === 'order') {

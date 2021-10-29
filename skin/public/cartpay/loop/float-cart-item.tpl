@@ -5,7 +5,7 @@
 {/strip}
 {if isset($data) && is_array($data)}
 	{foreach $data as $item}
-        <li id="item_{$item.id}" class="cart-item">
+        <li id="item_{$item.id_items}" class="cart-item">
             {include file="img/img.tpl" img=$item.img lazy=$lazy}
             <div class="item-details">
                 <span class="item-name">{$item.name}</span>

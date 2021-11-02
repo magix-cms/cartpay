@@ -355,7 +355,7 @@
                                 {$item['name']} &nbsp;
                                 {if is_array($item['param']) && !empty($item['param'])}
                                 {foreach $item['param'] as $param}
-                                {$param['value']}
+                                <small>{$param['value']}</small>
                                 {/foreach}
                                 {/if}
                             </td>

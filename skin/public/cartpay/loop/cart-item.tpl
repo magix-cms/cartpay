@@ -11,9 +11,11 @@
                 <div class="item-info">
                     {if $item.reference}<span class="item-ref">#&nbsp;{$item.reference}</span>{/if}
                     <span class="item-name">{$item.name}</span>
+                    {if is_array($item.param) && !empty($item.param)}
                     {foreach $item.param as $param => $value}
-                    <span class="item-param">{$param}&nbsp;: {$value}</span>
+                    <span class="item-param">{*{$param}&nbsp;: *}{$value.value}</span>
                     {/foreach}
+                    {/if}
                     <span class="item-price">{if $setting.price_display.value === 'tinc'}{$item.unit_price_inc|string_format:"%.2f"}{else}{$item.unit_price|string_format:"%.2f"}{/if}&nbsp;<span class=currency">€</span></span>
                 </div>
             </div>
@@ -23,9 +25,11 @@
                         <label for="quantity_{$item.id_items}" class="control-label">{#quantity#|ucfirst}&thinsp;:</label>
                         <input type="number" id="quantity_{$item.id_items}" name="quantity" min="0" step="1" value="{$item.q}" />
                     </div>
+                    {if is_array($item.param) && !empty($item.param)}
                     {foreach $item.param as $param => $value}
-                        <input type="hidden" name="param[{$param}]" value="{$value}" />
+                        <input type="hidden" name="param[{$param}]" value="{$value.id}" />
                     {/foreach}
+                    {/if}
                     <input type="hidden" name="id_items" value="{$item.id_items}" />
                     <input type="hidden" name="id_product" value="{$item.id}" />
                 </form>
@@ -37,7 +41,7 @@
                 <form action="{$url}/{$lang}/cartpay/?action=edit" class="edit-product-quantity">
                     <button type="submit" class="btn btn-box btn-invert btn-main-theme" title="{#remove_product_cart#}"><i class="material-icons ico ico-close"></i></button>
                     {foreach $item.param as $param => $value}
-                        <input type="hidden" name="param[{$param}]" value="{$value}" />
+                        <input type="hidden" name="param[{$param}]" value="{$value.id}" />
                     {/foreach}
                     <input type="hidden" name="id_product" value="{$item.id}" />
                     <input type="hidden" name="id_items" value="{$item.id_items}" />

@@ -358,9 +358,14 @@
                             <td style="border-bottom: 1px solid #ccc; padding: 4px 0 4px 8px; text-align:right;">{$item['total_inc']}&nbsp;€</td>
                         </tr>
                         {/foreach}
+                        {if is_array($data['cart']['fees']) && !empty($data['cart']['fees'])}
+                        {foreach $data['cart']['fees'] as $fees => $fee}
                         <tr>
-                            <td style="border-bottom: 1px solid #ccc; border-top: 3px doubled #ccc; border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0; text-align:right;" colspan="4">{#total_exc#}
+                            <td style="border-bottom: 1px solid #ccc; border-top: 3px doubled #ccc; border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0; text-align:right;" colspan="4">{#$fees#}
                                   </td>
+                                  <td style="border-bottom: 1px solid #ccc; border-top: 3px doubled #ccc; border-bottom: 1px solid #ccc; padding: 4px 0 4px 8px; text-align:right;">{$fee.price_inc}&nbsp;€</td>
+                                </tr> {/foreach} {/if} <tr>
+                                  <td style="border-bottom: 1px solid #ccc; border-top: 3px doubled #ccc; border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0; text-align:right;" colspan="4">{#total_exc#}</td>
                                   <td style="border-bottom: 1px solid #ccc; border-top: 3px doubled #ccc; border-bottom: 1px solid #ccc; padding: 4px 0 4px 8px; text-align:right;">{$data['cart']['total']['exc']}&nbsp;€</td>
                                 </tr> {foreach $data['cart']['total']['vat'] as $rate => $ttax} <tr>
                                   <td style="border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0; text-align:right;" colspan="4">{#total_vat#}&nbsp;<small>({$rate}%)</small></td>
@@ -390,61 +395,7 @@
       <tbody>
         <tr>
           <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
-            <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:600px;" ><![endif]-->
-            <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-              <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                <tbody>
-                  <tr>
-                    <td align="center" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                      <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:center;text-transform:uppercase;color:#333333;">{#order_shipping#}</div>
-                    </td>
-                  </tr>
-                  <tr>
-                    <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                      <table cellpadding="0" cellspacing="0" width="100%" border="0" style="color:{$light_grey};font-family:'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:13px;line-height:22px;table-layout:auto;width:100%;border:none;">
-                        <tr style="border-bottom:1px solid #ecedee;text-align:left;padding:15px 0;">
-                          <th style="padding: 0 15px 0 0;">{#mail_table_caption#}</th>
-                          <th style="padding: 0 15px;">{#mail_table_to100#}</th>
-                          <th style="padding: 0 15px;">{#mail_table_to300#}</th>
-                          <th style="padding: 0 0 0 15px;">{#mail_table_over300#}</th>
-                        </tr>
-                        <tr>
-                          <td style="padding: 0 15px 0 0;">{#mail_country_1#}</td>
-                          <td style="padding: 0 15px;">{#to100_1#}</td>
-                          <td style="padding: 0 15px;">{#to300_1#}</td>
-                          <td style="padding: 0 0 0 15px;">{#over300_1#}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 0 15px 0 0;">{#mail_country_2#}</td>
-                          <td style="padding: 0 15px;">{#to100_2#}</td>
-                          <td style="padding: 0 15px;">{#to300_2#}</td>
-                          <td style="padding: 0 0 0 15px;">{#over300_2#}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 0 15px 0 0;">{#mail_country_3#}</td>
-                          <td style="padding: 0 15px;">{#to100_3#}</td>
-                          <td style="padding: 0 15px;">{#to300_3#}</td>
-                          <td style="padding: 0 0 0 15px;">{#over300_3#}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 0 15px 0 0;">{#mail_country_4#}</td>
-                          <td style="padding: 0 15px;">{#to100_4#}</td>
-                          <td style="padding: 0 15px;">{#to300_4#}</td>
-                          <td style="padding: 0 0 0 15px;">{#over300_4#}</td>
-                        </tr>
-                        <tr>
-                          <td style="padding: 0 15px 0 0;">{#mail_country_5#}</td>
-                          <td style="padding: 0 15px;">{#to100_5#}</td>
-                          <td style="padding: 0 15px;">{#to300_5#}</td>
-                          <td style="padding: 0 0 0 15px;">{#over300_5#}</td>
-                        </tr>
-                      </table>
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-            <!--[if mso | IE]></td><![endif]--> {if $data['record']['payment_order'] === 'bank_wire'}
+            <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><![endif]--> {if $data['record']['payment_order'] === 'bank_wire'}
             <!--[if mso | IE]><td class="" style="vertical-align:top;width:600px;" ><![endif]-->
             <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
               <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">

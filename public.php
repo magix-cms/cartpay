@@ -504,6 +504,24 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
         return $arb;
     }
+
+    /**
+     * @param array $params
+     * @return float
+     */
+    private function getParamValue($params) {
+        $this->loadModules();
+
+        if(!empty($this->mods)) {
+            foreach ($this->mods as $name => $mod){
+                if(method_exists($mod,'impact_param_value')) {
+                    $value = $mod->impact_param_value($params);
+                }
+            }
+        }
+
+        return $value;
+    }
 	// --------------------
 
 	// --- Cartpay actions
@@ -705,7 +723,15 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					$product = $mc->setItemData($products[$item['id']][$i],$current);
 					$product['id_items'] = $products[$item['id']][$i]['id_items'];
 					$usedIndexes[$item['id']] = $i;
-
+                    // --- paramètres supplémentaires
+                    if($item['param'] != NULL) {
+                        foreach ($item['param'] as $params => $param) {
+                            $item['param'][$params] = [
+                                'id' => $param,
+                                'value' => $this->getParamValue($param)
+                            ];
+                        }
+                    }
 					$rate = 1 + $item['vat']/100;
 					$product['unit_price'] = round($item['unit_price'], 2);
 					$product['unit_price_inc'] = round($item['unit_price'] * $rate, 2);
@@ -713,6 +739,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					$product['total_inc'] = round($item['unit_price'] * $item['q'] * $rate, 2);
 					$item = array_merge($item,$product);
 				}
+                /*print '<pre>';
+                print_r($item);
+                print '</pre>';*/
 
 				foreach ($cart['fees'] as &$fee) {
 					$rate = 1 + $fee['vat']/100;

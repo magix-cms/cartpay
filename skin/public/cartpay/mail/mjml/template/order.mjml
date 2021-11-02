@@ -82,7 +82,15 @@
                         </tr>
                         {foreach $data['cart']['items'] as $item}
                         <tr>
-                            <td style="border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0;">{$item['name']}</td>
+                            <td style="border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0;">
+                                {$item['name']} &nbsp;
+                                {if is_array($item['param']) && !empty($item['param'])}
+                                {foreach $item['param'] as $param}
+                                {$param['value']}
+                                {/foreach}
+                                {/if}
+                            </td>
+
                             <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['q']}</td>
                             <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['unit_price']}&nbsp;€</td>
                             <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['vat']}&nbsp;%</td>

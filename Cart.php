@@ -77,6 +77,9 @@ class Cart
 					}
 					if($same) return $i;
 				}
+				else {
+					return $i;
+				}
 			}
 		}
 		return -1;

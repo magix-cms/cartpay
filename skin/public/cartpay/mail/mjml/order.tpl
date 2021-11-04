@@ -230,7 +230,7 @@
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['buyer']['firstname']} {$data['buyer']['lastname']}<br> {$data['buyer']['email']}<br> {if $data['buyer']['phone']}{$data['buyer']['phone']}<br>{/if} {$data['buyer']['address']}<br> {$data['buyer']['postcode']} {$data['buyer']['city']}<br> {if $data['buyer']['country']}{$data['buyer']['country']}<br>{/if} {if $data['buyer']['company']}{$data['buyer']['company']}<br>{/if} {if $data['buyer']['vat']}{$data['buyer']['vat']}<br>{/if}</div>
+                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['buyer']['firstname']} {$data['buyer']['lastname']}<br> {$data['buyer']['email']}<br> {if $data['buyer']['phone']}{$data['buyer']['phone']}<br>{/if} {$data['buyer']['address']}<br> {$data['buyer']['postcode']} {$data['buyer']['city']}<br> {if $data['buyer']['country']}{$data['buyer']['country']}<br>{/if} {if $data['buyer']['company']}{$data['buyer']['company']}<br>{/if} {if $data['buyer']['vat']}{$data['buyer']['vat']}<br>{/if} {foreach $data['additionnalResume'] as $item} <strong>{$item['name']}</strong><br> {$item['desc']} {/foreach}</div>
                                 </td>
                               </tr>
                             </tbody>

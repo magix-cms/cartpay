@@ -1440,6 +1440,26 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                 $this->cart->emptyCart();
                                                             }
                                                         }
+                                                    }elseif ($record['payment_order'] === 'bank_wire'){
+                                                        $log = new debug_logger(MP_LOG_DIR);
+                                                        $log->tracelog('start payment');
+                                                        $log->tracelog(json_encode(
+                                                            array(
+                                                                'type' => 'status',
+                                                                'data' => array(
+                                                                    'id' => $this->current_cart['id_cart'],
+                                                                    'tc' => 1
+                                                                )
+                                                            )
+                                                        ));
+                                                        /*$this->upd(array(
+                                                            'type' => 'status',
+                                                            'data' => array(
+                                                                'id' => $this->current_cart['id_cart'],
+                                                                'tc' => 1
+                                                            )
+                                                        ));*/
+                                                        //$this->cart->emptyCart();
                                                     }
                                                 }
                                             }

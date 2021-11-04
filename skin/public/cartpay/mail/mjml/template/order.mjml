@@ -31,6 +31,10 @@
         {if $data['buyer']['country']}{$data['buyer']['country']}<br/>{/if}
         {if $data['buyer']['company']}{$data['buyer']['company']}<br/>{/if}
         {if $data['buyer']['vat']}{$data['buyer']['vat']}<br/>{/if}
+        {foreach $data['additionnalResume'] as $item}
+        <strong>{$item['name']}</strong><br/>
+            {$item['desc']}
+        {/foreach}
     </mj-text>
 </mj-column>
 <mj-column width="50%">

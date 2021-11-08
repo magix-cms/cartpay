@@ -217,6 +217,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
             // Check if there is a current cart
             if(!$this->current_cart) {
                 // - no cart was found so we create new cart session
+				$this->cart->renew();
+				$this->session_key_cart = $this->cart->getKey();
                 $this->openSession($this->session_key_cart, $this->id_account);
                 $this->current_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
             }
@@ -234,7 +236,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
             elseif($this->current_cart['id_account'] && !$this->id_account) {
                 // - cart was found but assign to an account, empty the cart and start a new one
                 $this->cart->emptyCart();
-                $this->cart = new Cart('mc_cart');
+				$this->cart->renew();
                 // Get the new key of the cart
                 $this->session_key_cart = $this->cart->getKey();
                 // Get the new cart from the db
@@ -489,6 +491,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		}
 	}
 
+    /**
+     * @return array
+     */
     private function getAdditionnalResume(){
         $this->loadModules();
 
@@ -728,7 +733,11 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                         foreach ($item['param'] as $params => $param) {
                             $item['param'][$params] = [
                                 'id' => $param,
-                                'value' => $this->getParamValue($param)
+                                'value' => $this->getParamValue(
+                                    array(
+                                        'params'=>$param,
+                                        'items'=>$products[$item['id']][$i]['id_items'])
+                                )
                             ];
                         }
                     }
@@ -1440,10 +1449,11 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                 $this->cart->emptyCart();
                                                             }
                                                         }
-                                                    }elseif ($record['payment_order'] === 'bank_wire'){
+                                                    }
+													elseif ($record['payment_order'] === 'bank_wire'){
                                                         $log = new debug_logger(MP_LOG_DIR);
                                                         $log->tracelog('start payment');
-                                                        $log->tracelog(json_encode(
+                                                        /*$log->tracelog(json_encode(
                                                             array(
                                                                 'type' => 'status',
                                                                 'data' => array(
@@ -1451,15 +1461,15 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                     'tc' => 1
                                                                 )
                                                             )
-                                                        ));
-                                                        /*$this->upd(array(
+                                                        ));*/
+                                                        $this->upd(array(
                                                             'type' => 'status',
                                                             'data' => array(
                                                                 'id' => $this->current_cart['id_cart'],
                                                                 'tc' => 1
                                                             )
-                                                        ));*/
-                                                        //$this->cart->emptyCart();
+                                                        ));
+                                                        $this->cart->emptyCart();
                                                     }
                                                 }
                                             }
@@ -1468,7 +1478,10 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 											$this->template->assign('done',$this->done);
 
 											// If payment method method is bank wire or the transaction has been succeed
-											if(isset($this->done) && !$this->done['error']) $this->send_email($buyer['email'],$this->action,$buyer,$record);
+											if(isset($this->done) && !$this->done['error']) {
+                                                session_start();
+                                                $this->send_email($buyer['email'],$this->action,$buyer,$record);
+                                            }
 										}
 										// --- Step before the one before the last
 										elseif($current_step < array_key_last($steps)) {

@@ -4,6 +4,20 @@
         <div class="row">
             <div class="col-xs-12 col-md-6">
                 <div class="form-group">
+                    <label for="order_num">{#order#|ucfirst} :</label>
+                    <input id="order_num" type="text" name="order_num" value="{$cart.id_order}" placeholder="{#order#}" disabled class="form-control" />
+                </div>
+            </div>
+            <div class="col-xs-12 col-md-6">
+                <div class="form-group">
+                    <label for="email_ac">{#email#|ucfirst} :</label>
+                    <input id="email_ac" type="text" name="cart[email_ac]" value="{$cart.email}" placeholder="{#ph_email#}" disabled class="form-control" />
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-xs-12 col-md-6">
+                <div class="form-group">
                     <label for="lastname_ac">{#lastname#|ucfirst} :</label>
                     <input id="lastname_ac" type="text" name="cart[lastname_ac]" value="{$cart.lastname}" placeholder="{#ph_lastname#}" disabled class="form-control" />
                 </div>
@@ -12,14 +26,6 @@
                 <div class="form-group">
                     <label for="firstname_ac">{#firstname#|ucfirst} :</label>
                     <input id="firstname_ac" type="text" name="cart[firstname_ac]" value="{$cart.firstname}" placeholder="{#ph_firstname#}" disabled class="form-control" />
-                </div>
-            </div>
-        </div>
-        <div class="row">
-            <div class="col-xs-12 col-md-6">
-                <div class="form-group">
-                    <label for="email_ac">{#email#|ucfirst} :</label>
-                    <input id="email_ac" type="text" name="cart[email_ac]" value="{$cart.email}" placeholder="{#ph_email#}" disabled class="form-control" />
                 </div>
             </div>
         </div>
@@ -60,6 +66,52 @@
                 </select>
             </div>
         </div>
+        {strip}
+            {if isset($cart.transport)}
+                {$transport = $cart.transport}
+            {/if}
+        {/strip}
+        {if isset($transport) && is_array($transport)}
+            <fieldset>
+                <h3>Livraison</h3>
+                <div class="row">
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
+                            <label for="transport[lastname]">{#lastname#|ucfirst} :</label>
+                            <input id="transport[lastname]" type="text" name="transport[lastname]" value="{$transport.lastname}" placeholder="{#ph_lastname#}" disabled class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
+                            <label for="transport[firstname]">{#firstname#|ucfirst} :</label>
+                            <input id="transport[firstname]" type="text" name="transport[firstname]" value="{$transport.firstname}" placeholder="{#ph_firstname#}" disabled class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
+                            <label for="transport[street]">{#street_ac#|ucfirst} :</label>
+                            <input id="transport[street]" type="text" name="transport[street]" value="{$transport.street}" placeholder="{#ph_street#}" disabled class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
+                            <label for="transport[postcode]">{#postcode_ac#|ucfirst} :</label>
+                            <input id="transport[postcode]" type="text" name="transport[postcode]" value="{$transport.postcode} {$transport.name}" placeholder="{#ph_postcode#}" disabled class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
+                            <label for="transport[price]">{#price#|ucfirst} :</label>
+                            <input id="transport[price]" type="text" name="transport[price]" value="{$transport.price}" placeholder="{#ph_price#}" disabled class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+        {/if}
         <fieldset>
             <input type="hidden" name="id" value="{$cart.id_cart}" />
             <button class="btn btn-main-theme" type="submit" name="action" value="edit">{#save#|ucfirst}</button>

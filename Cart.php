@@ -55,6 +55,16 @@ class Cart
 	}
 
 	/**
+	 *
+	 */
+	public function renew()
+	{
+		$this->session->regenerate();
+		$this->key = session_id();
+		$this->session->run(['session_key_cart' => $this->key]);
+	}
+
+	/**
 	 * @return string
 	 */
 	public function getKey()

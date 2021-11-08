@@ -182,13 +182,13 @@ class plugins_cartpay_db
                                     SUM(items.quantity) AS nbr_quantity,
                                     cart.date_register
                                 FROM `mc_cartpay` as cart
-                                LEFT JOIN `mc_cartpay_buyer` as b USING (id_buyer)
-                                JOIN `mc_cartpay_items` as items USING (id_cart)
-                                LEFT JOIN `mc_cartpay_order` as o USING (id_cart)
-                                LEFT JOIN `mc_cartpay_quotation` as q USING (id_cart)
+                                JOIN `mc_cartpay_buyer` as b ON (b.id_buyer = cart.id_buyer)
+                                JOIN `mc_cartpay_items` as items ON (cart.id_cart = items.id_cart)
+                                LEFT JOIN `mc_cartpay_order` as o ON (cart.id_cart = o.id_cart)
+                                LEFT JOIN `mc_cartpay_quotation` as q ON (cart.id_cart = q.id_cart)
                                 WHERE cart.transmission_cart = 1 AND cart.id_account IS NULL ' . $cond.
-                        ' ORDER BY cart.id_cart DESC) carts WHERE carts.id_cart IS NOT NULL AND carts.id_cart > 0
-                         GROUP BY carts.id_cart '.$limit;
+                        ' GROUP BY cart.id_cart ORDER BY cart.id_cart DESC) carts WHERE carts.id_cart IS NOT NULL AND carts.id_cart > 0
+                          '.$limit;//GROUP BY carts.id_cart
                     break;
                 case 'product':
                     $sql = 'SELECT item.id_items,item.quantity,p.price_p,c.name_p
@@ -407,6 +407,11 @@ class plugins_cartpay_db
 				case 'order':
 				case 'quotation':
 					$sql = 'SELECT * FROM `mc_cartpay_'.$config['type'].'` WHERE id_cart = :id_cart ORDER BY date_register DESC LIMIT 0,1';
+                    break;
+                case 'countCart':
+                    $sql = 'SELECT count(id_cart) AS order_num FROM mc_cartpay 
+                    WHERE id_cart BETWEEN 1 AND :id AND transmission_cart = 1';
+                    break;
 			}
 
 			return $sql ? component_routing_db::layer()->fetch($sql, $params) : null;

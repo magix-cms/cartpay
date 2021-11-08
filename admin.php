@@ -350,24 +350,59 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                                 }else{
                                     $cart = $this->getItems('cart', $this->edit, 'one', false);
                                 }
+                                if(class_exists('plugins_transport_admin')) {
+                                    $transport = new plugins_transport_admin($this->template);
+
+                                    $cart['transport'] = $transport->getTransport($this->edit);
+                                }
+                                //$order_num = $this->getItems('countCart', $this->edit, 'one', false);
+                                //$this->template->assign('order_num', $order_num['order_num']);
+
                                 $this->template->assign('cart', $cart);
 
-                                $this->getItems('product', array(':id' => $this->edit, ':default_lang' => $defaultLanguage['id_lang']), 'all');
-                                if ($cart['type_cart'] == 'sale') {
-                                    $assign = array(
-                                        'id_items',
-                                        'name_p' => ['title' => 'name'],
-                                        'quantity' => ['title' => 'name', 'input' => null],
-                                        'price_p' => ['type' => 'price', 'input' => null]
-                                    );
-                                    $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p', 'price_p'), $assign);
-                                } else {
-                                    $assign = array(
-                                        'id_items',
-                                        'name_p' => ['title' => 'name'],
-                                        'quantity' => ['title' => 'name', 'input' => null]
-                                    );
-                                    $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p'), $assign);
+
+                                if(class_exists('plugins_attribute_admin')) {
+                                    $attribut = new plugins_attribute_admin($this->template);
+
+                                    $product = $attribut->getProductData(array(':id' => $this->edit, ':default_lang' => $defaultLanguage['id_lang']));
+                                    $this->template->assign('product',$product);
+
+                                    if ($cart['type_cart'] == 'sale') {
+                                        $assign = array(
+                                            'id_items',
+                                            'name_p' => ['title' => 'name'],
+                                            'value_attr' => ['title' => 'name'],
+                                            'quantity' => ['title' => 'name', 'input' => null],
+                                            'price_p' => ['type' => 'price', 'input' => null]
+                                        );
+                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p', 'price_p'), $assign);
+                                    } else {
+                                        $assign = array(
+                                            'id_items',
+                                            'name_p' => ['title' => 'name'],
+                                            'value_attr' => ['title' => 'name'],
+                                            'quantity' => ['title' => 'name', 'input' => null]
+                                        );
+                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p'), $assign);
+                                    }
+                                }else{
+                                    $this->getItems('product', array(':id' => $this->edit, ':default_lang' => $defaultLanguage['id_lang']), 'all');
+                                    if ($cart['type_cart'] == 'sale') {
+                                        $assign = array(
+                                            'id_items',
+                                            'name_p' => ['title' => 'name'],
+                                            'quantity' => ['title' => 'name', 'input' => null],
+                                            'price_p' => ['type' => 'price', 'input' => null]
+                                        );
+                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p', 'price_p'), $assign);
+                                    } else {
+                                        $assign = array(
+                                            'id_items',
+                                            'name_p' => ['title' => 'name'],
+                                            'quantity' => ['title' => 'name', 'input' => null]
+                                        );
+                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p'), $assign);
+                                    }
                                 }
                                 /*$country = new component_collections_country();
                                 $this->template->assign('countries',$country->getCountries());*/

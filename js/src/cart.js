@@ -104,7 +104,7 @@ const Cart = {
         let item = document.getElementById('product_'+cart.id_item);
         if(item !== undefined && cart.nb > 0) {
             //item.querySelector('.quantity').innerHTML = cart.nb;
-            item.querySelector('.product-total').innerHTML = cart.product_tot;
+            item.querySelector('.product-total').innerHTML = cart.product_tot.toFixed(2);
         }
         else if(cart.nb === 0) {
             item.remove();

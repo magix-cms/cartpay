@@ -382,6 +382,10 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				if(method_exists($mod,'impact_unit_price')) {
 					$unit_price = $mod->impact_unit_price($params);
 				}
+                // Add price on price or impact unit price
+                if(method_exists($mod,'add_unit_price')) {
+                    $unit_price += $mod->add_unit_price($params);
+                }
 			}
 		}
 
@@ -519,7 +523,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
         if(!empty($this->mods)) {
             foreach ($this->mods as $name => $mod){
-                if(method_exists($mod,'impact_param_value')) {
+                if(method_exists($mod,'impact_param_value') && $name === $params['module']) {
                     $value = $mod->impact_param_value($params);
                 }
             }
@@ -735,6 +739,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                 'id' => $param,
                                 'value' => $this->getParamValue(
                                     array(
+                                        'module'=>$params,
                                         'params'=>$param,
                                         'items'=>$products[$item['id']][$i]['id_items'])
                                 )

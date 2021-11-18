@@ -66,17 +66,24 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		$cart;
 
 	/**
-     * @var array $config
+     * @var int|string|null $id_account
      */
-    private $config;
+    private
+		$id_account = null;
 
 	/**
      * Session var
      * @var string $session_key_cart
      */
+    private $session_key_cart;
+
+	/**
+     * @var array $config
+     * @var array $current_cart
+     * @var array $steps
+     */
     private
-		$id_account = null,
-		$session_key_cart,
+		$config,
 		$current_cart,
 		$steps = [
 			'quotation' => [
@@ -93,39 +100,46 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		];
 
     /**
-     * Les variables globales
      * @var string $action
+     * @var string $step
+     * @var string $status
+	 * @var string $payment_method
      */
-    public $action = '';
+    public
+		$payment_method,
+		$step,
+		$status,
+		$action = '';
 
     /**
-     * Les variables plugin
      * @var int $id_product
+     * @var int $id_items
      * @var int $quantity
+     */
+    public
+		$id_product,
+		$id_items,
+		$quantity;
+
+    /**
+     * @var array $param
      * @var array $coor
      * @var array $billing
-     * @var string $payment_method
      * @var array $purchase
      * @var array $custom
      * @var array $done
      */
     public
-		$id_product,
-		$id_items,
-		$quantity,
 		$param,
 		$coor,
 		$billing,
-		$payment_method,
-		$step,
 		$purchase,
 		$custom,
-		$status,
 		$done;
 
     /**
      * plugins_cartpay_public constructor.
-     * @param null|frontend_model_template $t
+     * @param null|object|frontend_model_template $t
      */
     public function __construct($t = null) {
         $this->template = $t instanceof frontend_model_template ? $t : new frontend_model_template();
@@ -142,11 +156,11 @@ class plugins_cartpay_public extends plugins_cartpay_db {
      * Assign data to the defined variable or return the data
      * @param string $type
      * @param string|int|null $id
-     * @param string $context
+     * @param string|null $context
      * @param boolean $assign
      * @return mixed
      */
-    private function getItems($type, $id = null, $context = null, $assign = true) {
+    private function getItems(string $type, $id = null, string $context = null, bool $assign = true) {
         return $this->data->getItems($type, $id, $context, $assign);
     }
 
@@ -175,91 +189,99 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
         // Start cart session
         //$this->cart = new Cart('mc_cart');
-		$this->cart = Cart::getInstance('mc_cart');
+		$this->cart = Cart::getInstance();
 
         // Get the key of the cart
         $this->session_key_cart = $this->cart->getKey();
 
         // Check if cart with this key exists in db
-        $this->current_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
+        $session_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
 
-        // Check if there is a account cart
+        // Check if there is an account cart
         if(isset($account_cart)) {
-            // Check if the current cart is different from the current cart
-            if($this->current_cart['session_key_cart'] !== $account_cart['session_key_cart']) {
+            // Check if the current cart is different from the account cart
+            if($session_cart['session_key_cart'] !== $account_cart['session_key_cart']) {
                 // Get the content of the current cart
                 $cart = $this->cartData();
 
                 // - The current cart si empty so we'll replace it with the old one
                 if(!$cart['nb_items']) {
                     // - create new cart session with this key and retreive items of the cart
-                    $this->current_cart = $account_cart;
-                    //$this->cart = new Cart('mc_cart', $account_cart['session_key_cart']);
-                    $this->cart = new Cart('mc_cart', $account_cart['session_key_cart']);
+                    $session_cart = $account_cart;
+					$this->cart->newCart($account_cart['session_key_cart']);
                     $this->session_key_cart = $account_cart['session_key_cart'];
+					$this->cart->openCart();
                     $this->retreiveAccountCart();
                 }
                 else {
                     // - There is at least one product in the current cart so we assign it to the account
-                    $this->upd(array(
-                        'type' => 'session',
-                        'data' => array(
-                            'id' => $this->current_cart['id_cart'],
-                            'id_account' => $this->id_account
-                        )
-                    ));
-                    $this->current_cart['id_account'] = $this->id_account;
+                    $this->upd([
+						'type' => 'session',
+						'data' => [
+							'id' => $session_cart['id_cart'],
+							'id_account' => $this->id_account
+						]
+					]);
+                    $session_cart['id_account'] = $this->id_account;
                 }
             }
         }
         else {
             // - no account cart was found
             // Check if there is a current cart
-            if(!$this->current_cart) {
+            if(!$session_cart) {
                 // - no cart was found so we create new cart session
-				$this->cart->renew();
-				$this->session_key_cart = $this->cart->getKey();
                 $this->openSession($this->session_key_cart, $this->id_account);
-                $this->current_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
+                $session_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
             }
-            elseif(empty($this->current_cart['id_account']) && isset($this->id_account) && !empty($this->id_account)){
+            elseif($session_cart['transmission_cart'] === 1){
+				// - cart was found but is closed
+				$this->cart->newCart();
+				// Get the new key of the cart
+				$this->session_key_cart = $this->cart->getKey();
+				$this->openSession($this->session_key_cart, $this->id_account);
+				// Get the new cart from the db
+				$session_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
+			}
+            elseif(empty($session_cart['id_account']) && isset($this->id_account) && !empty($this->id_account)){
                 // - cart was found but not assign to the current account, update the session to save into account
-                $this->upd(array(
-                    'type' => 'session',
-                    'data' => array(
-                        'id' => $this->current_cart['id_cart'],
-                        'id_account' => $this->id_account
-                    )
-                ));
-                $this->current_cart['id_account'] = $this->id_account;
+                $this->upd([
+					'type' => 'session',
+					'data' => [
+						'id' => $session_cart['id_cart'],
+						'id_account' => $this->id_account
+					]
+				]);
+                $session_cart['id_account'] = $this->id_account;
             }
-            elseif($this->current_cart['id_account'] && !$this->id_account) {
+            elseif($session_cart['id_account'] && !$this->id_account) {
                 // - cart was found but assign to an account, empty the cart and start a new one
-                $this->cart->emptyCart();
-				$this->cart->renew();
+                $this->cart->newCart();
                 // Get the new key of the cart
                 $this->session_key_cart = $this->cart->getKey();
+				$this->openSession($this->session_key_cart, $this->id_account);
                 // Get the new cart from the db
-                $this->current_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
+                $session_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
             }
         }
+
+		$this->current_cart = $session_cart ?: [];
+		$this->cart->openCart();
 	}
 
     /**
      * Open Session
      * @param $session_key_cart
      * @param $id_account
-     * @return bool
      */
     private function openSession($session_key_cart, $id_account = null) {
-        $this->add(array(
-            'type' => 'session',
-            'data' => array(
-                'session_key_cart' => $session_key_cart,
-                'id_account' => $id_account
-            )
-        ));
-        return true;
+        $this->add([
+			'type' => 'session',
+			'data' => [
+				'session_key_cart' => $session_key_cart,
+				'id_account' => $id_account
+			]
+		]);
     }
     // --------------------
 
@@ -268,7 +290,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
      * Insert data
      * @param array $config
      */
-    private function add($config) {
+    private function add(array $config) {
         switch ($config['type']) {
             case 'order':
             case 'buyer':
@@ -277,7 +299,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
             case 'quotation':
             case 'session':
                 parent::insert(
-                    array('type' => $config['type']),
+                    ['type' => $config['type']],
                     $config['data']
                 );
                 break;
@@ -314,12 +336,12 @@ class plugins_cartpay_public extends plugins_cartpay_db {
      * Insert data
      * @param array $config
      */
-    private function del($config) {
+    private function del(array $config) {
         switch ($config['type']) {
             case 'product':
                 parent::delete(
-                    array('type' => $config['type']),
-                    $config['data']
+					['type' => $config['type']],
+					$config['data']
                 );
                 break;
         }
@@ -331,7 +353,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * Get available payment method names
 	 * @return array
 	 */
-	public function getPaymentMethodAvailable() {
+	public function getPaymentMethodAvailable(): array {
 		$this->loadModules();
 
 		$pma = [];
@@ -347,11 +369,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		if(!empty($this->mods)) {
 			foreach ($this->mods as $name => $mod){
 				if(property_exists($mod,'payment_plugin') && $mod->payment_plugin === true) {
-					$this->template->addConfigFile(
-						[component_core_system::basePath().'/plugins/'.$name.'/i18n/'],
-						['public_local_'],
-						false
-					);
+					$this->template->addConfigFile([component_core_system::basePath().'/plugins/'.$name.'/i18n/'], ['public_local_']);
 					$this->template->configLoad();
 					$pma[$name] = [
 						'value' => $name,
@@ -371,21 +389,21 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param array $params
 	 * @return float
 	 */
-	private function getProductPrice($params) {
+	private function getProductPrice(array $params): float {
 		$this->loadModules();
 
 		$pPrice = $this->getItems('product_price',$params['id_product'],'one',false);
 		$unit_price = $pPrice['price_p'];
 
 		if(!empty($this->mods)) {
-			foreach ($this->mods as $name => $mod){
-				if(method_exists($mod,'replace_unit_price')) {
-					$unit_price = $mod->replace_unit_price($params);
-				}
-                // Add price on price or impact unit price
-                if(method_exists($mod,'impact_unit_price')) {
-                    $unit_price += $mod->impact_unit_price($params);
-                }
+			// Replace unit price
+			foreach ($this->mods as $mod){
+				if(method_exists($mod,'replace_unit_price')) $unit_price = $mod->replace_unit_price($params);
+			}
+
+			// Add price on price or impact unit price
+			foreach ($this->mods as $mod){
+                if(method_exists($mod,'impact_unit_price')) $unit_price = $unit_price + $mod->impact_unit_price($params);
 			}
 		}
 
@@ -396,16 +414,14 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param array $params
 	 * @return float
 	 */
-	private function getProductVatRate($params) {
+	private function getProductVatRate(array $params): float {
 		$this->loadModules();
 
 		$vat_rate = $this->settings['vat_rate']['value'];
 
 		if(!empty($this->mods)) {
-			foreach ($this->mods as $name => $mod){
-				if(method_exists($mod,'impact_product_vat_rate')) {
-					$vat_rate = $mod->impact_product_vat_rate($params);
-				}
+			foreach ($this->mods as $mod){
+				if(method_exists($mod,'impact_product_vat_rate')) $vat_rate = $mod->impact_product_vat_rate($params);
 			}
 		}
 
@@ -413,10 +429,10 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	}
 
 	/**
-	 * @param $type
-	 * @return array|bool|mixed
+	 * @param string $type
+	 * @return array|bool
 	 */
-	private function getSteps($type) {
+	private function getSteps(string $type) {
 		if(!in_array($type,['quotation','order'])) return false;
 
 		$this->loadModules();
@@ -437,30 +453,26 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				if(method_exists($mod,$method)) {
 					try {
 						$reflectionMethod = new ReflectionMethod($mod, $method);
+
+						/**
+						 * This
+						 * [
+						 * 	'step' => 'My step',
+						 * 	'pos' => 5,
+						 * 	'mod' => plugin_name
+						 * ]
+						 * will insert the 'My step' step at the fifth position in the step order
+						 */
+						$mod_step = $reflectionMethod->invoke($mod);
 					}
 					catch(ReflectionException $e) {
-						$logger = new debug_logger();
+						$logger = new debug_logger(MP_LOG_DIR);
 						$logger->log('php','error','Reflection Exception : '.$e->getMessage(),debug_logger::LOG_MONTH);
 						return false;
 					}
 
-					/**
-					 * This
-					 * [
-					 * 	'step' => 'My step',
-					 * 	'pos' => 5,
-					 * 	'mod' => plugin_name
-					 * ]
-					 * will insert the 'My step' step at the fifth position in the step order
-					 */
-					$mod_step = $reflectionMethod->invoke($mod);
-
 					if(is_array($mod_step) && key_exists('step',$mod_step) && key_exists('pos',$mod_step) && key_exists('mod',$mod_step)) {
-						$this->template->addConfigFile(
-							array(component_core_system::basePath().'/plugins/'.$name.'/i18n/'),
-							array('public_local_'),
-							false
-						);
+						$this->template->addConfigFile([component_core_system::basePath().'/plugins/'.$name.'/i18n/'], ['public_local_']);
 						$this->template->configLoad();
 						$newsteps = [];
 						$i = 1;
@@ -481,33 +493,29 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param object $mod
 	 * @param string $action
 	 */
-	private function exeStepAction($mod, $action) {
+	private function exeStepAction(object $mod, string $action) {
 		if(method_exists($mod,$action)) {
 			try {
 				$reflectionMethod = new ReflectionMethod($mod, $action);
+				$reflectionMethod->invoke($mod, $this->current_cart);
 			}
 			catch(ReflectionException $e) {
-				$logger = new debug_logger();
+				$logger = new debug_logger(MP_LOG_DIR);
 				$logger->log('php','error','Reflection Exception : '.$e->getMessage(),debug_logger::LOG_MONTH);
-				return false;
 			}
-			$reflectionMethod->invoke($mod, $this->current_cart);
 		}
 	}
 
     /**
      * @return array
      */
-    private function getAdditionnalResume(){
+    private function getAdditionnalResume(): array {
         $this->loadModules();
-
         $arb = [];
 
         if(!empty($this->mods)) {
-            foreach ($this->mods as $name => $mod){
-                if(method_exists($mod,'orderResumeInfos')) {
-                    $arb[] = $mod->orderResumeInfos($this->current_cart);
-                }
+            foreach ($this->mods as $mod){
+                if(method_exists($mod,'orderResumeInfos')) $arb[] = $mod->orderResumeInfos($this->current_cart);
             }
         }
 
@@ -516,16 +524,32 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
     /**
      * @param array $params
-     * @return float
+     * @return mixed
      */
-    private function getParamValue($params) {
+    private function getParamValue(array $params) {
         $this->loadModules();
+		$value = null;
 
         if(!empty($this->mods)) {
             foreach ($this->mods as $name => $mod){
-                if(method_exists($mod,'impact_param_value') && $name === $params['module']) {
-                    $value = $mod->impact_param_value($params);
-                }
+                if(method_exists($mod,'get_param_value') && $name === $params['module']) $value = $mod->get_param_value($params);
+            }
+        }
+
+        return $value;
+    }
+
+    /**
+     * @param array $params
+     * @return mixed
+     */
+    private function getParamInfo(array $params) {
+        $this->loadModules();
+		$value = null;
+
+        if(!empty($this->mods)) {
+            foreach ($this->mods as $name => $mod){
+                if(method_exists($mod,'get_param_info') && $name === $params['module']) $value = $mod->get_param_info($params);
             }
         }
 
@@ -538,7 +562,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * Get account cart item and place them into cart
 	 */
 	private function retreiveAccountCart() {
-		if(isset($this->current_cart['id_cart'])) {
+		if(is_array($this->current_cart) && isset($this->current_cart['id_cart'])) {
 			$items = $this->getItems('account_cart_items',$this->current_cart['id_cart'],'all',false);
 			foreach ($items as $item) {
 			    $product = $item['id_product'];
@@ -565,16 +589,12 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	}
 
 	/**
-	 * @param $cart
-	 * @param $product
-	 * @param $quantity
-	 * @param $return
+	 * @param int|string $product
+	 * @param int $quantity
+	 * @param array $param
 	 */
-    private function addToCart($cart, $product, $quantity, $param){
-    	// Check if the product is already in the cart
-    	$inCart = $this->cart->inCart($product, $param);
-
-		// Get the product unit price
+    private function addToCart($product, int $quantity, array $param) {
+    	// Get the product unit price
 		$unit_price = $this->getProductPrice([
 			'id_product' => $product,
 			'quantity' => $quantity,
@@ -591,25 +611,25 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		]);
 
 		// Insert into cart
-        $item = $this->cart->addItem($product, $quantity, $unit_price ,$pVat, $param);
+        $updated = $this->cart->addItem($product, $quantity, $unit_price ,$pVat, $param);
 
 		$conf = [
 			'type' => 'product',
 			'data' => [
-				'id_cart' => $cart,
+				'id_cart' => $this->current_cart['id_cart'],
 				'id_product' => $product,
-				'quantity' => $item['q']
+				'quantity' => $quantity
 			]
 		];
 		// if the product is already in the cart : Yes - update quantity | No - insert in db
-		$inCart > -1 ? $this->upd($conf) : $this->add($conf);
+		$updated ? $this->upd($conf) : $this->add($conf);
 
         // Get full cart info
 		$cart = $this->cartData();
 
 		$html = null;
 		// If the item wasn't in the cart, prepare the line to be inserted in the float cart
-		if($inCart === -1){
+		if(!$updated){
 			$this->template->assign('setting',$this->settings);
 			$this->template->assign('data',[$cart['items'][$product]]);
 			$html = $this->template->fetch('cartpay/loop/float-cart-item.tpl');
@@ -630,53 +650,54 @@ class plugins_cartpay_public extends plugins_cartpay_db {
     }
 
 	/**
-	 * @param $cart
-	 * @param $product
-	 * @param $quantity
+	 * @param int|string $product
+	 * @param int|string $item
+	 * @param int $quantity
+	 * @param array $param
 	 */
-    private function updCart($cart, $product, $item, $quantity, $param){
+    private function updCart($product, $item, int $quantity, array $param) {
     	// Update in db
 		$id = $item;
 		if($quantity > 0){
 			$this->upd([
 				'type' => 'product',
 				'data' => [
-					'id_cart' => $cart,
+					'id_cart' => $this->current_cart['id_cart'],
 					'id_items' => $item,
 					'quantity' => $quantity
 				]
 			]);
 
 			// Get the product unit price
-			$unit_price = $this->getProductPrice([
+			/*$unit_price = $this->getProductPrice([
 				'id_product' => $product,
 				'quantity' => $quantity,
 				'id_account' => $this->id_account,
 				'param' => $this->param
-			]);
+			]);*/
 
 			// Get the product vat rate
-			$pVat = $this->getProductVatRate([
+			/*$pVat = $this->getProductVatRate([
 				'id_product' => $product,
 				'quantity' => $quantity,
 				'id_account' => $this->id_account,
 				'param' => $this->param
-			]);
+			]);*/
 		}
 		else {
 			$this->del([
 				'type' => 'product',
 				'data' => [
-					'id_cart' => $cart,
+					'id_cart' => $this->current_cart['id_cart'],
 					'id_items' => $item
 				]
 			]);
-			$unit_price = null;
-			$pVat = null;
+			/*$unit_price = null;
+			$pVat = null;*/
 		}
 
 		// Update item in cart
-		$item = $this->cart->updItem($product,$quantity,$unit_price,$pVat,$param);
+		$item = $this->cart->updItem($product, $quantity, null, null, $param);
 
 		// Get full cart info
 		$cart = $this->cartData();
@@ -706,9 +727,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
     }
 
     /**
-     *
+     * @return array
      */
-    public function cartData() {
+    public function cartData(): array {
 		$cart = $this->cart->getCartData();
 
         if(isset($this->session_key_cart)) {
@@ -728,34 +749,43 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
 				$usedIndexes = [];
 				foreach ($cart['items'] as &$item) {
-					$i = isset($usedIndexes[$item['id']]) ? $usedIndexes[$item['id']] + 1 : 0;
-					$product = $mc->setItemData($products[$item['id']][$i],$current);
-					$product['id_items'] = $products[$item['id']][$i]['id_items'];
-					$usedIndexes[$item['id']] = $i;
-                    // --- paramètres supplémentaires
-                    if($item['param'] != NULL) {
-                        foreach ($item['param'] as $params => $param) {
-                            $item['param'][$params] = [
-                                'id' => $param,
-                                'value' => $this->getParamValue(
-                                    array(
-                                        'module'=>$params,
-                                        'params'=>$param,
-                                        'items'=>$products[$item['id']][$i]['id_items'])
-                                )
+					$i = isset($usedIndexes[$item['item']->id]) ? $usedIndexes[$item['item']->id] + 1 : 0;
+					try {
+						$product = $mc->setItemData($products[$item['item']->id][$i],$current);
+					}
+					catch(Exception $e) {
+						$log = new debug_logger(MP_LOG_DIR);
+						$log->log('php','error',$e->getMessage());
+					}
+					$product['id_items'] = $products[$item['item']->id][$i]['id_items'];
+					$usedIndexes[$item['item']->id] = $i;
+                    // --- Additional parameters
+                    if(!empty($item['item']->params)) {
+						$item['params'] = [];
+                        foreach ($item['item']->params as $param => $value) {
+							$item['params'][$param] = [
+                                'id' => $value,
+                                'value' => $this->getParamValue([
+									'module' => $param,
+									'params' => $value,
+									'items' => $products[$item['item']->id][$i]['id_items']
+								]),
+                                'info' => $this->getParamInfo([
+									'module' => $param,
+									'params' => $value,
+									'items' => $products[$item['item']->id][$i]['id_items']
+								])
                             ];
                         }
                     }
-					$rate = 1 + $item['vat']/100;
-					$product['unit_price'] = round($item['unit_price'], 2);
-					$product['unit_price_inc'] = round($item['unit_price'] * $rate, 2);
-					$product['total'] = round($item['unit_price'] * $item['q'], 2);
-					$product['total_inc'] = round($item['unit_price'] * $item['q'] * $rate, 2);
+					$rate = 1 + $item['item']->vat/100;
+					$product['vat'] = $item['item']->vat;
+					$product['unit_price'] = round($item['item']->unit_price, 2);
+					$product['unit_price_inc'] = round($item['item']->unit_price * $rate, 2);
+					$product['total'] = round($item['item']->unit_price * $item['q'], 2);
+					$product['total_inc'] = round($item['item']->unit_price * $item['q'] * $rate, 2);
 					$item = array_merge($item,$product);
 				}
-                /*print '<pre>';
-                print_r($item);
-                print '</pre>';*/
 
 				foreach ($cart['fees'] as &$fee) {
 					$rate = 1 + $fee['vat']/100;
@@ -789,18 +819,18 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param string $step
      * @return string url
 	 */
-	private function setStepUrl($type, $step) {
+	private function setStepUrl(string $type, string $step): string {
 		$url = http_url::getUrl().'/'.$this->template->lang.'/cartpay/'.$type.'/?step='.$step;
 		$this->template->assign('next_step_url',$url);
 		return $url;
 	}
 
 	/**
-	 * @param $type
-	 * @param $data
+	 * @param string $type
+	 * @param array $data
 	 * @return array
 	 */
-	private function setItemsAccount($type,$data) {
+	private function setItemsAccount(string $type, array $data): array {
 		$newArr = array();
 		if(!empty($data)) {
 			switch($type){
@@ -838,10 +868,10 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	}
 
 	/**
-	 * @param $cart
+	 * @param array $cart
 	 * @return array
 	 */
-	private function getbuyerInfo($cart) {
+	private function getbuyerInfo(array $cart): array {
 		if(!empty($this->mods) && isset($this->mods['account']) && isset($this->id_account)) {
 			$account = $this->mods['account'];
 			$type = 'account';
@@ -859,7 +889,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param array $data
 	 * @param string $step
 	 */
-	private function saveRecord($action,$data,$step) {
+	private function saveRecord(string $action, array $data, string $step) {
 		$cart = $this->cartData();
 		$conf = ['type' => $action];
 		if($action === 'order') {
@@ -885,10 +915,10 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	}
 
 	/**
-	 * @param $cart
-	 * @param $data
+	 * @param array $cart
+	 * @param array $data
 	 */
-	private function saveBuyer($cart, $data) {
+	private function saveBuyer(array $cart, array $data) {
 		$conf = [
 			'type' => 'buyer',
 			'data' => [
@@ -922,10 +952,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	}
 
 	/**
-	 * @param $cart
-	 * @param $data
+	 * @param array $data
 	 */
-	private function saveBilling($data) {
+	private function saveBilling(array $data) {
 		$conf = [
 			'type' => 'billing',
 			'data' => [
@@ -944,8 +973,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * @param string $type
 	 * @return array
 	 */
-	private function getDoneStepStatus($action, $type)
-	{
+	private function getDoneStepStatus(string $action, string $type): array	{
 		$status = [
 			'success' => [
 				'title' => $this->template->getConfigVars($action.'_success'),
@@ -983,131 +1011,76 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	// --- Mail
 	/**
 	 * Retourne le message de notification
-	 * @param $type
-	 * @param null $subContent
-	 * @return string
+	 * @param string $type
+	 * @param null|string $subContent
+	 * @return array
 	 */
-	private function setNotify($type,$subContent=null){
+	private function setNotify(string $type, string $subContent = null): array {
 		$this->template->configLoad();
 		switch($type){
 			case 'warning':
-				$warning = array(
-					'empty' =>  $this->template->getConfigVars('fields_empty'),
-					'mail'  =>  $this->template->getConfigVars('mail_format')
-				);
+				$warning = [
+					'empty' => $this->template->getConfigVars('fields_empty'),
+					'mail' => $this->template->getConfigVars('mail_format')
+				];
 				$message = $warning[$subContent];
 				break;
 			case 'success':
 				$message = $this->template->getConfigVars('message_send_success');
 				break;
 			case 'error':
-				$error = array(
-					'installed'   =>  $this->template->getConfigVars('installed'),
-					'configured'  =>  $this->template->getConfigVars('configured')
-				);
-				$message = sprintf('plugin_error','contact',$error[$subContent]);
+				$error = [
+					'installed' => $this->template->getConfigVars('installed'),
+					'configured' => $this->template->getConfigVars('configured')
+				];
+				$error = $error[$subContent] ?: '';
+				$message = sprintf($error,'plugin_error','contact');
 				break;
+			default:
+				$message = '';
 		}
 
-		return array(
-			'type'      => $type,
-			'content'   => $message
-		);
+		return [
+			'type' => $type,
+			'content' => $message
+		];
 	}
 
 	/**
 	 * getNotify
-	 * @param $type
-	 * @param null $subContent
+	 * @param string $type
+	 * @param string|null $subContent
 	 */
-	private function getNotify($type,$subContent=null) {
+	private function getNotify(string $type, string $subContent = null) {
 		$this->template->assign('message',$this->setNotify($type,$subContent));
 		$this->template->display('contact/notify/message.tpl');
 	}
 
-    /**
-     * @param $type
-     * @return string
-     */
-    private function setTitleMail($type){
-        $about = new frontend_model_about($this->template);
-        $collection = $about->getCompanyData();
+	/**
+	 * @return array
+	 */
+	private function getAdditionnalMailResume(): array {
+		$this->loadModules();
 
-        switch ($type) {
-            default: $title = $this->template->getConfigVars($type.'_title');
-        }
+		$arb = [];
 
-        return sprintf($title, $collection['name']);
-    }
+		if(!empty($this->mods)) {
+			foreach ($this->mods as $mod){
+				if(method_exists($mod,'mailResumeInfos')) $arb[] = $mod->mailResumeInfos($this->current_cart);
+			}
+		}
 
-    /**
-     * @param string $tpl
-     * @param bool $debug
-     * @return string
-     * @throws Exception
-     */
-    private function getBodyMail($tpl, $debug = false){
-        $cssInliner = $this->settings->getSetting('css_inliner');
-        $this->template->assign('getDataCSSIColor',$this->settings->fetchCSSIColor());
-
-        $data = array();
-
-        switch ($tpl) {
-            default: $data = $this->cart;
-        }
-
-        $key_cart = $this->getItems('session',array('session_key_cart' => $this->session_key_cart),'one',false);
-        $langData = $this->getItems('idFromIso',array('iso' => $this->lang),'one',false);
-
-        $product = $this->getItems('catalog',array('id' => $key_cart['id_cart'],':default_lang'=>$langData['id_lang']),'all',false);
-
-        foreach ($product as $item => $val) {
-            $product[$item]['url'] = $this->routingUrl->getBuildUrl(array(
-                    'type' => 'product',
-                    'iso' => $val['iso_lang'],
-                    'id' => $val['id_product'],
-                    'url' => $val['url_p'],
-                    'id_parent'         =>  $val['id_cat'],
-                    'url_parent'        =>  $val['url_cat']
-                )
-            );
-        }
-        if($key_cart['id_account'] != NULL) {
-
-            $newData = $this->getItems('account', $key_cart['id_account'], 'one', false);
-            $account = $this->setItemsAccount('account', $newData);
-
-        }elseif($key_cart['id_buyer'] != NULL) {
-
-            $newData = $this->getItems('buyer', $key_cart['id_buyer'], 'one', false);
-            $account = $this->setItemsAccount('buyer', $newData);
-
-        }
-        if(!empty($account)) $this->template->assign('account',$account);
-        if(!empty($product)) $this->template->assign('product',$product);
-
-        //if(!empty($data)) $this->template->assign('data',$data);
-
-        $bodyMail = $this->template->fetch('cartpay/mail/'.$tpl.'.tpl');
-        if ($cssInliner['value']) {
-            $bodyMail = $this->mail->plugin_css_inliner($bodyMail,array(component_core_system::basePath().'skin/'.$this->template->themeSelected().'/mail/css' => 'mail.min.css'));
-        }
-
-        if($debug) {
-            print $bodyMail;
-        }
-        else {
-            return $bodyMail;
-        }
-    }
+		return $arb;
+	}
 
     /**
      * Send a mail
-     * @param $email
-     * @param $tpl
-     * @return bool
+     * @param string $email
+     * @param string $tpl
+     * @param array $buyer
+     * @param array $record
      */
-    protected function send_email($email, $tpl, $buyer, $record) {
+    protected function send_email(string $email, string $tpl, array $buyer, array $record) {
         if($email) {
             $this->template->configLoad();
 			$this->sanitize = new filter_sanitize();
@@ -1116,13 +1089,6 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				$this->getNotify('warning','mail');
             }
             else {
-				/*$this->mail = new frontend_model_mail($this->template,'cartpay','smtp',[
-					'setHost'		=> 'web-solution-way.com',
-					'setPort'		=> 25,
-					'setEncryption'	=> '',
-					'setUsername'	=> 'server@web-solution-way.com',
-					'setPassword'	=> 'Wsw123/*'
-				]);*/
                 $this->mail = new frontend_model_mail($this->template,'cartpay');
 				$this->modelDomain = new frontend_model_domain($this->template);
 				$this->routingUrl = new component_routing_url();
@@ -1132,7 +1098,6 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					header($_SERVER['SERVER_PROTOCOL'].' 400 Bad Request');
 					exit;
 				}
-
 				$noreply = 'noreply@'.str_replace('www.','',$_SERVER['HTTP_HOST']);
 
 				$data = [
@@ -1142,7 +1107,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					'cart' => $this->cartData(),
 					'pma' => $this->getPaymentMethodAvailable(),
 					'config' => $this->getConfig(),
-                    'additionnalResume' => $this->getAdditionnalResume()
+                    'additionnalResume' => $this->getAdditionnalMailResume()
 				];
 
 				if(!empty($data)) {
@@ -1153,9 +1118,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                     $file = null;
 					if($contacts) {
 						//Initialisation du contenu du message
-						$send = false;
+						//$send = false;
 						foreach ($contacts as $recipient) {
-							$isSend = $this->mail->send_email(
+							/*$isSend = $this->mail->send_email(
 								$recipient['mail_contact'],
 								$tpl,
 								$data,
@@ -1163,17 +1128,30 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 								$buyer['email'],
                                 $from['value'],//$from['mail_sender'],
                                 $file
+							);*/
+							$this->mail->send_email(
+								$recipient['mail_contact'],
+								$tpl,
+								$data,
+								'',
+								$buyer['email'],
+								$from['value'],//$from['mail_sender'],
+								$file
 							);
 						}
-						//$this->getNotify($send ? 'success' : 'error');
 					}
-					else {
-						//$this->getNotify('error','configured');
-					}
-
 					//Initialisation du contenu du message
 					//$send = false;
-					$isSend = $this->mail->send_email(
+					/*$isSend = $this->mail->send_email(
+						$buyer['email'],
+						$tpl,
+						$data,
+						'',
+						$noreply,
+                        $from['value'],//$from['mail_sender'],
+                        $file
+					);*/
+					$this->mail->send_email(
 						$buyer['email'],
 						$tpl,
 						$data,
@@ -1184,17 +1162,18 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					);
 					//if(!$send) $send = $isSend;
 					//$this->getNotify($send ? 'success' : 'error');
-
 				}
 				else {
 					$this->message->json_post_response(false,'error_config');
-					return false;
 				}
             }
         }
     }
     // --------------------
 
+	/**
+	 *
+	 */
     public function run() {
 		$key_cart = $this->current_cart;
 
@@ -1217,7 +1196,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 						$this->param = http_request::isPost('param') ? $this->clean->arrayClean($_POST['param']) : [];
 
 						if(isset($this->id_product) && isset($this->quantity)) {
-							$this->action === 'add' ? $this->addToCart($key_cart['id_cart'], $this->id_product, $this->quantity, $this->param) : $this->updCart($key_cart['id_cart'], $this->id_product, $this->id_items, $this->quantity, $this->param);
+							$this->action === 'add' ? $this->addToCart($this->id_product, $this->quantity, $this->param) : $this->updCart($this->id_product, $this->id_items, $this->quantity, $this->param);
 						}
 						break;
 					case 'quotation':
@@ -1451,7 +1430,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                         'tc' => 1
                                                                     ]
                                                                 ]);
-                                                                $this->cart->emptyCart();
+																$this->cart->newCart();
                                                             }
                                                         }
                                                     }
@@ -1474,7 +1453,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                 'tc' => 1
                                                             )
                                                         ));
-                                                        $this->cart->emptyCart();
+                                                        $this->cart->newCart();
                                                     }
                                                 }
                                             }
@@ -1484,7 +1463,6 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
 											// If payment method method is bank wire or the transaction has been succeed
 											if(isset($this->done) && !$this->done['error']) {
-                                                session_start();
                                                 $this->send_email($buyer['email'],$this->action,$buyer,$record);
                                             }
 										}

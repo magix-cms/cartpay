@@ -336,10 +336,13 @@ class plugins_cartpay_db
 							WHERE cart.id_cart = :id AND cart.id_account IS NULL';
                     break;
 				case 'session':
-					$sql = 'SELECT *
+					/*$sql = 'SELECT *
 							FROM mc_cartpay
 							WHERE session_key_cart = :session_key_cart
-							AND transmission_cart = 0';
+							AND transmission_cart = 0';*/
+					$sql = 'SELECT *
+							FROM mc_cartpay
+							WHERE session_key_cart = :session_key_cart';
 					break;
 				case 'account_session':
 					$sql = "SELECT * 

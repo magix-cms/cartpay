@@ -1,4 +1,4 @@
-<mj-wrapper background-color="#EEE" full-width="full-width">
+<mj-wrapper full-width="full-width">
     <mj-section>
         <mj-column width="100%" padding="0">
             <mj-raw>
@@ -141,9 +141,9 @@
     <mj-section>
         <mj-column width="50%">
             <mj-text mj-class="lightext" padding-top="0" font-size="11px">
-                {#call_us_at#}<br/>{$companyData['contact']['phone']}<br/>
+                {if $companyData['contact']['phone']}{#call_us_at#}<br/>{$companyData['contact']['phone']}<br/>{/if}
                 {if $companyData['contact']['mobile']}{#call_us_at#}<br/>{$companyData['contact']['mobile']}<br/>{/if}
-                {#email_us_at#}<br/>{$companyData['contact']['mail']}
+                {if $companyData['contact']['mail']}{#email_us_at#}<br/>{$companyData['contact']['mail']}{/if}
             </mj-text>
         </mj-column>
         <mj-column width="50%">

@@ -31,10 +31,6 @@
         {if $data['buyer']['country']}{$data['buyer']['country']}<br/>{/if}
         {if $data['buyer']['company']}{$data['buyer']['company']}<br/>{/if}
         {if $data['buyer']['vat']}{$data['buyer']['vat']}<br/>{/if}
-        {foreach $data['additionnalResume'] as $item}
-        <strong>{$item['name']}</strong><br/>
-            {$item['desc']}
-        {/foreach}
     </mj-text>
 </mj-column>
 <mj-column width="50%">
@@ -51,6 +47,29 @@
         {$data['record']['id_order']}
     </mj-text>
 </mj-column>
+<mj-raw>{if $data['additionnalResume']}
+    {foreach $data['additionnalResume'] as $item}</mj-raw>
+<mj-raw>{if $count['additionnalResume']%2 === 1 && !$item@last}</mj-raw>
+    <mj-column width="50%">
+        <mj-text mj-class="smalltitle">
+            {$item['name']}
+        </mj-text>
+        <mj-text mj-class="lightext" padding-top="0">
+            {$item['desc']}
+        </mj-text>
+    </mj-column>
+<mj-raw>{else}</mj-raw>
+    <mj-column width="100%">
+        <mj-text mj-class="smalltitle">
+            {$item['name']}
+        </mj-text>
+        <mj-text mj-class="lightext" padding-top="0">
+            {$item['desc']}
+        </mj-text>
+    </mj-column>
+<mj-raw>{/if}</mj-raw>
+<mj-raw>{/foreach}
+{/if}</mj-raw>
 <mj-raw>{if $data['buyer']['info']}</mj-raw>
     <mj-column width="100%">
         <mj-text mj-class="smalltitle" align="center">
@@ -87,14 +106,19 @@
                         {foreach $data['cart']['items'] as $item}
                         <tr>
                             <td style="border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0;">
-                                {$item['name']} &nbsp;
-                                {if is_array($item['param']) && !empty($item['param'])}
-                                {foreach $item['param'] as $param}
-                                <small>{$param['value']}</small>
+                                {$item['name']}&nbsp;
+                                {if is_array($item['params']) && !empty($item['params'])}
+                                {foreach $item['params'] as $param}
+                                <br><small>{$param['value']}</small>
+                                {if !empty($param.info) && is_array($param.info)}
+                                {foreach $param.info as $info}
+                                <br><small><b>{$info.name}&nbsp;:</b></small>
+                                <br><small>{$info.value}</small>
+                                {/foreach}
+                                {/if}
                                 {/foreach}
                                 {/if}
                             </td>
-
                             <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['q']}</td>
                             <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['unit_price']}&nbsp;€</td>
                             <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['vat']}&nbsp;%</td>
@@ -131,8 +155,6 @@
         </table>
     </mj-raw>
 </mj-column>
-</mj-section>
-<mj-section>
 <mj-raw>{if $data['record']['payment_order'] === 'bank_wire'}</mj-raw>
 <mj-column width="100%">
     <mj-divider/>

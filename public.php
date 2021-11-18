@@ -658,6 +658,23 @@ class plugins_cartpay_public extends plugins_cartpay_db {
     private function updCart($product, $item, int $quantity, array $param) {
     	// Update in db
 		$id = $item;
+
+		// Get the product unit price
+		$unit_price = $this->getProductPrice([
+			'id_product' => $product,
+			'quantity' => $quantity,
+			'id_account' => $this->id_account,
+			'param' => $this->param
+		]);
+
+		// Get the product vat rate
+		$pVat = $this->getProductVatRate([
+			'id_product' => $product,
+			'quantity' => $quantity,
+			'id_account' => $this->id_account,
+			'param' => $this->param
+		]);
+
 		if($quantity > 0){
 			$this->upd([
 				'type' => 'product',
@@ -667,22 +684,6 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					'quantity' => $quantity
 				]
 			]);
-
-			// Get the product unit price
-			/*$unit_price = $this->getProductPrice([
-				'id_product' => $product,
-				'quantity' => $quantity,
-				'id_account' => $this->id_account,
-				'param' => $this->param
-			]);*/
-
-			// Get the product vat rate
-			/*$pVat = $this->getProductVatRate([
-				'id_product' => $product,
-				'quantity' => $quantity,
-				'id_account' => $this->id_account,
-				'param' => $this->param
-			]);*/
 		}
 		else {
 			$this->del([
@@ -692,19 +693,17 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 					'id_items' => $item
 				]
 			]);
-			/*$unit_price = null;
-			$pVat = null;*/
 		}
 
 		// Update item in cart
-		$item = $this->cart->updItem($product, $quantity, null, null, $param);
+		$item = $this->cart->updItem($product, $quantity, $unit_price, $pVat, $param);
 
 		// Get full cart info
 		$cart = $this->cartData();
 
 		$product_tot = 0;
 		$price_display = $this->settings['price_display']['value'];
-		if($quantity > 0) $product_tot = $item['unit_price'] * $item['q'] * ($price_display === 'tinc' ? 1 + ($item['vat']/100) : 1);
+		if($quantity > 0) $product_tot = $item['item']->unit_price * $item['q'] * ($price_display === 'tinc' ? 1 + ($item['item']->vat/100) : 1);
 
         $total = [
         	'tot' => $price_display === 'tinc' ? $cart['total']['inc'] : $cart['total']['exc'],

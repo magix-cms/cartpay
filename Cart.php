@@ -105,12 +105,12 @@ class Cart
 	 * @param float|null $price
 	 * @param float|null $vat
 	 * @param array $params
-	 * @return bool
+	 * @return array|null
 	 */
-	public function updItem($id, int $quantity = null, float $price = null, float $vat = null, array $params = []): bool {
+	public function updItem($id, int $quantity = null, float $price = null, float $vat = null, array $params = []) {
 		$item = new CartItem($id, $price, $vat, $params);
 		$key = $this->inCart($item);
-		if($key === -1) return false;
+		if($key === -1) return null;
 
 		if($price !== null) $this->items[$key]['item']->unit_price = $price;
 		if($vat !== null) $this->items[$key]['item']->vat = $vat;
@@ -127,7 +127,7 @@ class Cart
 		}
 
 		$this->saveCart();
-		return true;
+		return $this->items[$key] ?: null;
 	}
 
 	/**

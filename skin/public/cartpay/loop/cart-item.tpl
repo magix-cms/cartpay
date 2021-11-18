@@ -30,8 +30,8 @@
                         <label for="quantity_{$item.id_items}" class="control-label">{#quantity#|ucfirst}&thinsp;:</label>
                         <input type="number" id="quantity_{$item.id_items}" name="quantity" min="0" step="1" value="{$item.q}" />
                     </div>
-                    {if is_array($item.item->params) && !empty($item.item->params)}
-                    {foreach $item.item->params as $param => $value}
+                    {if is_array($item.params) && !empty($item.params)}
+                    {foreach $item.params as $param => $value}
                         <input type="hidden" name="param[{$param}]" value="{$value.id}" />
                     {/foreach}
                     {/if}
@@ -45,8 +45,8 @@
             <div class="item-remove">
                 <form action="{$url}/{$lang}/cartpay/?action=edit" class="edit-product-quantity">
                     <button type="submit" class="btn btn-box btn-invert btn-main-theme" title="{#remove_product_cart#}"><i class="material-icons ico ico-close"></i></button>
-                    {if is_array($item.item->params) && !empty($item.item->params)}
-                    {foreach $item.item->params as $param => $value}
+                    {if is_array($item.params) && !empty($item.params)}
+                    {foreach $item.params as $param => $value}
                         <input type="hidden" name="param[{$param}]" value="{$value.id}" />
                     {/foreach}
                     {/if}

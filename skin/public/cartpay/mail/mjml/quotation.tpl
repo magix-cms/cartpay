@@ -364,11 +364,11 @@
   </table>
   </div>
   <!--[if mso | IE]></td></tr></table><![endif]-->
-  <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#EEEEEE;background-color:#EEEEEE;width:100%;">
+  <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
     <tbody>
       <tr>
         <td>
-          <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:600px;" width="600" bgcolor="#EEEEEE" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
+          <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:600px;" width="600" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
           <div style="margin:0px auto;max-width:600px;">
             <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
               <tbody>
@@ -537,7 +537,7 @@
                         <tbody>
                           <tr>
                             <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:11px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{#call_us_at#}<br>{$companyData['contact']['phone']}<br> {if $companyData['contact']['mobile']}{#call_us_at#}<br>{$companyData['contact']['mobile']}<br>{/if} {#email_us_at#}<br>{$companyData['contact']['mail']}</div>
+                              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:11px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{if $companyData['contact']['phone']}{#call_us_at#}<br>{$companyData['contact']['phone']}<br>{/if} {if $companyData['contact']['mobile']}{#call_us_at#}<br>{$companyData['contact']['mobile']}<br>{/if} {if $companyData['contact']['mail']}{#email_us_at#}<br>{$companyData['contact']['mail']}{/if}</div>
                             </td>
                           </tr>
                         </tbody>

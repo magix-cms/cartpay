@@ -229,12 +229,12 @@
                             <tbody>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#billing_information#}</div>
+                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">Order ID</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['buyer']['firstname']} {$data['buyer']['lastname']}<br> {$data['buyer']['email']}<br> {if $data['buyer']['phone']}{$data['buyer']['phone']}<br>{/if} {$data['buyer']['address']}<br> {$data['buyer']['postcode']} {$data['buyer']['city']}<br> {if $data['buyer']['country']}{$data['buyer']['country']}<br>{/if} {if $data['buyer']['company']}{$data['buyer']['company']}<br>{/if} {if $data['buyer']['vat']}{$data['buyer']['vat']}<br>{/if}</div>
+                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['record']['id_order']}</div>
                                 </td>
                               </tr>
                             </tbody>
@@ -254,20 +254,39 @@
                                   <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['pma'][$data['record']['payment_order']]['name']}</div>
                                 </td>
                               </tr>
+                            </tbody>
+                          </table>
+                        </div>
+                        <!--[if mso | IE]></td></tr></table><![endif]-->
+                      </td>
+                    </tr>
+                  </tbody>
+                </table>
+              </div>
+              <!--[if mso | IE]></td></tr></table></td></tr><tr><td class="" width="960px" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
+              <div style="margin:0px auto;max-width:960px;">
+                <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
+                  <tbody>
+                    <tr>
+                      <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
+                        <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:480px;" ><![endif]-->
+                        <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
+                          <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
+                            <tbody>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">Order ID</div>
+                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#billing_information#}</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['record']['id_order']}</div>
+                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['buyer']['firstname']} {$data['buyer']['lastname']}<br> {$data['buyer']['email']}<br> {if $data['buyer']['phone']}{$data['buyer']['phone']}<br>{/if} {$data['buyer']['address']}<br> {$data['buyer']['postcode']} {$data['buyer']['city']}<br> {if $data['buyer']['country']}{$data['buyer']['country']}<br>{/if} {if $data['buyer']['company']}{$data['buyer']['company']}<br>{/if} {if $data['buyer']['vat']}{$data['buyer']['vat']}<br>{/if}</div>
                                 </td>
                               </tr>
                             </tbody>
                           </table>
                         </div>
-                        <!--[if mso | IE]></td><![endif]--> {if $data['additionnalResume']} {foreach $data['additionnalResume'] as $item}{if $count['additionnalResume']%2 === 1 && !$item@last}
+                        <!--[if mso | IE]></td><![endif]--> {if $data['additionnalResume']} {foreach $data['additionnalResume'] as $item}{if count($data['additionnalResume'])%2 === 1 && !$item@last || count($data['additionnalResume']) === 1}
                         <!--[if mso | IE]><td class="" style="vertical-align:top;width:480px;" ><![endif]-->
                         <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
                           <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
@@ -384,37 +403,45 @@
                                     <table cellpadding="0" cellspacing="0" width="100%" border="0" style="color:#000000;font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:22px;table-layout:auto;width:100%;border:none;">
                                       <tr>
                                         <th style="border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0;">{#product#|ucfirst}</th>
-                            <th style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{#quantity#|ucfirst}</th>
-                            <th style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{#unit_price#|ucfirst}</th>
-                            <th style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{#vat_rate#|ucfirst}</th>
-                            <th style="border-bottom: 1px solid #ccc; padding: 4px 0 4px 8px; text-align:right;">{#price#|ucfirst}</th>
-                        </tr>
-                        {foreach $data['cart']['items'] as $item}
-                        <tr>
-                            <td style="border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0;">
-                                {$item['name']}&nbsp;
-                                {if is_array($item['params']) && !empty($item['params'])}
-                                {foreach $item['params'] as $param}
-                                <br><small>{$param['value']}</small>
-                                {if !empty($param.info) && is_array($param.info)}
-                                {foreach $param.info as $info}
-                                <br><small><b>{$info.name}&nbsp;:</b></small>
-                                <br><small>{$info.value}</small>
-                                {/foreach}
-                                {/if}
-                                {/foreach}
-                                {/if}
-                            </td>
-                            <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['q']}</td>
-                            <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['unit_price']}&nbsp;€</td>
-                            <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['vat']}&nbsp;%</td>
-                            <td style="border-bottom: 1px solid #ccc; padding: 4px 0 4px 8px; text-align:right;">{$item['total_inc']}&nbsp;€</td>
-                        </tr>
+                    <th style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{#quantity#|ucfirst}</th>
+                    <th style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{#unit_price#|ucfirst}</th>
+                    <th style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{#vat_rate#|ucfirst}</th>
+                    <th style="border-bottom: 1px solid #ccc; padding: 4px 0 4px 8px; text-align:right;">{#price#|ucfirst}</th>
+                </tr>
+                {foreach $data['cart']['items'] as $item}
+                <tr>
+                    <td style="border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0;">
+                        {$item['name']}&nbsp;
+                        {if is_array($item['params']) && !empty($item['params'])}
+                        {foreach $item['params'] as $param}
+                        {if is_array($param.value)}
+                        {foreach $param.value as $value}
+                            <br><small>{$value}</small>
                         {/foreach}
-                        {if is_array($data['cart']['fees']) && !empty($data['cart']['fees'])}
-                        {foreach $data['cart']['fees'] as $fees => $fee}
-                        <tr>
-                            <td style="border-bottom: 1px solid #ccc; border-top: 3px doubled #ccc; border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0; text-align:right;" colspan="4">{#$fees#}
+                        {else}
+                        <br><small>{$param.value}</small>
+                        {/if}
+                        {if !empty($param.info) && is_array($param.info)}
+                        {foreach $param.info as $info}
+                        {if !empty($info.value)}
+                        <br><small><b>{$info.name}&nbsp;:</b></small>
+                        <br><small>{$info.value}</small>
+                        {/if}
+                        {/foreach}
+                        {/if}
+                        {/foreach}
+                        {/if}
+                    </td>
+                    <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['q']}</td>
+                    <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['unit_price']}&nbsp;€</td>
+                    <td style="border-bottom: 1px solid #ccc; padding: 4px 8px; text-align:center;">{$item['vat']}&nbsp;%</td>
+                    <td style="border-bottom: 1px solid #ccc; padding: 4px 0 4px 8px; text-align:right;">{$item['total_inc']}&nbsp;€</td>
+                </tr>
+                {/foreach}
+                {if is_array($data['cart']['fees']) && !empty($data['cart']['fees'])}
+                {foreach $data['cart']['fees'] as $fees => $fee}
+                <tr>
+                    <td style="border-bottom: 1px solid #ccc; border-top: 3px doubled #ccc; border-bottom: 1px solid #ccc; padding: 4px 8px 4px 0; text-align:right;" colspan="4">{#$fees#}
                                   </td>
                                   <td style="border-bottom: 1px solid #ccc; border-top: 3px doubled #ccc; border-bottom: 1px solid #ccc; padding: 4px 0 4px 8px; text-align:right;">{$fee.price_inc}&nbsp;€</td>
                                 </tr> {/foreach} {/if} <tr>

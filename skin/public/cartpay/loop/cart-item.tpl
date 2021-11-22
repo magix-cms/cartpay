@@ -13,7 +13,13 @@
                     <span class="item-name">{$item.name}</span>
                     {if is_array($item.params) && !empty($item.params)}
                     {foreach $item.params as $param => $value}
-                    <span class="item-param">{*{$param}&nbsp;: *}{$value.value}</span>
+                        {if is_array($value.value)}
+                            {foreach $value.value as $v}
+                                <span class="item-param">{*{$param}&nbsp;: *}{$v}</span>
+                            {/foreach}
+                        {else}
+                            <span class="item-param">{*{$param}&nbsp;: *}{$value.value}</span>
+                        {/if}
                         {*{if !empty($value.info) && is_array($value.info)}
                             {foreach $value.info as $info}
                             <span class="item-param">{$info.name}&nbsp;: {$info.value}</span>
@@ -32,7 +38,13 @@
                     </div>
                     {if is_array($item.params) && !empty($item.params)}
                     {foreach $item.params as $param => $value}
-                        <input type="hidden" name="param[{$param}]" value="{$value.id}" />
+                        {if is_array($value.id)}
+                            {foreach $value.id as $k => $v}
+                                <input type="hidden" name="param[{$param}][{$k}]" value="{$v}" />
+                            {/foreach}
+                        {else}
+                            <input type="hidden" name="param[{$param}]" value="{$value.id}" />
+                        {/if}
                     {/foreach}
                     {/if}
                     <input type="hidden" name="id_items" value="{$item.id_items}" />
@@ -47,7 +59,13 @@
                     <button type="submit" class="btn btn-box btn-invert btn-main-theme" title="{#remove_product_cart#}"><i class="material-icons ico ico-close"></i></button>
                     {if is_array($item.params) && !empty($item.params)}
                     {foreach $item.params as $param => $value}
-                        <input type="hidden" name="param[{$param}]" value="{$value.id}" />
+                        {if is_array($value.id)}
+                            {foreach $value.id as $k => $v}
+                                <input type="hidden" name="param[{$param}][{$k}]" value="{$v}" />
+                            {/foreach}
+                        {else}
+                            <input type="hidden" name="param[{$param}]" value="{$value.id}" />
+                        {/if}
                     {/foreach}
                     {/if}
                     <input type="hidden" name="id_product" value="{$item.item->id}" />

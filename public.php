@@ -555,6 +555,22 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
         return $value;
     }
+
+    /**
+     * @return array
+     */
+    public function getParams(): array {
+        $this->loadModules();
+		$params = [];
+
+        if(!empty($this->mods)) {
+            foreach ($this->mods as $mod){
+                if(method_exists($mod,'add_to_cart_params')) $params[] = $mod->add_to_cart_params();
+            }
+        }
+
+        return $params;
+    }
 	// --------------------
 
 	// --- Cartpay actions
@@ -766,12 +782,12 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                 'id' => $value,
                                 'value' => $this->getParamValue([
 									'module' => $param,
-									'params' => $value,
+									'value' => $value,
 									'items' => $products[$item['item']->id][$i]['id_items']
 								]),
                                 'info' => $this->getParamInfo([
 									'module' => $param,
-									'params' => $value,
+									'value' => $value,
 									'items' => $products[$item['item']->id][$i]['id_items']
 								])
                             ];
@@ -1434,9 +1450,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                         }
                                                     }
 													elseif ($record['payment_order'] === 'bank_wire'){
-                                                        $log = new debug_logger(MP_LOG_DIR);
+                                                        /*$log = new debug_logger(MP_LOG_DIR);
                                                         $log->tracelog('start payment');
-                                                        /*$log->tracelog(json_encode(
+                                                        $log->tracelog(json_encode(
                                                             array(
                                                                 'type' => 'status',
                                                                 'data' => array(
@@ -1445,14 +1461,14 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                 )
                                                             )
                                                         ));*/
-                                                        $this->upd(array(
+                                                        /*$this->upd(array(
                                                             'type' => 'status',
                                                             'data' => array(
                                                                 'id' => $this->current_cart['id_cart'],
                                                                 'tc' => 1
                                                             )
                                                         ));
-                                                        $this->cart->newCart();
+                                                        $this->cart->newCart();*/
                                                     }
                                                 }
                                             }

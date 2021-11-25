@@ -18,9 +18,9 @@
 		</authors>
 		<release>
 			<date_create>21/01/2014</date_create>
-			<date_update>10/01/2020</date_update>
-			<version>3.1</version>
-			<phase>Beta</phase>
+			<date_update>23/11/2021</date_update>
+			<version>4.0</version>
+			<phase>Stable</phase>
 		</release>
 		<support>
 			<ticket href="https://github.com/magix-cms/cartpay/issues"></ticket>

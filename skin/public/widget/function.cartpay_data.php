@@ -54,7 +54,7 @@
  * @throws Exception
  */
 function smarty_function_cartpay_data($params, $smarty){
-    $modelTemplate = $smarty->tpl_vars['modelTemplate']->value instanceof frontend_model_template ? $smarty->tpl_vars['modelTemplate']->value : new frontend_model_template();
+	$modelTemplate = $smarty->tpl_vars['modelTemplate']->value instanceof frontend_model_template ? $smarty->tpl_vars['modelTemplate']->value : new frontend_model_template();
 	$cart = new plugins_cartpay_public($modelTemplate);
 	$modelTemplate->addConfigFile(
 		array(component_core_system::basePath().'/plugins/cartpay/i18n/'),
@@ -63,5 +63,8 @@ function smarty_function_cartpay_data($params, $smarty){
 	);
 	$modelTemplate->configLoad();
 	$smarty->assign('cart',$cart->cartData());
-    $smarty->assign('config_cart',$cart->getConfig());
+	$smarty->assign('config_cart',$cart->getConfig());
+	if($_GET['controller'] === 'catalog' && isset($_GET['id']) && isset($_GET['id_parent'])) {
+		$smarty->assign('cartpay_params',$cart->getParams());
+	}
 }

@@ -72,6 +72,8 @@
             {/if}
         {/strip}
         {if isset($transport) && is_array($transport)}
+            {*<pre>{$transport|print_r}</pre>*}
+            {if $transport.type eq 'delivery'}
             <fieldset>
                 <h3>Livraison</h3>
                 <div class="row">
@@ -111,6 +113,18 @@
                     </div>
                 </div>
             </fieldset>
+                {else}
+            <fieldset>
+            <h3>Livraison</h3>
+                <div class="row">
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
+                            <input id="transport[price]" type="text" name="transport[type]" value="{#$transport.type#}" disabled class="form-control" />
+                        </div>
+                    </div>
+                </div>
+            </fieldset>
+            {/if}
         {/if}
         <fieldset>
             <input type="hidden" name="id" value="{$cart.id_cart}" />

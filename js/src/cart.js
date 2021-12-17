@@ -7,7 +7,7 @@ function fade(elem, type, ms) {
 
     if(isIn) {
         elem.style.display = 'block';
-        elem.style.opacity = opacity;
+        elem.style.opacity = opacity; 
     }
 
     function func() {
@@ -184,7 +184,7 @@ window.addEventListener('load',function(){
 
                         if(typeof d.extend === 'object') {
                             let cart = d.extend;
-                            floatCart.upd(cart.id, cart.nb, cart.nb_items, cart.total);
+                            floatCart.upd(cart.id_item, cart.nb, cart.nb_items, cart.total);
                         }
                     }
                 });

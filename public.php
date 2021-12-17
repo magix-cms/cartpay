@@ -642,12 +642,13 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
         // Get full cart info
 		$cart = $this->cartData();
+        $item = end($cart['items']);
 
 		$html = null;
 		// If the item wasn't in the cart, prepare the line to be inserted in the float cart
 		if(!$updated){
 			$this->template->assign('setting',$this->settings);
-			$this->template->assign('data',[$cart['items'][$product]]);
+			$this->template->assign('data',[$item]);
 			$html = $this->template->fetch('cartpay/loop/float-cart-item.tpl');
 		}
 
@@ -658,7 +659,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
             'result' => $html,
             'extend' => [
                 'id' => $product,
-                'nb' => $conf['data']['quantity'],
+                'id_item' => $item['id_items'],
+                'nb' => $item['q'],
                 'nb_items' => $cart['nb_items'],
                 'total' => $price_display === 'tinc' ? $cart['total']['inc'] : $cart['total']['exc']
             ]
@@ -1461,14 +1463,14 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                 )
                                                             )
                                                         ));*/
-                                                        /*$this->upd(array(
+                                                        $this->upd(array(
                                                             'type' => 'status',
                                                             'data' => array(
                                                                 'id' => $this->current_cart['id_cart'],
                                                                 'tc' => 1
                                                             )
                                                         ));
-                                                        $this->cart->newCart();*/
+                                                        $this->cart->newCart();
                                                     }
                                                 }
                                             }

@@ -10,4 +10,5 @@
     {/if}
     <input type="hidden" name="id_product" value="{$product.id}" />
     <button type="submit" class="btn btn-main">{#add_cart#|ucfirst}</button>
+    <div class="mc-message mc-message-cartpay"></div>
 </form>

@@ -655,7 +655,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		$price_display = $this->settings['price_display']['value'];
 
 		// Return a JSON object with the cart changes
-        $this->message->json_post_response(true,null,[
+        $this->message->json_post_response(true,'add_to_cart',[
             'result' => $html,
             'extend' => [
                 'id' => $product,
@@ -664,7 +664,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                 'nb_items' => $cart['nb_items'],
                 'total' => $price_display === 'tinc' ? $cart['total']['inc'] : $cart['total']['exc']
             ]
-        ]);
+        ],
+        ['template' => 'cartpay/message.tpl']);
     }
 
 	/**

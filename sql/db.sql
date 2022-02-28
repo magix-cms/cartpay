@@ -31,7 +31,7 @@ CREATE TABLE IF NOT EXISTS `mc_cartpay_order` (
   `id_cart` int(7) UNSIGNED NOT NULL,
   `step_order` varchar(30) DEFAULT NULL,
   `info_order` text DEFAULT NULL,
-  `amount_order` decimal(12,0) NOT NULL,
+  `amount_order` decimal(12,2) NOT NULL,
   `currency_order` varchar(20) NOT NULL,
   `transaction_id` varchar(40) NOT NULL,
   `payment_order` varchar(30) NOT NULL,

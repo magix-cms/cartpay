@@ -1,6 +1,6 @@
 <div class="float-cart{if !$cart.nb_items} empty-cart{/if}">
     <div class="shopping-cart-header">
-        <i class="material-icons cart-icon ico ico-shopping_cart"></i><span class="badge cart-total-items">{$cart.nb_items}</span>
+        <i class="material-icons cart-icon ico ico-bag2"></i><span class="badge cart-total-items">{$cart.nb_items}</span>
         <div class="shopping-cart-total">
             <span class="lighter-text">{#total#}&thinsp;:</span>&nbsp;<span class="main-color-text"><span class="total_cart">{if $setting.price_display.value === 'tinc'}{$cart.total.inc}{else}{$cart.total.exc}{/if}</span>&nbsp;<span class=currency">€</span></span>
         </div>

@@ -18,7 +18,7 @@
                                 <span class="item-param">{*{$param}&nbsp;: *}{$v}</span>
                             {/foreach}
                         {else}
-                            <span class="item-param">{*{$param}&nbsp;: *}{$value.value}</span>
+                            <span class="item-param">{*{$param}&nbsp;: *}{$value.value}{if !empty($value.price.price)}&thinsp;:&thinsp;<span class="item-price">{if $setting.price_display.value === 'tinc'}{math equation="price * (1 + (vat / 100))" price=$value.price.price vat=$value.price.vat format="%.2f"}{else}{$value.price.price|string_format:"%.2f"}{/if}&nbsp;<span class=currency">€</span>{if $setting.price_display.value === 'tinc'}{#tax_included#}{else}{#tax_excluded#}{/if}</span>{/if}</span>
                         {/if}
                         {*{if !empty($value.info) && is_array($value.info)}
                             {foreach $value.info as $info}
@@ -40,7 +40,11 @@
                     {foreach $item.params as $param => $value}
                         {if is_array($value.id)}
                             {foreach $value.id as $k => $v}
-                                <input type="hidden" name="param[{$param}][{$k}]" value="{$v}" />
+                                {if is_array($v)}{foreach $v as $sk => $sv}
+                                    <input type="hidden" name="param[{$param}][{$k}][{$sk}]" value="{$sv}" />
+                                {/foreach}{else}
+                                    <input type="hidden" name="param[{$param}][{$k}]" value="{$v}" />
+                                {/if}
                             {/foreach}
                         {else}
                             <input type="hidden" name="param[{$param}]" value="{$value.id}" />
@@ -61,7 +65,11 @@
                     {foreach $item.params as $param => $value}
                         {if is_array($value.id)}
                             {foreach $value.id as $k => $v}
-                                <input type="hidden" name="param[{$param}][{$k}]" value="{$v}" />
+                                {if is_array($v)}{foreach $v as $sk => $sv}
+                                    <input type="hidden" name="param[{$param}][{$k}][{$sk}]" value="{$sv}" />
+                                {/foreach}{else}
+                                    <input type="hidden" name="param[{$param}][{$k}]" value="{$v}" />
+                                {/if}
                             {/foreach}
                         {else}
                             <input type="hidden" name="param[{$param}]" value="{$value.id}" />

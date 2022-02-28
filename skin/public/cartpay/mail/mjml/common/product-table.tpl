@@ -20,7 +20,8 @@
                             <br><small>{$value}</small>
                         {/foreach}
                         {else}
-                        <br><small>{$param.value}</small>
+                        {*<br><small>{$param.value}</small>*}
+                        <br><small>{*{$param}&nbsp;: *}{$param.value}{if !empty($value.price.price)}&thinsp;:&thinsp;{math equation="price * (1 + (vat / 100))" price=$param.price.price vat=$param.price.vat format="%.2f"}&nbsp;€&nbsp;{#tax_included#}{/if}</small>
                         {/if}
                         {if !empty($param.info) && is_array($param.info)}
                         {foreach $param.info as $info}

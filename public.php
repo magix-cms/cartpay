@@ -428,6 +428,20 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		return $vat_rate;
 	}
 
+    /**
+     * @param array $params
+     */
+    private function getProductParamPrice(array &$params) {
+        $this->loadModules();
+
+        if(!empty($this->mods)) {
+            // Replace unit price
+            foreach ($params as $mod => &$param) {
+                if(isset($this->mods[$mod]) && method_exists($this->mods[$mod],'impact_price')) $param['price'] = $this->mods[$mod]->impact_price($param);
+            }
+        }
+    }
+
 	/**
 	 * @param string $type
 	 * @return array|bool
@@ -557,6 +571,23 @@ class plugins_cartpay_public extends plugins_cartpay_db {
     }
 
     /**
+     * @param array $params
+     * @return mixed
+     */
+    private function getParamPrice(array $params) {
+        $this->loadModules();
+		$value = null;
+
+        if(!empty($this->mods)) {
+            foreach ($this->mods as $name => $mod){
+                if(method_exists($mod,'get_param_price') && $name === $params['module']) $value = $mod->get_param_price($params);
+            }
+        }
+
+        return $value;
+    }
+
+    /**
      * @return array
      */
     public function getParams(): array {
@@ -626,6 +657,11 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			'param' => $param
 		]);
 
+		// Get the product vat rate
+		if(!empty($param)) {
+            $this->getProductParamPrice($param);
+        }
+
 		// Insert into cart
         $updated = $this->cart->addItem($product, $quantity, $unit_price ,$pVat, $param);
 
@@ -646,7 +682,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
 		$html = null;
 		// If the item wasn't in the cart, prepare the line to be inserted in the float cart
-		if(!$updated){
+		if(!$updated) {
 			$this->template->assign('setting',$this->settings);
 			$this->template->assign('data',[$item]);
 			$html = $this->template->fetch('cartpay/loop/float-cart-item.tpl');
@@ -694,6 +730,11 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			'param' => $this->param
 		]);
 
+        // Get the product vat rate
+        if(!empty($param)) {
+            $this->getProductParamPrice($param);
+        }
+
 		if($quantity > 0){
 			$this->upd([
 				'type' => 'product',
@@ -722,7 +763,17 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
 		$product_tot = 0;
 		$price_display = $this->settings['price_display']['value'];
-		if($quantity > 0) $product_tot = $item['item']->unit_price * $item['q'] * ($price_display === 'tinc' ? 1 + ($item['item']->vat/100) : 1);
+		if($quantity > 0) {
+            $product_tot = $item['item']->unit_price * $item['q'] * ($price_display === 'tinc' ? 1 + ($item['item']->vat/100) : 1);
+
+            if(!empty($item['item']->params)) {
+                foreach ($item['item']->params as $param) {
+                    if(isset($param['price']) && !empty($param['price'])) {
+                        $product_tot = $product_tot + ( $param['price']['price'] * ($price_display === 'tinc' ? 1 + ($param['price']['vat']/100) : 1) );
+                    }
+                }
+            }
+        }
 
         $total = [
         	'tot' => $price_display === 'tinc' ? $cart['total']['inc'] : $cart['total']['exc'],
@@ -765,58 +816,78 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				$ms = new frontend_model_core();
 				$current = $ms->setCurrentId();
 
-				$usedIndexes = [];
-				foreach ($cart['items'] as &$item) {
-					$i = isset($usedIndexes[$item['item']->id]) ? $usedIndexes[$item['item']->id] + 1 : 0;
-					try {
-						$product = $mc->setItemData($products[$item['item']->id][$i],$current);
-					}
-					catch(Exception $e) {
-						$log = new debug_logger(MP_LOG_DIR);
-						$log->log('php','error',$e->getMessage());
-					}
-					$product['id_items'] = $products[$item['item']->id][$i]['id_items'];
-					$usedIndexes[$item['item']->id] = $i;
+                $usedIndexes = [];
+                foreach ($cart['items'] as &$item) {
+                    $i = isset($usedIndexes[$item['item']->id]) ? $usedIndexes[$item['item']->id] + 1 : 0;
+                    try {
+                        $product = $mc->setItemData($products[$item['item']->id][$i],$current);
+                    }
+                    catch(Exception $e) {
+                        $log = new debug_logger(MP_LOG_DIR);
+                        $log->log('php','error',$e->getMessage());
+                    }
+                    $product['id_items'] = $products[$item['item']->id][$i]['id_items'];
+                    $usedIndexes[$item['item']->id] = $i;
+                    $rate = 1 + $item['item']->vat/100;
+                    $product['vat'] = $item['item']->vat;
+                    $product['unit_price'] = round($item['item']->unit_price, 2);
+                    $product['unit_price_inc'] = round($item['item']->unit_price * $rate, 2);
+                    $product['total'] = $item['item']->unit_price * $item['q'];
+                    $product['total_inc'] = $item['item']->unit_price * $item['q'] * $rate;
+
                     // --- Additional parameters
                     if(!empty($item['item']->params)) {
-						$item['params'] = [];
+                        $item['params'] = [];
                         foreach ($item['item']->params as $param => $value) {
-							$item['params'][$param] = [
-                                'id' => $value,
-                                'value' => $this->getParamValue([
-									'module' => $param,
-									'value' => $value,
-									'items' => $products[$item['item']->id][$i]['id_items']
-								]),
-                                'info' => $this->getParamInfo([
-									'module' => $param,
-									'value' => $value,
-									'items' => $products[$item['item']->id][$i]['id_items']
-								])
-                            ];
+                            if(isset($value['price']) && !empty($value['price'])) {
+                                $rate = 1 + ($value['price']['vat']/100);
+                                $exc = $value['price']['price'];
+                                $inc = $exc * $rate;
+                                //$vat = $inc - $exc;
+                                $product['total'] += round($exc,2);
+                                $product['total_inc'] += round($inc,2);
+                            }
+
+                            //if(!empty($value['value'])) {
+                                $item['params'][$param] = [
+                                    'id' => $value,
+                                    'value' => $this->getParamValue([
+                                        'module' => $param,
+                                        'value' => $value,
+                                        'items' => $products[$item['item']->id][$i]['id_items']
+                                    ]),
+                                    'info' => $this->getParamInfo([
+                                        'module' => $param,
+                                        'value' => $value,
+                                        'items' => $products[$item['item']->id][$i]['id_items']
+                                    ]),
+                                    'price' => $value['price']
+                                ];
+                            /*}
+                            else {
+                                $item['params'][$param] = $value;
+                            }*/
                         }
                     }
-					$rate = 1 + $item['item']->vat/100;
-					$product['vat'] = $item['item']->vat;
-					$product['unit_price'] = round($item['item']->unit_price, 2);
-					$product['unit_price_inc'] = round($item['item']->unit_price * $rate, 2);
-					$product['total'] = round($item['item']->unit_price * $item['q'], 2);
-					$product['total_inc'] = round($item['item']->unit_price * $item['q'] * $rate, 2);
-					$item = array_merge($item,$product);
-				}
 
-				foreach ($cart['fees'] as &$fee) {
-					$rate = 1 + $fee['vat']/100;
-					$fee['price'] = round($fee['price'], 2);
-					$fee['price_inc'] = round($fee['price'] * $rate, 2);
-				}
+                    $product['total'] = round($product['total'],2);
+                    $product['total_inc'] = round($product['total_inc'],2);
 
-				$cart['total']['exc'] = round($cart['total']['exc'], 2);
-				$cart['total']['inc'] = round($cart['total']['inc'], 2);
-				foreach ($cart['total']['vat'] as $key => $val) {
-					$cart['total']['vat'][$key] = round($val,2);
-				}
-			}
+                    $item = array_merge($item,$product);
+                }
+
+                foreach ($cart['fees'] as &$fee) {
+                    $rate = 1 + $fee['vat']/100;
+                    $fee['price'] = round($fee['price'], 2);
+                    $fee['price_inc'] = round($fee['price'] * $rate, 2);
+                }
+
+                $cart['total']['exc'] = round($cart['total']['exc'], 2);
+                $cart['total']['inc'] = round($cart['total']['inc'], 2);
+                foreach ($cart['total']['vat'] as $key => $val) {
+                    $cart['total']['vat'][$key] = round($val,2);
+                }
+            }
         }
 
 		return $cart;

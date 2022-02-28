@@ -203,6 +203,23 @@ class Cart
                     $this->total['vat'][$item['item']->vat] += $vat;
                 else
                     $this->total['vat'][$item['item']->vat] = $vat;
+
+                if(!empty($item['item']->params)) {
+                    foreach ($item['item']->params as $param) {
+                        if(isset($param['price']) && !empty($param['price'])) {
+                            $rate = 1 + (floatval($param['price']['vat']) / 100);
+                            $exc = $param['price']['price'];
+                            $inc = $exc * $rate;
+                            $vat = $inc - $exc;
+                            $this->total['exc'] += $exc;
+                            $this->total['inc'] += $inc;
+                            if(isset($this->total['vat'][$param['price']['vat']]))
+                                $this->total['vat'][$param['price']['vat']] += $vat;
+                            else
+                                $this->total['vat'][$param['price']['vat']] = $vat;
+                        }
+                    }
+                }
             }
         }
         return $this->total;

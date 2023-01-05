@@ -62,7 +62,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         $header,
         $settings,
         $setting,
-        $tableaction,$tableform;
+        $tableaction,$tableform, $offset;
 
     /**
      * Les variables globales
@@ -86,7 +86,8 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         $address = array(),
         $config = array(),
         $id = 0,
-        $status_order;
+        $status_order,
+        $search;
 
     public $tableconfig = array(
         'all' => array(
@@ -97,6 +98,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             'type_cart' => ['type' => 'enum', 'enum' => 'type_', 'input' => null, 'class' => ''],
             'nbr_product' => ['title' => 'name', 'input' => null],
             'nbr_quantity' => ['title' => 'name', 'input' => null],
+            'status_order' => ['title' => 'name','type' => 'enum', 'enum' => '', 'input' => null, 'class' => ''],
             'date_register'
         )
     );
@@ -127,9 +129,19 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         $formClean = new form_inputEscape();
 
         if (http_request::isGet('tableaction')) {
-            $this->tableaction = $formClean->simpleClean($_GET['tableaction']);
-            $this->tableform = new backend_controller_tableform($this,$this->template);
+            $this->tableaction = form_inputEscape::simpleClean($_GET['tableaction']);
+            $this->tableform = new backend_controller_tableform($this, $this->template);
         }
+
+        // --- Search
+        if (http_request::isGet('search')) {
+            $this->search = form_inputEscape::arrayClean($_GET['search']);
+            $this->search = array_filter($this->search, function ($value) {
+                return $value !== '';
+            });
+        }
+        if (http_request::isGet('offset')) $this->offset = intval($formClean->simpleClean($_GET['offset']));
+
         // --- GET
         if (http_request::isGet('controller')) {
             $this->controller = $formClean->simpleClean($_GET['controller']);
@@ -203,7 +215,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
     public function tableSearch($ajax = false)
     {
 
-        $results = $this->getItems('carts',null,null,true,true);
+        $results = $this->getItems('carts',null,'all',true,true);
         $params = array();
 
         if($ajax) {
@@ -220,7 +232,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
 
         $this->data->getScheme(
             array('mc_cartpay', 'mc_profil', 'mc_cartpay_buyer'),
-            array('id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'date_register'),
+            array('id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'status_order', 'date_register'),
             $this->tableconfig['all']
         );
 
@@ -364,7 +376,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                                 if(class_exists('plugins_attribute_admin')) {
                                     $attribut = new plugins_attribute_admin($this->template);
 
-                                    $product = $attribut->getProductData(array(':id' => $this->edit, ':default_lang' => $defaultLanguage['id_lang']));
+                                    $product = $attribut->getProductData(array('id' => $this->edit, 'default_lang' => $defaultLanguage['id_lang']));
                                     $this->template->assign('product',$product);
 
                                     if ($cart['type_cart'] == 'sale') {
@@ -375,7 +387,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                                             'quantity' => ['title' => 'name', 'input' => null],
                                             'price_p' => ['type' => 'price', 'input' => null]
                                         );
-                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p', 'price_p'), $assign);
+                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content','mc_attribute_product'), array('id_items', 'name_p', 'price_p'), $assign);
                                     } else {
                                         $assign = array(
                                             'id_items',
@@ -435,15 +447,15 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                     );
                 }*/
                 if(class_exists('plugins_account_admin')){
-                    $carts = $this->getItems('carts_account',null,null,true,true);
+                    $this->getItems('carts_account',null,'all',true,true);
                 }else{
-                    $carts = $this->getItems('carts',null,null,true,true);
+                    $this->getItems('carts',null,'all',true,true);
                 }
-                $this->template->assign('carts',$carts);
+                //$this->template->assign('carts',$carts);
                 $this->getItems('config', $this->edit, 'one');
 
                 $this->data->getScheme(array('mc_cartpay', 'mc_profil', 'mc_cartpay_buyer'),
-                    array('id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'date_register'),
+                    array('id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'status_order', 'date_register'),
                     $this->tableconfig['all']
                 );
                 $this->template->display('index.tpl');

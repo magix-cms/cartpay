@@ -132,10 +132,10 @@ class plugins_cartpay_db
 					break;
                 case 'carts':
                     $limit = '';
-                    if($config['offset']) {
-                        $limit = ' LIMIT 0, '.$config['offset'];
-                        if(isset($config['page']) && $config['page'] > 1) {
-                            $limit = ' LIMIT '.(($config['page'] - 1) * $config['offset']).', '.$config['offset'];
+                    if ($config['offset']) {
+                        $limit = ' LIMIT 0, ' . $config['offset'];
+                        if (isset($config['page']) && $config['page'] > 1) {
+                            $limit = ' LIMIT ' . (($config['page'] - 1) * $config['offset']) . ', ' . $config['offset'];
                         }
                     }
                     $cond = '';
@@ -180,6 +180,7 @@ class plugins_cartpay_db
                                       END) AS type_cart,
                                     count(items.id_items) AS nbr_product,
                                     SUM(items.quantity) AS nbr_quantity,
+                                    o.status_order,
                                     cart.date_register
                                 FROM `mc_cartpay` as cart
                                 JOIN `mc_cartpay_buyer` as b ON (b.id_buyer = cart.id_buyer)

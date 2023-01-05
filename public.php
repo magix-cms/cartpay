@@ -883,7 +883,14 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                 }
 
                 $cart['total']['exc'] = round($cart['total']['exc'], 2);
-                $cart['total']['inc'] = round($cart['total']['inc'], 2);
+                $settings = new frontend_model_setting($this->template);
+                $price_display = $settings->getSetting("price_display");
+                if($price_display['value'] === 'tinc'){
+                    $cart['total']['inc'] = round($cart['total']['inc'], 2);
+                }else{
+                    $cart['total']['inc'] = round($cart['total']['exc'], 2);
+                }
+
                 foreach ($cart['total']['vat'] as $key => $val) {
                     $cart['total']['vat'][$key] = round($val,2);
                 }
@@ -1489,20 +1496,20 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                 if($this->action === 'order') {
                                                     $this->loadModules();
                                                     if($record['payment_order'] !== 'bank_wire' && isset($this->mods[$record['payment_order']])){
-                                                        $log = new debug_logger(MP_LOG_DIR);
+                                                        /*$log = new debug_logger(MP_LOG_DIR);
                                                         $log->tracelog('start payment');
                                                         $log->tracelog(json_encode(array('id'=>$record['id_order'],'payment_status'=>$this->mods[$record['payment_order']]->getPaymentStatus())));
-                                                        //$log->tracelog('sleep');
+                                                        *///$log->tracelog('sleep');
 
                                                         if(method_exists($this->mods[$record['payment_order']],'getPaymentStatus')){
                                                             //$log->tracelog('start payment');
-                                                            $log->tracelog(json_encode(array(
+                                                            /*$log->tracelog(json_encode(array(
                                                                 'id' => $record['id_order'],
                                                                 'status_order' => $this->mods[$record['payment_order']]->getPaymentStatus(),
                                                                 'tc' => 1
                                                             )));
 
-                                                            $log->tracelog('sleep');
+                                                            $log->tracelog('sleep');*/
 
                                                             $this->upd([
                                                                 'type' => 'status_order',
@@ -1546,12 +1553,19 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                     }
                                                 }
                                             }
+                                            //$log = new debug_logger(MP_LOG_DIR);
 											// Set the done step data based on the action type and the status of the process
 											$this->done = $this->getDoneStepStatus($this->action, $this->status);
 											$this->template->assign('done',$this->done);
 
 											// If payment method method is bank wire or the transaction has been succeed
 											if(isset($this->done) && !$this->done['error']) {
+                                                /*$log = new debug_logger(MP_LOG_DIR);
+                                                $log->tracelog($buyer['email']);
+                                                $log->tracelog(json_encode($this->action));
+                                                $log->tracelog(json_encode($buyer));
+                                                $log->tracelog(json_encode($record));*/
+
                                                 $this->send_email($buyer['email'],$this->action,$buyer,$record);
                                             }
 										}

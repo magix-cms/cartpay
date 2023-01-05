@@ -32,7 +32,7 @@
     </fieldset>
 </form>
 {*<pre>{$product|print_r}</pre>*}
-{include file="section/form/table-form-2.tpl" data=$product idcolumn='id_items' checkbox=false dlt=false edit=false activation=false search=false sortable=false controller="cartpay"}
+{include file="section/form/table-form-3.tpl" data=$product idcolumn='id_items' checkbox=false dlt=false edit=false activation=false search=false sortable=false controller="cartpay"}
 {if $cart.type_cart eq "sale"}
 <form id="cart_form_order" method="post" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;action=edit" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-6">
     <fieldset>
@@ -54,7 +54,7 @@
             <div class="col-xs-12 col-md-6">
                 <div class="form-group">
                     <label for="payment_order">{#payment_order#|ucfirst} :</label>
-                    <input id="payment_order" type="text" name="cart[payment_order]" value="{$cart.payment_order}" placeholder="{#payment_order#}" disabled class="form-control" />
+                    <input id="payment_order" type="text" name="cart[payment_order]" value="{#$cart.payment_order#}" placeholder="{#payment_order#}" disabled class="form-control" />
                 </div>
             </div>
             <div class="col-xs-12 col-md-6">
@@ -99,8 +99,22 @@
                     </div>
                     <div class="col-xs-12 col-md-6">
                         <div class="form-group">
+                            <label for="transport[city]">{#city_ac#|ucfirst} :</label>
+                            <input id="transport[city]" type="text" name="transport[city]" value="{$transport.city}" placeholder="{#ph_city#}" disabled class="form-control" />
+                        </div>
+                    </div>
+                </div>
+                <div class="row">
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
                             <label for="transport[postcode]">{#postcode_ac#|ucfirst} :</label>
-                            <input id="transport[postcode]" type="text" name="transport[postcode]" value="{$transport.postcode} {$transport.name}" placeholder="{#ph_postcode#}" disabled class="form-control" />
+                            <input id="transport[postcode]" type="text" name="transport[postcode]" value="{$transport.postcode}" placeholder="{#ph_postcode#}" disabled class="form-control" />
+                        </div>
+                    </div>
+                    <div class="col-xs-12 col-md-6">
+                        <div class="form-group">
+                            <label for="transport[country]">{#country_ac#|ucfirst} :</label>
+                            <input id="transport[country]" type="text" name="transport[country]" value="{#$transport.country#}" placeholder="{#ph_country#}" disabled class="form-control" />
                         </div>
                     </div>
                 </div>

@@ -85,6 +85,3 @@ CREATE TABLE IF NOT EXISTS `mc_cartpay_buyer` (
 
 INSERT INTO `mc_cartpay_config` (`id_config`, `type_order`, `quotation_enabled`, `order_enabled`, `bank_wire`, `account_owner`, `bank_account`, `bank_address`, `email_config`, `email_config_from`, `billing_address`, `show_price`)
 VALUES (NULL, 'quotation', '1', '0', '0', NULL, NULL, NULL, NULL, NULL, '0', '0');
-
-INSERT INTO `mc_admin_access` (`id_role`, `id_module`, `view`, `append`, `edit`, `del`, `action`)
-  SELECT 1, m.id_module, 1, 1, 1, 1, 1 FROM mc_module AS m WHERE name = 'cartpay';

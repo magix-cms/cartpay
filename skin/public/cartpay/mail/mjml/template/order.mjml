@@ -57,12 +57,22 @@
     <mj-text mj-class="lightext" padding-top="0">
         {#order_bank_wire#}
     </mj-text>
+    <mj-raw>{if $data['config']['bank_account'] != NULL}</mj-raw>
     <mj-text mj-class="smalltitle">
         {#order_iban#}
     </mj-text>
     <mj-text mj-class="lightext" padding-top="0">
         {$data['config']['bank_account']}
     </mj-text>
+    <mj-raw>{/if}</mj-raw>
+    <mj-raw>{if $data['config']['bank_link'] != NULL}</mj-raw>
+    <mj-text mj-class="smalltitle">
+        {#order_link#}
+    </mj-text>
+    <mj-text mj-class="lightext" padding-top="0">
+        <a href="{$data['config']['bank_link']}" target="_blank">{$data['config']['bank_link']}</a>
+    </mj-text>
+    <mj-raw>{/if}</mj-raw>
     <mj-text mj-class="smalltitle">
         {#order_owner#}
     </mj-text>

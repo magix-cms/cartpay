@@ -1,12 +1,5 @@
 // Compiler options
-@import (reference) "../components/variables";
-@import (reference) "../components/colors";
-@import (reference) "../components/theme";
-
-// Core variables and mixins
-@import (reference) "../components/mixins";
-@import (reference) "../components/reboot";
-@import (reference) "../components/type";
+@import (reference) "mixins";
 
 .lighter-text {
 	color: var(--light-grey);
@@ -17,7 +10,7 @@
 }
 
 .nav-cart {
-	padding: 6px 12px;
+	//padding: 6px 12px;
 	position: relative;
 	.btn-main-outline{
 		--btn-brd: #D6B487;
@@ -31,19 +24,29 @@
 		}*/
 	}
 	> a {
+		padding: 6px 12px;
+		font-family: @headings-font-family;
 		//color: var(--light-grey);
+		//color: black;
 		text-decoration: none;
 		display: flex;
 		align-items: center;
 		justify-content: center;
+		font-size: 1.5rem;
+		//background-color: var(--white);
+		color: var(--white);
 
 		.ico {
-			font-size: 1.2rem;
-			color: var(--main-color);
+			font-size: 1.5rem;
+			color: var(--white);
 		}
 
 		&:hover {
-			color: black;
+			background-color: var(--main-color);
+			color: var(--white);
+			.badge{
+				color: var(--white);
+			}
 		}
 	}
 }
@@ -53,13 +56,14 @@
 	}
 }
 .badge {
-	background-color: var(--main-color);
-	color: var(--white, white);
+	//background-color: var(--main-color);
+	//color: var(--white, white);
+	color: var(--white);
 	display: inline-flex;
 	justify-content: center;
 	align-items: center;
 	padding: 3px;
-	border-radius: 100%;
+	//border-radius: 100%;
 	line-height: 1;
 	font-size: 80%;
 	white-space: nowrap;
@@ -76,7 +80,8 @@
 	padding: 1.5rem;
 	//right: 0;
 	//left:100%;
-	left: 12px;
+	//left: 12px;
+	right: 12px;
 	top: 100%;//100%;
 	//margin-top: 1rem;
 	opacity: 0;
@@ -251,7 +256,7 @@
 					color: var(--light-grey);
 				}
 				.item-name {
-					font-size: @font-size-h2;
+					//font-size: @font-size-h2;
 				}
 				.item-price {
 					color: var(--main-color);
@@ -288,7 +293,7 @@
 			}
 			.item-total {
 				color: var(--main-color);
-				font-size: @font-size-h3;
+				//font-size: @font-size-h3;
 				font-weight: normal;
 			}
 			.item-remove {
@@ -326,7 +331,7 @@
 			}
 
 			&:last-child {
-				font-size: @font-size-h3;
+				//font-size: @font-size-h3;
 				> div {
 					border-bottom: none;
 				}

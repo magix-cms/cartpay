@@ -1,5 +1,5 @@
 <div class="row">
-<form id="edit_config" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;tabs=config&amp;action=edit" method="post" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-6">
+<form id="edit_config" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;tabs=config&amp;action=edit" method="post" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-8">
     <fieldset>
         <div class="row">
             <div class="col-xs-12 col-md-6">
@@ -89,6 +89,14 @@
                     <div class="form-group">
                         <label for="bank_account">{#bank_account#|ucfirst}&nbsp;</label>
                         <input type="text" name="acConfig[bank_account]" id="bank_account" class="form-control" placeholder="{#bank_account#}" value="{$config.bank_account}" />
+                    </div>
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-xs-12 col-md-6">
+                    <div class="form-group">
+                        <label for="bank_link">{#bank_link#|ucfirst}&nbsp;</label>
+                        <input type="text" name="acConfig[bank_link]" id="bank_link" class="form-control" placeholder="{#bank_link#}" value="{$config.bank_link}" />
                     </div>
                 </div>
             </div>

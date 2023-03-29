@@ -3,9 +3,10 @@
 {block name="description"}{seo_rewrite conf=['level'=>'root','type'=>'description','default'=>{#seo_cartpay_desc#}]}{/block}
 {block name='body:id'}{$type}{/block}
 {block name="styleSheet"}
-    {$css_files = [
+    {*{$css_files = [
     "/skin/{$theme}/css/form{if $setting.mode.value !== 'dev'}.min{/if}.css"
-    ]}
+    ]}*}
+    {$css_files = ["form"]}
 {/block}
 {block name="article:content"}
     <h1 class="text-center">{$type_title}</h1>

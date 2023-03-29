@@ -346,7 +346,7 @@
                                 </td>
                               </tr>
                               <!-- mj-include fails to read file : ../common/product-table
-product-table.tpl at /Users/aureliengerits/PhpstormProjects/floraliesstjean/skin/floralies/cartpay/mail/mjml/common/product-table
+product-table.tpl at /Users/aureliengerits/PhpstormProjects/petitpapillonblanc/skin/papillon/cartpay/mail/mjml/common/product-table
 product-table.tpl -->
                             </tbody>
                           </table>

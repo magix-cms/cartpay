@@ -7,11 +7,11 @@ const cartpay = (function ($) {
             $('#bank_wire').on('change', function() {
                 if($(this).is(':checked')) {
                     $('#bank').collapse('show');
-                    $('#bank_account').rules('add',{required: true});
+                    //$('#bank_account').rules('add',{required: true});
                 }
                 else {
                     $('#bank').collapse('hide');
-                    $('#bank_account').rules('remove');
+                    //$('#bank_account').rules('remove');
                 }
             });
             /*$("#edit_config").validate({

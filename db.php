@@ -502,6 +502,7 @@ class plugins_cartpay_db
 							`account_owner` = :account_owner,
 							`bank_account` = :bank_account,
 							`bank_address` = :bank_address,
+							`bank_link` = :bank_link,
 							`email_config` = :email_config,
 							`email_config_from` = :email_config_from,
 							`billing_address` = :billing_address,

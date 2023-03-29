@@ -1,4 +1,4 @@
-<div class="float-cart{if !$cart.nb_items} empty-cart{/if}">
+<div class="float-cart{if $cart.nb_items eq 0} empty-cart{/if}">
     <div class="shopping-cart-header">
         <i class="material-icons cart-icon ico ico-bag2"></i><span class="badge cart-total-items">{$cart.nb_items}</span>
         <div class="shopping-cart-total">

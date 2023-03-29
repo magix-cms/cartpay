@@ -324,6 +324,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                                     $this->config['account_owner'] = $this->config['account_owner'] === '' ? null : $this->config['account_owner'];
                                     $this->config['bank_account'] = $this->config['bank_account'] === '' ? null : $this->config['bank_account'];
                                     $this->config['bank_address'] = $this->config['bank_address'] === '' ? null : $this->config['bank_address'];
+                                    $this->config['bank_link'] = $this->config['bank_link'] === '' ? null : $this->config['bank_link'];
 
                                     $this->config['email_config'] = $this->config['email_config'] === '' ? null : $this->config['email_config'];
                                     $this->config['email_config_from'] = $this->config['email_config_from'] === '' ? null : $this->config['email_config_from'];

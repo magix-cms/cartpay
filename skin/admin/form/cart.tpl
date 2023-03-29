@@ -122,7 +122,7 @@
                     <div class="col-xs-12 col-md-6">
                         <div class="form-group">
                             <label for="transport[price]">{#price#|ucfirst} :</label>
-                            <input id="transport[price]" type="text" name="transport[price]" value="{$transport.price}" placeholder="{#ph_price#}" disabled class="form-control" />
+                            <input id="transport[price]" type="text" name="transport[price]" value="{if $transport.price != NULL}{$transport.price}{else}0{/if}" placeholder="{#ph_price#}" disabled class="form-control" />
                         </div>
                     </div>
                 </div>

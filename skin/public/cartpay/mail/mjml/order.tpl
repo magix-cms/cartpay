@@ -467,8 +467,7 @@
             <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
               <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{#order_bank_wire#}</div>
             </td>
-          </tr>
-          <tr>
+          </tr> {if $data['config']['bank_account'] != NULL} <tr>
             <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
               <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#order_iban#}</div>
             </td>
@@ -477,8 +476,16 @@
             <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
               <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['config']['bank_account']}</div>
             </td>
+          </tr> {/if}{if $data['config']['bank_link'] != NULL} <tr>
+            <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
+              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#order_link#}</div>
+            </td>
           </tr>
           <tr>
+            <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
+              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};"><a href="{$data['config']['bank_link']}" target="_blank">{$data['config']['bank_link']}</a></div>
+            </td>
+          </tr> {/if} <tr>
             <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
               <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#order_owner#}</div>
             </td>

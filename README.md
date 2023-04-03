@@ -54,7 +54,7 @@ Ajouter a la fin du fichier :
 'normal' => [
 ],
 'defer' => [
-"/skin/{$theme}/js/{if $setting.mode.value === 'dev'}src/{/if}form{if !$setting.mode.value === 'dev'}.min{/if}.js",
+"/skin/{$theme}/js/{if $setting.mode === 'dev'}src/{/if}form{if !$setting.mode === 'dev'}.min{/if}.js",
 "/skin/{$theme}/js/vendor/localization/messages_{$lang}.js"
 ]
 ]}
@@ -65,9 +65,9 @@ Ajouter a la fin du fichier :
 Ouvrez le fichier layout.tpl de votre skin et ajouter les lignes suivantes: 
 #### JS
 ```smarty
-"/skin/{$theme}/js/{if $setting.mode.value === 'dev'}src/{/if}cart{if $setting.mode.value !== 'dev'}.min{/if}.js"
+"/skin/{$theme}/js/{if $setting.mode === 'dev'}src/{/if}cart{if $setting.mode !== 'dev'}.min{/if}.js"
 ````
 #### CSS
 ```smarty
-"/skin/{$theme}/css/cartpay{if $setting.mode.value !== 'dev'}.min{/if}.css"
+"/skin/{$theme}/css/cartpay{if $setting.mode !== 'dev'}.min{/if}.css"
 ````

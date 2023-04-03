@@ -47,7 +47,7 @@ class Cart
 	public function __construct() {
 		$settingComp = new component_collections_setting();
 		$settings = $settingComp->getSetting();
-		$this->session = new http_session($settings['ssl']['value']);
+		$this->session = new http_session($settings['ssl']);//['value']);
 		$this->newCart();
 	}
 

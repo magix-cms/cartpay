@@ -22,7 +22,7 @@
     <div class="submit">
     <input type="hidden" name="id_product" value="{$product.id}" />
     <button type="submit" class="btn btn-main">{#add_cart#|ucfirst}</button>
-    <a href="#desc" data-toggle="tab" class="btn{*btn-link*} btn-sd">annuler</a>
+    {*<a href="#desc" data-toggle="tab" class="btn btn-sd">annuler</a>*}
     </div>
     <div class="mc-message mc-message-cartpay"></div>
 </form>

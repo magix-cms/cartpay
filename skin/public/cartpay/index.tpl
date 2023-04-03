@@ -6,13 +6,14 @@
 {block name="article:content"}
     <h1 class="text-center">{#my_cart#}</h1>
     <div id="shopping-cart"{if !$cart.nb_items} class="empty-cart"{/if}>
+        {*<pre>{$cart.items|print_r}</pre>*}
         <ul class="shopping-cart-items">
             {include file="cartpay/loop/cart-item.tpl" data=$cart.items}
         </ul>
         <div class="cart-total">
             <div class="tot row">
                 <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_products#}</div>
-                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_products">{if $setting.price_display.value === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
+                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_products">{if $setting.price_display === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
             </div>
             <div class="tot row">
                 <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_exc#}</div>
@@ -26,7 +27,7 @@
             {/foreach}
             <div class="tot row">
                 <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_inc#}</div>
-                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_inc">{if $setting.price_display.value === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
+                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_inc">{if $setting.price_display === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
             </div>
         </div>
         <div class="actions">
@@ -79,7 +80,7 @@
     'normal' => [
     ],
     'defer' => [
-    "/skin/{$theme}/js/{if $setting.mode.value === 'dev'}src/{/if}form{if $setting.mode.value !== 'dev'}.min{/if}.js",
+    "/skin/{$theme}/js/{if $setting.mode === 'dev'}src/{/if}form{if $setting.mode !== 'dev'}.min{/if}.js",
     "/skin/{$theme}/js/vendor/localization/messages_{$lang}.js"
     ]
     ]}

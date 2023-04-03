@@ -28,7 +28,6 @@
     <mj-text font-size="12px" text-transform="uppercase" font-weight="bold" padding-bottom="0">
         {#quotation_mail_details#}
     </mj-text>
-    <mj-include path="../common/product-table
-product-table.tpl" type="html"/>
+    <mj-include path="../common/product-table.tpl" type="html"/>
 </mj-column>
 </mj-section>

@@ -3,7 +3,7 @@
  * MAGIX CMS Copyright (c) 2018 Gerits Aurelien,
  * Dual licensed under the MIT AND GPL Version 3 licenses.
  *
- * Date: August 20 10:34 2018
+ * Date: March 10 14:23 2023
  */-->
 <config>
 	<authorized>
@@ -18,8 +18,8 @@
 		</authors>
 		<release>
 			<date_create>21/01/2014</date_create>
-			<date_update>23/11/2021</date_update>
-			<version>4.1</version>
+			<date_update>29/03/2023</date_update>
+			<version>5.0</version>
 			<phase>Stable</phase>
 		</release>
 		<support>

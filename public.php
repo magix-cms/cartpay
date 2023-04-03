@@ -417,7 +417,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	private function getProductVatRate(array $params): float {
 		$this->loadModules();
 
-		$vat_rate = $this->settings['vat_rate']['value'];
+		$vat_rate = $this->settings['vat_rate'];
 
 		if(!empty($this->mods)) {
 			foreach ($this->mods as $mod){
@@ -688,7 +688,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			$html = $this->template->fetch('cartpay/loop/float-cart-item.tpl');
 		}
 
-		$price_display = $this->settings['price_display']['value'];
+		$price_display = $this->settings['price_display'];
 
 		// Return a JSON object with the cart changes
         $this->message->json_post_response(true,'add_to_cart',[
@@ -762,7 +762,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		$cart = $this->cartData();
 
 		$product_tot = 0;
-		$price_display = $this->settings['price_display']['value'];
+		$price_display = $this->settings['price_display'];
 		if($quantity > 0) {
             $product_tot = $item['item']->unit_price * $item['q'] * ($price_display === 'tinc' ? 1 + ($item['item']->vat/100) : 1);
 
@@ -1551,6 +1551,15 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                         ));
                                                         $this->cart->newCart();
                                                     }
+                                                }elseif($this->action === 'quotation'){
+                                                    $this->upd(array(
+                                                        'type' => 'status',
+                                                        'data' => array(
+                                                            'id' => $this->current_cart['id_cart'],
+                                                            'tc' => 1
+                                                        )
+                                                    ));
+                                                    $this->cart->newCart();
                                                 }
                                             }
                                             //$log = new debug_logger(MP_LOG_DIR);

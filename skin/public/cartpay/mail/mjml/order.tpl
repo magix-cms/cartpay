@@ -1,8 +1,9 @@
 <!doctype html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" style="background: #EEEEEE;">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 
 <head>
-  <title> {if isset($title_mail)}{$title_mail}{/if} </title>
+  <title>
+  </title>
   <!--[if !mso]><!-->
   <meta http-equiv="X-UA-Compatible" content="IE=edge">
   <!--<![endif]-->
@@ -57,10 +58,8 @@
         </style>
         <![endif]-->
   <!--[if !mso]><!-->
-  <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700" rel="stylesheet" type="text/css">
   <style type="text/css">
-    @import url(https://fonts.googleapis.com/css?family=Roboto:300,400,500);
     @import url(https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700);
   </style>
   <!--<![endif]-->
@@ -92,46 +91,11 @@
   </style>
 </head>
 
-<body style="word-spacing: normal; background-color: #EEEEEE; background: #EEEEEE;">
+<body style="word-spacing:normal;background-color:#EEEEEE;">
   <div style="background-color:#EEEEEE;">
-    <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" bgcolor="#EEEEEE" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-    <div style="background:#EEEEEE;background-color:#EEEEEE;margin:0px auto;max-width:960px;">
-      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#EEEEEE;background-color:#EEEEEE;width:100%;">
-        <tbody>
-          <tr>
-            <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
-              <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:960px;" ><![endif]-->
-              <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                  <tbody>
-                    <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                      <tr>
-                        <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                          <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="border-collapse:collapse;border-spacing:0px;">
-                            <tbody>
-                              <tr>
-                                <td style="width:100px;">
-                                  <a href="{$url}" target="_blank" align="center">
-                                    <img alt="{$logo_alt}" height="{$logo_h}" width="{$logo_w}" src="{$logo_url}" style="border:0;display:block;outline:none;text-decoration:none;width:100%;font-size:13px;">
-                                  </a>
-                                </td>
-                              </tr>
-                            </tbody>
-                          </table>
-                        </td>
-                      </tr>
-                    </table>
-                  </tbody>
-                </table>
-              </div>
-              <!--[if mso | IE]></td></tr></table><![endif]-->
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
-    <!--[if mso | IE]></td></tr></table><table align="center" border="0" cellpadding="0" cellspacing="0" class="body-section-outlook" role="presentation" style="width:960px;" width="960" bgcolor="#ffffff" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-    <div class="body-section" style="-webkit-box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15); -moz-box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15); box-shadow: 1px 4px 11px 0px rgba(0, 0, 0, 0.15); background: #ffffff; background-color: #ffffff; margin: 0px auto; max-width: 960px;">
+    <!-- mj-include fails to read file : ../common/header.mjml at /Users/aureliengerits/PhpstormProjects/cardtest/skin/card/cartpay/mail/common/header.mjml -->
+    <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="body-section-outlook" role="presentation" style="width:960px;" width="960" bgcolor="#ffffff" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
+    <div class="body-section" style="background:#ffffff;background-color:#ffffff;margin:0px auto;max-width:960px;">
       <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#ffffff;background-color:#ffffff;width:100%;">
         <tbody>
           <tr>
@@ -148,25 +112,25 @@
                             <tbody>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:16px;font-weight:bold;line-height:23px;text-align:left;color:#333333;">{#order_mail_h1#}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:16px;font-weight:bold;line-height:1;text-align:left;color:#000000;">{#order_mail_h1#}</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                  <p style="border-top:solid 2px {$main_color};font-size:1px;margin:0px auto;width:100%;">
+                                  <p style="border-top:solid 4px #000000;font-size:1px;margin:0px auto;width:100%;">
                                   </p>
-                                  <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 2px {$main_color};font-size:1px;margin:0px auto;width:910px;" role="presentation" width="910px" ><tr><td style="height:0;line-height:0;"> &nbsp;
+                                  <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 4px #000000;font-size:1px;margin:0px auto;width:910px;" role="presentation" width="910px" ><tr><td style="height:0;line-height:0;"> &nbsp;
 </td></tr></table><![endif]-->
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:20px;font-weight:bold;line-height:23px;text-align:left;color:#333333;">{#order_mail_h2#}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:20px;font-weight:bold;line-height:1;text-align:left;color:#000000;">{#order_mail_h2#}</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:16px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{#order_mail_thx#}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:16px;line-height:1;text-align:left;color:#000000;">{#order_mail_thx#}</div>
                                 </td>
                               </tr>
                             </tbody>
@@ -190,7 +154,7 @@
                             <tbody>
                               <tr>
                                 <td style="vertical-align:top;padding:0;">
-                                  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
+                                  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="" width="100%">
                                     <tbody>
                                       <tr>
                                         <td align="center" style="font-size:0px;padding:0 25px;word-break:break-word;">
@@ -224,13 +188,13 @@
                           <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
                             <tbody>
                               <tr>
-                                <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">Order ID</div>
+                                <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">Order ID</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['record']['id_order']}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$data['record']['id_order']}</div>
                                 </td>
                               </tr>
                             </tbody>
@@ -241,13 +205,13 @@
                           <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
                             <tbody>
                               <tr>
-                                <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#payment_mehtod#}</div>
+                                <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{#payment_mehtod#}</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['pma'][$data['record']['payment_order']]['name']}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$data['pma'][$data['record']['payment_order']]['name']}</div>
                                 </td>
                               </tr>
                             </tbody>
@@ -270,13 +234,13 @@
                           <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
                             <tbody>
                               <tr>
-                                <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#billing_information#}</div>
+                                <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{#billing_information#}</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['buyer']['firstname']} {$data['buyer']['lastname']}<br> {$data['buyer']['email']}<br> {if $data['buyer']['phone']}{$data['buyer']['phone']}<br>{/if} {$data['buyer']['address']}<br> {$data['buyer']['postcode']} {$data['buyer']['city']}<br> {if $data['buyer']['country']}{$data['buyer']['country']}<br>{/if} {if $data['buyer']['company']}{$data['buyer']['company']}<br>{/if} {if $data['buyer']['vat']}{$data['buyer']['vat']}<br>{/if}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$data['buyer']['firstname']} {$data['buyer']['lastname']}<br /> {$data['buyer']['email']}<br /> {if $data['buyer']['phone']}{$data['buyer']['phone']}<br />{/if} {$data['buyer']['address']}<br /> {$data['buyer']['postcode']} {$data['buyer']['city']}<br /> {if $data['buyer']['country']}{$data['buyer']['country']}<br />{/if} {if $data['buyer']['company']}{$data['buyer']['company']}<br />{/if} {if $data['buyer']['vat']}{$data['buyer']['vat']}<br />{/if}</div>
                                 </td>
                               </tr>
                             </tbody>
@@ -288,13 +252,13 @@
                           <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
                             <tbody>
                               <tr>
-                                <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{$item['name']}</div>
+                                <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$item['name']}</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$item['desc']}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$item['desc']}</div>
                                 </td>
                               </tr>
                             </tbody>
@@ -306,13 +270,13 @@
                           <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
                             <tbody>
                               <tr>
-                                <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{$item['name']}</div>
+                                <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$item['name']}</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$item['desc']}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$item['desc']}</div>
                                 </td>
                               </tr>
                             </tbody>
@@ -324,13 +288,13 @@
                           <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
                             <tbody>
                               <tr>
-                                <td align="center" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:center;text-transform:uppercase;color:#333333;">{#info_comp#}</div>
+                                <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:center;color:#000000;">{#info_comp#}</div>
                                 </td>
                               </tr>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['buyer']['info']}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$data['buyer']['info']}</div>
                                 </td>
                               </tr>
                             </tbody>
@@ -355,7 +319,7 @@
                             <tbody>
                               <tr>
                                 <td style="vertical-align:top;padding:0;">
-                                  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
+                                  <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="" width="100%">
                                     <tbody>
                                       <tr>
                                         <td align="center" style="font-size:0px;padding:0 25px;word-break:break-word;">
@@ -390,7 +354,7 @@
                             <tbody>
                               <tr>
                                 <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-                                  <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#order_mail_details#}</div>
+                                  <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:1;text-align:left;text-transform:uppercase;color:#000000;">{#order_mail_details#}</div>
                                 </td>
                               </tr>
                               <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
@@ -452,57 +416,57 @@
         <tbody>
           <tr>
             <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-              <p style="border-top:solid 2px {$main_color};font-size:1px;margin:0px auto;width:100%;">
+              <p style="border-top:solid 4px #000000;font-size:1px;margin:0px auto;width:100%;">
               </p>
-              <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 2px {$main_color};font-size:1px;margin:0px auto;width:910px;" role="presentation" width="910px" ><tr><td style="height:0;line-height:0;"> &nbsp;
+              <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" style="border-top:solid 4px #000000;font-size:1px;margin:0px auto;width:910px;" role="presentation" width="910px" ><tr><td style="height:0;line-height:0;"> &nbsp;
 </td></tr></table><![endif]-->
             </td>
           </tr>
           <tr>
-            <td align="center" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:center;text-transform:uppercase;color:#333333;">{#order_next#}</div>
+            <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:center;color:#000000;">{#order_next#}</div>
             </td>
           </tr>
           <tr>
             <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{#order_bank_wire#}</div>
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{#order_bank_wire#}</div>
             </td>
           </tr> {if $data['config']['bank_account'] != NULL} <tr>
-            <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#order_iban#}</div>
+            <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{#order_iban#}</div>
             </td>
           </tr>
           <tr>
             <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['config']['bank_account']}</div>
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$data['config']['bank_account']}</div>
             </td>
           </tr> {/if}{if $data['config']['bank_link'] != NULL} <tr>
-            <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#order_link#}</div>
+            <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{#order_link#}</div>
             </td>
           </tr>
           <tr>
             <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};"><a href="{$data['config']['bank_link']}" target="_blank">{$data['config']['bank_link']}</a></div>
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;"><a href="{$data['config']['bank_link']}" target="_blank">{$data['config']['bank_link']}</a></div>
             </td>
           </tr> {/if} <tr>
-            <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#order_owner#}</div>
+            <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{#order_owner#}</div>
             </td>
           </tr>
           <tr>
             <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['config']['account_owner']}<br> {$data['config']['bank_address']|nl2br}</div>
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$data['config']['account_owner']}<br /> {$data['config']['bank_address']|nl2br}</div>
             </td>
           </tr>
           <tr>
-            <td align="left" style="font-size:0px;padding:10px 25px;padding-bottom:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:12px;font-weight:bold;line-height:23px;text-align:left;text-transform:uppercase;color:#333333;">{#order_ref_commu#}</div>
+            <td align="left" style="font-size:0px;padding:10px 25px;word-break:break-word;">
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{#order_ref_commu#}</div>
             </td>
           </tr>
           <tr>
             <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:14px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$data['record']['id_order']}</div>
+              <div style="font-family:Ubuntu, Helvetica, Arial, sans-serif;font-size:13px;line-height:1;text-align:left;color:#000000;">{$data['record']['id_order']}</div>
             </td>
           </tr>
         </tbody>
@@ -522,242 +486,8 @@
   </table>
   </div>
   <!--[if mso | IE]></td></tr></table><![endif]-->
-  <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
-    <tbody>
-      <tr>
-        <td>
-          <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-          <div style="margin:0px auto;max-width:960px;">
-            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
-              <tbody>
-                <tr>
-                  <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
-                    <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" width="960px" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-                    <div style="margin:0px auto;max-width:960px;">
-                      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
-                        <tbody>
-                          <tr>
-                            <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
-                              <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:960px;" ><![endif]-->
-                              <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                                  <tbody>
-                                    <tr>
-                                      <td style="vertical-align:top;padding:0;">
-                                        <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
-                                          <tbody>
-                                          </tbody>
-                                          <tbody>
-                                            <tr>
-                                              <td style="vertical-align:top;padding:0;">
-                                                <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
-                                                  <tr>
-                                                    <td align="center" style="font-size:0px;padding:0;word-break:break-word;">
-                                                      <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation"><tr><![endif]--> {if isset($companyData['socials']['facebook'])}
-                                                      <!--[if mso | IE]><td><![endif]-->
-                                                      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="float:none;display:inline-table;">
-                                                        <tr>
-                                                          <td style="padding:4px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#A1A0A0;border-radius:3px;width:30px;">
-                                                              <tr>
-                                                                <td style="font-size:0;height:30px;vertical-align:middle;width:30px;"> <a href="https://www.facebook.com/sharer/sharer.php?u={$companyData.socials.facebook}" target="_blank">
-                                                                    <img height="30" src="https://www.mailjet.com/images/theme/v1/icons/ico-social/facebook.png" style="border-radius:3px;display:block;" width="30">
-                                                                  </a> </td>
-                                                              </tr>
-                                                            </table>
-                                                          </td>
-                                                        </tr>
-                                                      </table>
-                                                      <!--[if mso | IE]></td><![endif]--> {/if} {if isset($companyData['socials']['twitter'])}
-                                                      <!--[if mso | IE]><td><![endif]-->
-                                                      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="float:none;display:inline-table;">
-                                                        <tr>
-                                                          <td style="padding:4px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#A1A0A0;border-radius:3px;width:30px;">
-                                                              <tr>
-                                                                <td style="font-size:0;height:30px;vertical-align:middle;width:30px;"> <a href="https://twitter.com/home?status={$companyData.socials.twitter}" target="_blank">
-                                                                    <img height="30" src="https://www.mailjet.com/images/theme/v1/icons/ico-social/twitter.png" style="border-radius:3px;display:block;" width="30">
-                                                                  </a> </td>
-                                                              </tr>
-                                                            </table>
-                                                          </td>
-                                                        </tr>
-                                                      </table>
-                                                      <!--[if mso | IE]></td><![endif]--> {/if} {if isset($companyData['socials']['linkedin'])}
-                                                      <!--[if mso | IE]><td><![endif]-->
-                                                      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="float:none;display:inline-table;">
-                                                        <tr>
-                                                          <td style="padding:4px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#A1A0A0;border-radius:3px;width:30px;">
-                                                              <tr>
-                                                                <td style="font-size:0;height:30px;vertical-align:middle;width:30px;"> <a href="https://www.linkedin.com/shareArticle?mini=true&amp;url={$companyData.socials.linkedin}&amp;title=&amp;summary=&amp;source=" target="_blank">
-                                                                    <img height="30" src="https://www.mailjet.com/images/theme/v1/icons/ico-social/linkedin.png" style="border-radius:3px;display:block;" width="30">
-                                                                  </a> </td>
-                                                              </tr>
-                                                            </table>
-                                                          </td>
-                                                        </tr>
-                                                      </table>
-                                                      <!--[if mso | IE]></td><![endif]--> {/if} {if isset($companyData['socials']['pinterest'])}
-                                                      <!--[if mso | IE]><td><![endif]-->
-                                                      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="float:none;display:inline-table;">
-                                                        <tr>
-                                                          <td style="padding:4px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#A1A0A0;border-radius:3px;width:30px;">
-                                                              <tr>
-                                                                <td style="font-size:0;height:30px;vertical-align:middle;width:30px;"> <a href="https://pinterest.com/pin/create/button/?url={$companyData.socials.pinterest}&amp;media=&amp;description=" target="_blank">
-                                                                    <img height="30" src="https://www.mailjet.com/images/theme/v1/icons/ico-social/pinterest.png" style="border-radius:3px;display:block;" width="30">
-                                                                  </a> </td>
-                                                              </tr>
-                                                            </table>
-                                                          </td>
-                                                        </tr>
-                                                      </table>
-                                                      <!--[if mso | IE]></td><![endif]--> {/if} {if isset($companyData['socials']['instagram'])}
-                                                      <!--[if mso | IE]><td><![endif]-->
-                                                      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="float:none;display:inline-table;">
-                                                        <tr>
-                                                          <td style="padding:4px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#A1A0A0;border-radius:3px;width:30px;">
-                                                              <tr>
-                                                                <td style="font-size:0;height:30px;vertical-align:middle;width:30px;"> <a href="{$companyData.socials.instagram}" target="_blank">
-                                                                    <img height="30" src="https://www.mailjet.com/images/theme/v1/icons/ico-social/instagram.png" style="border-radius:3px;display:block;" width="30">
-                                                                  </a> </td>
-                                                              </tr>
-                                                            </table>
-                                                          </td>
-                                                        </tr>
-                                                      </table>
-                                                      <!--[if mso | IE]></td><![endif]--> {/if} {if isset($companyData['socials']['github'])}
-                                                      <!--[if mso | IE]><td><![endif]-->
-                                                      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="float:none;display:inline-table;">
-                                                        <tr>
-                                                          <td style="padding:4px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#A1A0A0;border-radius:3px;width:30px;">
-                                                              <tr>
-                                                                <td style="font-size:0;height:30px;vertical-align:middle;width:30px;"> <a href="{$companyData.socials.github}" target="_blank">
-                                                                    <img height="30" src="https://www.mailjet.com/images/theme/v1/icons/ico-social/github.png" style="border-radius:3px;display:block;" width="30">
-                                                                  </a> </td>
-                                                              </tr>
-                                                            </table>
-                                                          </td>
-                                                        </tr>
-                                                      </table>
-                                                      <!--[if mso | IE]></td><![endif]--> {/if} {if isset($companyData['socials']['soundcloud'])}
-                                                      <!--[if mso | IE]><td><![endif]-->
-                                                      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="float:none;display:inline-table;">
-                                                        <tr>
-                                                          <td style="padding:4px;">
-                                                            <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#A1A0A0;border-radius:3px;width:30px;">
-                                                              <tr>
-                                                                <td style="font-size:0;height:30px;vertical-align:middle;width:30px;"> <a href="{$companyData.socials.soundcloud}" target="_blank">
-                                                                    <img height="30" src="https://www.mailjet.com/images/theme/v1/icons/ico-social/soundcloud.png" style="border-radius:3px;display:block;" width="30">
-                                                                  </a> </td>
-                                                              </tr>
-                                                            </table>
-                                                          </td>
-                                                        </tr>
-                                                      </table>
-                                                      <!--[if mso | IE]></td><![endif]--> {/if}
-                                                      <!--[if mso | IE]></tr></table><![endif]-->
-                                                    </td>
-                                                  </tr>
-                                                </table>
-                                              </td>
-                                            </tr>
-                                          </tbody>
-                                        </table>
-                                      </td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <!--[if mso | IE]></td></tr></table><![endif]-->
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <!--[if mso | IE]></td></tr></table></td></tr><tr><td class="" width="960px" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-          <div style="margin:0px auto;max-width:960px;">
-            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
-              <tbody>
-                <tr>
-                  <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
-                    <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:480px;" ><![endif]-->
-                    <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                      <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                        <tbody>
-                          <tr>
-                            <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:11px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{if $companyData['contact']['phone']}{#call_us_at#}<br>{$companyData['contact']['phone']}<br>{/if} {if $companyData['contact']['mobile']}{#call_us_at#}<br>{$companyData['contact']['mobile']}<br>{/if} {if $companyData['contact']['mail']}{#email_us_at#}<br>{$companyData['contact']['mail']}{/if}</div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <!--[if mso | IE]></td><td class="" style="vertical-align:top;width:480px;" ><![endif]-->
-                    <div class="mj-column-per-50 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                      <table border="0" cellpadding="0" cellspacing="0" role="presentation" style="vertical-align:top;" width="100%">
-                        <tbody>
-                          <tr>
-                            <td align="left" style="font-size:0px;padding:10px 25px;padding-top:0;word-break:break-word;">
-                              <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:11px;font-weight:400;line-height:23px;text-align:left;color:{$light_grey};">{$companyData['contact']['adress']['street']},<br> {$companyData['contact']['adress']['postcode']} {$companyData['contact']['adress']['city']}{if isset($companyData['contact']['adress']['country'])},<br> {$companyData['contact']['adress']['country']}{/if}</div>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <!--[if mso | IE]></td></tr></table><![endif]-->
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <!--[if mso | IE]></td></tr></table></td></tr><tr><td class="" width="960px" ><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-          <div style="margin:0px auto;max-width:960px;">
-            <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
-              <tbody>
-                <tr>
-                  <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
-                    <!--[if mso | IE]><table role="presentation" border="0" cellpadding="0" cellspacing="0"><tr><td class="" style="vertical-align:top;width:960px;" ><![endif]-->
-                    <div class="mj-column-per-100 mj-outlook-group-fix" style="font-size:0px;text-align:left;direction:ltr;display:inline-block;vertical-align:top;width:100%;">
-                      <table border="0" cellpadding="0" cellspacing="0" role="presentation" width="100%">
-                        <tbody>
-                          <tr>
-                            <td style="vertical-align:top;padding:0;">
-                              <table border="0" cellpadding="0" cellspacing="0" role="presentation" style width="100%">
-                                <tbody>
-                                  <tr>
-                                    <td align="center" style="font-size:0px;padding:10px 25px;word-break:break-word;">
-                                      <div style="font-family:Roboto, 'Helvetica Neue', Helvetica, Arial, sans-serif;font-size:11px;font-weight:400;line-height:16px;text-align:center;color:#445566;">&copy; {$companyData['name']}, {#mail_all_rights_reserved#}.</div>
-                                    </td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </td>
-                          </tr>
-                        </tbody>
-                      </table>
-                    </div>
-                    <!--[if mso | IE]></td></tr></table><![endif]-->
-                  </td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <!--[if mso | IE]></td></tr></table></td></tr></table><![endif]-->
-        </td>
-      </tr>
-    </tbody>
-  </table>
+  <!-- mj-include fails to read file : ../common/footer.mjml at /Users/aureliengerits/PhpstormProjects/cardtest/skin/card/cartpay/mail/common/footer.mjml -->
   </div>
-  <!--[if mso | IE]></td></tr></table><![endif]-->
 </body>
 
 </html>

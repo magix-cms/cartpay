@@ -24,6 +24,7 @@
                     </div>
                     <div class="tab-content">
                         <div role="tabpanel" class="tab-pane active" id="general">
+                            {*{$scheme|print_r}*}
                             {include file="section/form/table-form-3.tpl" idcolumn='id_cart' data=$carts activation=false sortable=false controller="cartpay" change_offset=true}
                         </div>
                         <div role="tabpanel" class="tab-pane" id="config">

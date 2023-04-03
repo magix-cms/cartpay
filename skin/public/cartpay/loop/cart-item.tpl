@@ -18,7 +18,7 @@
                                 <span class="item-param">{*{$param}&nbsp;: *}{$v}</span>
                             {/foreach}
                         {else}
-                            <span class="item-param">{*{$param}&nbsp;: *}{$value.value}{if !empty($value.price.price)}&thinsp;:&thinsp;<span class="item-price">{if $setting.price_display.value === 'tinc'}{math equation="price * (1 + (vat / 100))" price=$value.price.price vat=$value.price.vat format="%.2f"}{else}{$value.price.price|string_format:"%.2f"}{/if}&nbsp;<span class=currency">€</span>{if $setting.price_display.value === 'tinc'}{#tax_included#}{else}{#tax_excluded#}{/if}</span>{/if}</span>
+                            <span class="item-param">{*{$param}&nbsp;: *}{$value.value}{if !empty($value.price.price)}&thinsp;:&thinsp;<span class="item-price">{if $setting.price_display === 'tinc'}{math equation="price * (1 + (vat / 100))" price=$value.price.price vat=$value.price.vat format="%.2f"}{else}{$value.price.price|string_format:"%.2f"}{/if}&nbsp;<span class=currency">€</span>{if $setting.price_display === 'tinc'}{#tax_included#}{else}{#tax_excluded#}{/if}</span>{/if}</span>
                         {/if}
                         {*{if !empty($value.info) && is_array($value.info)}
                             {foreach $value.info as $info}
@@ -27,7 +27,7 @@
                         {/if}*}
                     {/foreach}
                     {/if}
-                    <span class="item-price">{if $setting.price_display.value === 'tinc'}{$item.unit_price_inc|string_format:"%.2f"}{else}{$item.unit_price|string_format:"%.2f"}{/if}&nbsp;<span class=currency">€</span></span>
+                    <span class="item-price">{if $setting.price_display === 'tinc'}{$item.unit_price_inc|string_format:"%.2f"}{else}{$item.unit_price|string_format:"%.2f"}{/if}&nbsp;<span class=currency">€</span></span>
                 </div>
             </div>
             <div class="item-quantity">
@@ -56,7 +56,7 @@
                 </form>
             </div>
             <div class="item-total">
-                <span class="product-total">{if $setting.price_display.value === 'tinc'}{$item.total_inc|string_format:"%.2f"}{else}{$item.total|string_format:"%.2f"}{/if}</span>&nbsp;€
+                <span class="product-total">{if $setting.price_display === 'tinc'}{$item.total_inc|string_format:"%.2f"}{else}{$item.total|string_format:"%.2f"}{/if}</span>&nbsp;€
             </div>
             <div class="item-remove">
                 <form action="{$url}/{$lang}/cartpay/?action=edit" class="edit-product-quantity">

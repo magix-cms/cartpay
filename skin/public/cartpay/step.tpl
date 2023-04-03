@@ -35,7 +35,7 @@
     'normal' => [
     ],
     'defer' => [
-    "/skin/{$theme}/js/{if $setting.mode.value === 'dev'}src/{/if}form{if $setting.mode.value !== 'dev'}.min{/if}.js",
+    "/skin/{$theme}/js/{if $setting.mode === 'dev'}src/{/if}form{if $setting.mode !== 'dev'}.min{/if}.js",
     "/skin/{$theme}/js/vendor/localization/messages_{$lang}.js"
     ]
     ]}

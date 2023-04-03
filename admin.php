@@ -50,46 +50,83 @@ require_once('db.php');
 class plugins_cartpay_admin extends plugins_cartpay_db
 {
     /**
-     * @var object
+     * @var backend_model_template$template
+     * @var backend_model_data $data
+     * @var component_core_message $message
+     * @var backend_controller_plugins $plugins
+     * @var backend_model_language $modelLanguage
+     * @var component_collections_language $collectionLanguage
+     * @var backend_model_setting $settings
+     * @var backend_controller_tableform $tableform
+     * @var backend_controller_module $module
      */
-    protected $controller,
-        $data,
-        $template,
-        $message,
-        $plugins,
-        $modelLanguage,
-        $collectionLanguage,
-        $header,
-        $settings,
-        $setting,
-        $tableaction,$tableform, $offset;
+    protected backend_model_template $template;
+    protected backend_model_data $data;
+    protected component_core_message $message;
+    protected backend_model_plugins $plugins;
+    protected backend_model_language $modelLanguage;
+    protected component_collections_language $collectionLanguage;
+    protected backend_model_setting $settings;
+    protected backend_controller_tableform $tableform;
+    protected backend_controller_module $module;
 
     /**
-     * Les variables globales
-     * @var integer $edit
+     * @var array $setting
+     */
+    protected array $setting;
+
+    /**
+     * @var string $controller
      * @var string $action
+     * @var string $tableaction
      * @var string $tabs
      */
-    public $edit = 0,
-        $action = '',
-        $tabs = '';
+    public string
+        $controller,
+        $action,
+        $tableaction,
+        $tabs,
+        $status_order;
 
     /**
-     * Les variables plugin
-     * @var array $account
+     * @var int $edit
+     * @var int $offset
+     * @var int $page
+     * @var int $id
+     */
+    public int
+        $edit,
+        $offset,
+        $page,
+        $id;
+
+    /**
+     * @var array $mods
+     * @var array $cartpay
      * @var array $address
      * @var array $config
-     * @var integer $id
+     * @var array $assign
+     * @var array $tables
+     * @var array $columns
+     * @var array $search
+     * @var array $extendedTables
+     * @var array $extendedAssign
+     * @var array $extendedColumns
      */
-    public
-        $cartpay = array(),
-        $address = array(),
-        $config = array(),
-        $id = 0,
-        $status_order,
-        $search;
+    public array
+        $mods,
+        $cartpay,
+        $config,
+        $address,
+        $search,
+        $columns,
+        $assign,
+        $tables,
+        $extendedTables,
+        $extendedAssign,
+        $extendedColumns;
 
-    public $tableconfig = array(
+    /*public $tableconfig = array(
         'all' => array(
             'id_cart',
             'email' => ['title' => 'name'],
@@ -101,15 +138,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             'status_order' => ['title' => 'name','type' => 'enum', 'enum' => '', 'input' => null, 'class' => ''],
             'date_register'
         )
-    );
-    /**
-     * Modules
-     * @var $module
-     * @var $activeMods
-     * @var $cartpayModule
-     * @var $country
-     */
-    //protected $module, $activeMods, $cartpayModule;
+    );*/
 
     /**
      * plugins_account_admin constructor.
@@ -117,16 +146,21 @@ class plugins_cartpay_admin extends plugins_cartpay_db
     public function __construct()
     {
         $this->template = new backend_model_template();
-        $this->plugins = new backend_controller_plugins();
+        $this->data = new backend_model_data($this);
+        $this->plugins = new backend_model_plugins();
         $this->message = new component_core_message($this->template);
         $this->modelLanguage = new backend_model_language($this->template);
         $this->collectionLanguage = new component_collections_language();
-        $this->data = new backend_model_data($this);
         $this->settings = new backend_model_setting();
-        $this->setting = $this->settings->getSetting();
-        $this->header = new http_header();
+        $this->setting = $this->template->settings;
 
-        $formClean = new form_inputEscape();
+        // --- GET
+        if (http_request::isGet('controller')) $this->controller = form_inputEscape::simpleClean($_GET['controller']);
+        if (http_request::isGet('edit')) $this->edit = form_inputEscape::numeric($_GET['edit']);
+        if (http_request::isGet('tabs')) $this->tabs = form_inputEscape::simpleClean($_GET['tabs']);
+        if (http_request::isGet('page')) $this->page = intval(form_inputEscape::simpleClean($_GET['page']));
+        $this->offset = (http_request::isGet('offset')) ? intval(form_inputEscape::simpleClean($_GET['offset'])) : 25;
+        if (http_request::isRequest('action')) $this->action = form_inputEscape::simpleClean($_REQUEST['action']);
 
         if (http_request::isGet('tableaction')) {
             $this->tableaction = form_inputEscape::simpleClean($_GET['tableaction']);
@@ -140,49 +174,14 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                 return $value !== '';
             });
         }
-        if (http_request::isGet('offset')) $this->offset = intval($formClean->simpleClean($_GET['offset']));
-
-        // --- GET
-        if (http_request::isGet('controller')) {
-            $this->controller = $formClean->simpleClean($_GET['controller']);
-        }
-        if (http_request::isGet('edit')) {
-            $this->edit = (int)$formClean->numeric($_GET['edit']);
-        }
-        if (http_request::isGet('action')) {
-            $this->action = $formClean->simpleClean($_GET['action']);
-        } elseif (http_request::isPost('action')) {
-            $this->action = $formClean->simpleClean($_POST['action']);
-        }
-        if (http_request::isGet('tabs')) {
-            $this->tabs = $formClean->simpleClean($_GET['tabs']);
-        }
-
-        /*if (class_exists('plugins_profil_cartpay')) {
-            $this->cartpayModule = new plugins_profil_cartpay();
-        }
-        if(class_exists('plugins_profil_module')) {
-            $this->module = new plugins_profil_module();
-        }*/
 
         // --- ADD or EDIT
-        if (http_request::isPost('cartpay')) {
-            $this->cartpay = (array)$formClean->arrayClean($_POST['cartpay']);
-        } elseif (http_request::isGet('cartpay')) {
-            $this->cartpay = (array)$formClean->arrayClean($_GET['cartpay']);
-        }
-        if (http_request::isPost('address')) {
-            $this->address = (array)$formClean->arrayClean($_POST['address']);
-        }
-        if (http_request::isPost('acConfig')) {
-            $this->config = (array)$formClean->arrayClean($_POST['acConfig']);
-        }
-        if (http_request::isPost('id')) {
-            $this->id = (int)$formClean->simpleClean($_POST['id']);
-        }
-        if (http_request::isPost('status_order')) {
-            $this->status_order = $formClean->simpleClean($_POST['status_order']);
-        }
+        if (http_request::isPost('cartpay')) $this->cartpay = form_inputEscape::arrayClean($_POST['cartpay']);
+        elseif (http_request::isGet('cartpay')) $this->cartpay = form_inputEscape::arrayClean($_GET['cartpay']);
+        if (http_request::isPost('address')) $this->address = form_inputEscape::arrayClean($_POST['address']);
+        if (http_request::isPost('acConfig')) $this->config = (array)form_inputEscape::arrayClean($_POST['acConfig']);
+        if (http_request::isPost('id')) $this->id = (int)form_inputEscape::simpleClean($_POST['id']);
+        if (http_request::isPost('status_order')) $this->status_order = form_inputEscape::simpleClean($_POST['status_order']);
         //
     }
 
@@ -198,59 +197,354 @@ class plugins_cartpay_admin extends plugins_cartpay_db
     /**
      * Assign data to the defined variable or return the data
      * @param string $type
-     * @param string|int|null $id
-     * @param string $context
-     * @param boolean $assign
+     * @param array|int|null $id
+     * @param string|null $context
+     * @param boolean|string $assign
      * @param boolean $pagination
      * @return mixed
      */
-    private function getItems($type, $id = null, $context = null, $assign = true, $pagination = false) {
+    private function getItems(string $type, $id = null, string $context = null, $assign = true, bool $pagination = false) {
         return $this->data->getItems($type, $id, $context, $assign, $pagination);
     }
     /**
-     * @param $ajax
-     * @return mixed
-     * @throws Exception
+     *
      */
-    public function tableSearch($ajax = false)
-    {
+    private function loadModules() {
+        $this->module = $this->module ?? new backend_controller_module();
+        if(empty($this->mods)) $this->mods = $this->module->load_module('cartpay');
+    }
+    // -------- Listing root ----------
+    /**
+     * @return void
+     */
+    public function setTablesArray() {
+        if(!isset($this->tables)) {
+            $this->tables = ['mc_cartpay','mc_cartpay_buyer'];
+            $this->loadModules();
+            if(!empty($this->mods)) {
+                foreach ($this->mods as $mod){
+                    if(method_exists($mod,'extendTablesArray')) {
+                        $this->tables = array_merge($this->tables,$mod->extendTablesArray());
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * @return void
+     */
+    public function setColumnsArray() {
+        if(!isset($this->columns)) {
+            $this->columns = ['id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'status_order', 'date_register'];
+            $this->loadModules();
+            if(!empty($this->mods)) {
+                foreach ($this->mods as $mod){
+                    if(method_exists($mod,'extendColumnsArray')) {
+                        $this->columns = array_merge($this->columns,$mod->extendColumnsArray());
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * @return void
+     */
+    public function setAssignArray() {
+        if(!isset($this->assign)) {
+            $this->assign = [
+                'id_cart',
+                'email' => ['title' => 'name'],
+                'firstname' => ['title' => 'name'],
+                'lastname' => ['title' => 'name'],
+                'type_cart' => ['type' => 'enum', 'enum' => 'type_', 'input' => null, 'class' => ''],
+                'nbr_product' => ['title' => 'name', 'input' => null],
+                'nbr_quantity' => ['title' => 'name', 'input' => null],
+                'status_order' => ['title' => 'name','type' => 'enum', 'enum' => '', 'input' => null, 'class' => ''],
+                'date_register'
+            ];
+            $this->loadModules();
+            if(!empty($this->mods)) {
+                $extendArray = [];
+                foreach ($this->mods as $name => $mod){
+                    if(method_exists($mod,'extendAssignArray')) {
+                        $extendArray[] = $mod->extendAssignArray();
+                    }
+                }
+                $newAssignArray = [];
+                foreach ($extendArray as $cols) {
+                    foreach ($cols as $pos => $item) {
+                        $i = 1;
+                        foreach ($this->assign as $key => $col) {
+                            if($i === $pos) {
+                                if(is_array($item)) $newAssignArray = array_merge($newAssignArray,$item);
+                                else $newAssignArray[] = $item;
+                            }
+                            if(is_string($key)) $newAssignArray[$key] = $col;
+                            else $newAssignArray[] = $col;
+                            $i++;
+                        }
+                        $this->assign = $newAssignArray;
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * @return void
+     */
+    private function setTableformData() {
+        //$this->modelLanguage->getLanguage();
+        $this->setTablesArray();
+        $this->setColumnsArray();
+        $this->setAssignArray();
+        $params = [];
+        $this->loadModules();
+        if(!empty($this->mods)) {
+            $extendQueryParams = [];
+            foreach ($this->mods as $mod){
+                if(method_exists($mod,'extendListingQuery')) {
+                    $extendQueryParams[] = $mod->extendListingQuery();
+                }
+            }
+            if(!empty($extendQueryParams)) {
+                foreach ($extendQueryParams as $extendParams) {
+                    if(isset($extendParams['select']) && !empty($extendParams['select'])) $params['select'][] = $extendParams['select'];
+                    if(isset($extendParams['join']) && !empty($extendParams['join'])) $params['join'][] = $extendParams['join'];
+                    if(isset($extendParams['where']) && !empty($extendParams['where'])) $params['where'][] = $extendParams['where'];
+                }
+            }
+        }
+        $this->getItems('carts',$params,'all',true,true);
+        $this->data->getScheme($this->tables,$this->columns,$this->assign);
+    }
 
-        $results = $this->getItems('carts',null,'all',true,true);
-        $params = array();
+    /**
+     * @param bool $ajax
+     * @return array
+     */
+    public function tableSearch(bool $ajax = false): array {
+        $params = [];
+        $this->setTablesArray();
+        $this->setColumnsArray();
+        $this->setAssignArray();
+        $this->loadModules();
+        if(!empty($this->mods)) {
+            $extendQueryParams = [];
+            foreach ($this->mods as $mod){
+                if(method_exists($mod,'extendListingQuery')) {
+                    $extendQueryParams[] = $mod->extendListingQuery();
+                }
+            }
+            if(!empty($extendQueryParams)) {
+                foreach ($extendQueryParams as $extendParams) {
+                    if(isset($extendParams['select']) && !empty($extendParams['select'])) $params['select'][] = $extendParams['select'];
+                    if(isset($extendParams['join']) && !empty($extendParams['join'])) $params['join'][] = $extendParams['join'];
+                    if(isset($extendParams['where']) && !empty($extendParams['where'])) $params['where'][] = $extendParams['where'];
+                    if(isset($extendParams['search']) && !empty($extendParams['search'])) $params['search'][] = $extendParams['search'];
+                }
+            }
+        }
 
+        $results = $this->getItems('carts',$params,'all',true,true);
         if($ajax) {
-            $params['section'] = 'pages';
+            $params['section'] = 'carts';
             $params['idcolumn'] = 'id_cart';
             $params['activation'] = false;
             $params['sortable'] = false;
             $params['checkbox'] = true;
             $params['edit'] = true;
             $params['dlt'] = true;
-            $params['readonly'] = array();
+            $params['readonly'] = [];
             $params['cClass'] = 'plugins_cartpay_admin';
         }
+        //$this->data->getScheme(['mc_cartpay','mc_cartpay_buyer'],['id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'status_order', 'date_register'],$this->assign);
+        $this->data->getScheme($this->tables,$this->columns,$this->assign);
 
-        $this->data->getScheme(
-            array('mc_cartpay', 'mc_profil', 'mc_cartpay_buyer'),
-            array('id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'status_order', 'date_register'),
-            $this->tableconfig['all']
-        );
-
-        return array(
-            'data' => $results,
+        return [
+            'data' => empty($results) ? [] : $results,
             'var' => 'carts',
             'tpl' => 'index.tpl',
             'params' => $params
-        );
+        ];
+
     }
+    // -------- End Listing root ----------
+    // ----------------------------------------
+    // -------- Start Listing edit ----------------------------------------------
+    /**
+     * @return void
+     */
+    public function setTablesEditArray() {
+        if(!isset($this->extendedTables)) {
+            $this->extendedTables = ['mc_cartpay','mc_cartpay_buyer', 'mc_catalog_product', 'mc_catalog_product_content'];
+            $this->loadModules();
+            if(!empty($this->mods)) {
+                foreach ($this->mods as $mod){
+                    if(method_exists($mod,'extendTablesEditArray')) {
+                        $this->extendedTables = array_merge($this->extendedTables,$mod->extendTablesEditArray());
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * @return void
+     */
+    public function setColumnsEditArray() {
+        if(!isset($this->extendedColumns)) {
+            $this->extendedColumns = ['id_items', 'name_p', 'price_p'];
+            $this->loadModules();
+            if(!empty($this->mods)) {
+                foreach ($this->mods as $mod){
+                    if(method_exists($mod,'extendColumnsEditArray')) {
+                        $this->extendedColumns = array_merge($this->extendedColumns,$mod->extendColumnsEditArray());
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * @return void
+     */
+    public function setAssignEditArray() {
+        if(!isset($this->extendedAssign)) {
+            $this->extendedAssign = [
+                'id_items',
+                'name_p' => ['title' => 'name'],
+                'price_p' => ['title' => 'name','type' => 'price','input' => null]
+            ];
+            $this->loadModules();
+            if(!empty($this->mods)) {
+                $extendArray = [];
+                $unsetArray = [];
+                foreach ($this->mods as $name => $mod){
+                    if(method_exists($mod,'unsetAssignEditArray')) {
+                        $unsetArray[] = $mod->unsetAssignEditArray();
+                    }
+                    if(method_exists($mod,'setAssignEditArray')) {
+                        $extendArray[] = $mod->setAssignEditArray();
+                    }
+                }
+                $newAssignArray = [];
+                $newUnsetArray = [];
+                if(is_array($unsetArray)) {
+
+                    foreach ($unsetArray as $key => $value) {
+                        foreach ($value as $item){
+                            $newUnsetArray[] = $item;
+                        }
+
+                    }
+                    foreach ($newUnsetArray as $cols) {
+                        unset($this->extendedAssign[$cols]);
+                    }
+                }
+                foreach ($extendArray as $cols) {
+                    foreach ($cols as $pos => $item) {
+                        $i = 1;
+                        foreach ($this->extendedAssign as $key => $col) {
+                            if($i === $pos) {
+                                if(is_array($item)) $newAssignArray = array_merge($newAssignArray,$item);
+                                else $newAssignArray[] = $item;
+                            }
+                            if(is_string($key)) $newAssignArray[$key] = $col;
+                            else $newAssignArray[] = $col;
+                            $i++;
+                        }
+                        $this->extendedAssign = $newAssignArray;
+                        $newAssignArray = [];
+                    }
+                }
+            }
+        }
+    }
+    /**
+     * @return void
+     */
+    private function setTableformEditData() {
+        $this->modelLanguage->getLanguage();
+        $this->setTablesEditArray();
+        $this->setColumnsEditArray();
+        $this->setAssignEditArray();
+        $params = [];
+        $this->loadModules();
+        if(!empty($this->mods)) {
+            $extendQueryParams = [];
+            foreach ($this->mods as $mod){
+                if(method_exists($mod,'extendEditListingQuery')) {
+                    $extendQueryParams[] = $mod->extendEditListingQuery();
+                }
+            }
+            if(!empty($extendQueryParams)) {
+                foreach ($extendQueryParams as $extendParams) {
+                    if(isset($extendParams['select']) && !empty($extendParams['select'])) $params['select'][] = $extendParams['select'];
+                    if(isset($extendParams['join']) && !empty($extendParams['join'])) $params['join'][] = $extendParams['join'];
+                    if(isset($extendParams['where']) && !empty($extendParams['where'])) $params['where'][] = $extendParams['where'];
+                }
+            }
+        }
+        $defaultLanguage = $this->collectionLanguage->fetchData(['context' => 'one', 'type' => 'default']);
+        //$this->getItems('carts', array(':default_lang' => $defaultLanguage['id_lang']), 'all');
+        /*print '<pre>';
+        print_r(array_merge(['id' => $this->edit],$params));
+        print '</pre>';*/
+        $this->getItems('product',array_merge(['id' => $this->edit,':default_lang' => $defaultLanguage['id_lang']],$params),'all',true,false);
+        $this->data->getScheme($this->extendedTables,$this->extendedColumns,$this->extendedAssign);
+    }
+    // -------- End Listing edit ----------
+
+    /**
+     * @return void
+     */
+    public function setTableFormArray(){
+        $params = [];
+        $this->loadModules();
+        if(!empty($this->mods)) {
+            $extendQueryParams = [];
+            foreach ($this->mods as $mod){
+                if(method_exists($mod,'extendCartpayQuery')) {
+                    $extendQueryParams[] = $mod->extendCartpayQuery();
+                }
+            }
+            if(!empty($extendQueryParams)) {
+                foreach ($extendQueryParams as $extendParams) {
+                    if(isset($extendParams['select']) && !empty($extendParams['select'])) $params['select'][] = $extendParams['select'];
+                    if(isset($extendParams['join']) && !empty($extendParams['join'])) $params['join'][] = $extendParams['join'];
+                    if(isset($extendParams['where']) && !empty($extendParams['where'])) $params['where'][] = $extendParams['where'];
+                }
+            }
+        }
+
+        $cart = $this->getItems('cart', array_merge(['id'=>$this->edit],$params), 'one', false);
+        $this->template->assign('cart', $cart);
+    }
+    /**
+     * @return void
+     */
+    public function extendFormEdit(){
+        $formFiles = [];
+        $this->loadModules();
+        if(!empty($this->mods)) {
+            $extendQueryParams = [];
+            foreach ($this->mods as $mod) {
+                if(method_exists($mod,'extendCartpayForm')) {
+                    $formFiles[] = $mod->extendCartpayForm();
+                }
+            }
+        }
+        $this->template->assign('cartpay_params',$formFiles);
+        //print_r($formFiles);
+        //if(is_string($temp)) $this->template->display($dir.$temp.'.tpl');
+    }
+
+    /// -------- Cart data --------
+    ///
     /**
      * Update data
      * @param array $config
      */
-    private function upd($config)
-    {
+    private function upd(array $config) {
         switch ($config['type']) {
-            //case 'accountActive':
             case 'cart':
             case 'address':
             case 'cartConfig':
@@ -258,208 +552,147 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             case 'config':
             case 'status_order':
                 parent::update(
-                    array('type' => $config['type']),
+                    ['type' => $config['type']],
                     $config['data']
                 );
                 break;
         }
     }
-    public function run()
-    {
-        if (isset($this->tableaction)) {
-            $this->tableform->run();
-        } else {
-            if ($this->action) {
-                switch ($this->action) {
-                    /*case 'add':
-                        if(is_array($this->account) && !empty($this->account)) {
-                            if($this->account['passwd'] === $this->account['repeat_passwd']) {
-                                $this->account['passcrypt_ac'] = password_hash($this->account['passwd'], PASSWORD_DEFAULT);
-                                $this->account['keyuniqid_ac'] = filter_rsa::uniqID();
-                                $this->account['active_ac'] = isset($this->account['active_ac']) ? 1 : 0;
-                                unset($this->account['passwd']);
-                                unset($this->account['repeat_passwd']);
 
-                                $this->add(array(
+    /**
+     * @return void
+     */
+    public function run(){
+        $this->loadModules();
+        if (http_request::isGet('plugin')) $this->plugin = form_inputEscape::simpleClean($_GET['plugin']);
+
+        if(isset($this->plugin)) {
+            //$defaultLanguage = $this->collectionLanguage->fetchData(['context' => 'one', 'type' => 'default']);
+            //$this->getItems('carts', array(':default_lang' => $defaultLanguage['id_lang']), 'all');
+            $this->getItems('carts', NULL, 'all');
+            $this->plugins->getModuleTabs('cartpay');
+            // Initialise l'API menu des plugins core
+            $this->modelLanguage->getLanguage();
+            // Execute un plugin core
+            $class = 'plugins_' . $this->plugin . '_core';
+            if(file_exists(component_core_system::basePath().'plugins'.DIRECTORY_SEPARATOR.$this->plugin.DIRECTORY_SEPARATOR.'core.php') && class_exists($class) && method_exists($class, 'run')) {
+                $executeClass =  new $class;
+                if($executeClass instanceof $class){
+                    $executeClass->run();
+                }
+            }
+        }
+        else {
+            if (isset($this->tableaction)) {
+                $this->tableform->run();
+            } else {
+                if (isset($this->action)) {
+                    switch ($this->action) {
+                        case 'edit':
+                            $status = false;
+                            $notify = 'error';
+                            if (!empty($this->tabs)) {
+                                switch ($this->tabs) {
+                                    case 'config':
+                                        $config = $this->getItems('config', null, 'one', false);
+                                        $this->config['id'] = $config['id_config'];
+                                        $this->config['bank_wire'] = isset($this->config['bank_wire']) ? 1 : 0;
+                                        $this->config['quotation_enabled'] = isset($this->config['quotation_enabled']) ? 1 : 0;
+                                        $this->config['order_enabled'] = isset($this->config['order_enabled']) ? 1 : 0;
+                                        //$this->config['type_order'] = $this->config['type_order'];
+                                        $this->config['account_owner'] = $this->config['account_owner'] === '' ? null : $this->config['account_owner'];
+                                        $this->config['bank_account'] = $this->config['bank_account'] === '' ? null : $this->config['bank_account'];
+                                        $this->config['bank_address'] = $this->config['bank_address'] === '' ? null : $this->config['bank_address'];
+                                        $this->config['bank_link'] = $this->config['bank_link'] === '' ? null : $this->config['bank_link'];
+
+                                        $this->config['email_config'] = $this->config['email_config'] === '' ? null : $this->config['email_config'];
+                                        $this->config['email_config_from'] = $this->config['email_config_from'] === '' ? null : $this->config['email_config_from'];
+                                        $this->config['billing_address'] = isset($this->config['billing_address']) ? 1 : 0;
+                                        $this->config['show_price'] = isset($this->config['show_price']) ? 1 : 0;
+                                        //print_r($this->config);
+                                        $this->upd(array(
+                                            'type' => 'config',
+                                            'data' => $this->config
+                                        ));
+
+                                        $status = true;
+                                        $notify = 'update';
+                                        break;
+                                }
+                                $this->message->json_post_response($status, $notify);
+                            } else {
+                                if (isset($this->status_order)) {
+                                    $this->upd(array(
+                                        'type' => 'status_order',
+                                        'data' => array(
+                                            'status_order' => $this->status_order,
+                                            'id' => $this->id
+                                        )
+                                    ));
+                                    $status = true;
+                                    $notify = 'update';
+                                    $this->message->json_post_response($status, $notify);
+
+                                } else {
+                                    /*if (class_exists('plugins_account_admin')) {
+                                        $cart = $this->getItems('cart_account', $this->edit, 'one', false);
+                                    } else {
+                                        $cart = $this->getItems('cart', $this->edit, 'one', false);
+                                    }*/
+
+                                    $this->setTableFormArray();
+                                    $this->extendFormEdit();
+
+                                    /*$country = new component_collections_country();
+                                    $this->template->assign('countries',$country->getCountries());*/
+                                    $this->setTableformEditData();
+                                    $this->loadModules();
+                                    //print_r($this->mods);
+                                    if(!empty($this->mods)) {
+                                        foreach ($this->mods as $name => $mod){
+                                            if(method_exists($mod,'extendAssignEditArray')) {
+                                                $this->template->addConfigFile([component_core_system::basePath().'plugins'.DIRECTORY_SEPARATOR.$name.DIRECTORY_SEPARATOR.'i18n'.DIRECTORY_SEPARATOR], [$name.'_admin_']);
+                                            }
+                                        }
+                                    }
+                                    $this->template->display('edit.tpl');
+                                }
+                            }
+                            break;
+                        case 'delete':
+                            if (isset($this->id) && !empty($this->id)) {
+                                $this->del(
+                                    array(
                                         'type' => 'account',
-                                        'data' => $this->account
+                                        'data' => array(
+                                            'id' => $this->id
+                                        )
                                     )
                                 );
-                                $this->message->json_post_response(true,'add_redirect');
+                            }
+                            break;
+                    }
+                } else {
+                    /*if (class_exists('plugins_account_admin')) {
+                        $this->getItems('carts_account', null, 'all', true, true);
+                    } else {
+                        $this->getItems('carts', null, 'all', true, true);
+                    }*/
+
+                    //$this->template->assign('carts',$carts);
+                    $this->getItems('config', null, 'one');
+
+                    $this->setTableformData();
+                    $this->loadModules();
+                    if (!empty($this->mods)) {
+                        foreach ($this->mods as $name => $mod) {
+                            if (method_exists($mod, 'extendAssignArray')) {
+                                $this->template->addConfigFile([component_core_system::basePath() . 'plugins' . DIRECTORY_SEPARATOR . $name . DIRECTORY_SEPARATOR . 'i18n' . DIRECTORY_SEPARATOR], [$name . '_admin_']);
                             }
                         }
-                        else {
-                            $this->modelLanguage->getLanguage();
-
-                            $this->template->display('add.tpl');
-                        }
-                        break;*/
-                    case 'edit':
-                        $status = false;
-                        $notify = 'error';
-                        if (!empty($this->tabs)) {
-                            switch ($this->tabs) {
-                                /*case 'account':
-                                    $this->account['id'] = $this->id;
-                                    $this->address['id'] = $this->id;
-
-                                    $this->upd(array(
-                                        'type' => 'account',
-                                        'data' => array_map(function($v) { return $v === '' ? null : $v; }, $this->account)
-                                    ));
-                                    $this->upd(array(
-                                        'type' => 'address',
-                                        'data' => array_map(function($v) { return $v === '' ? null : $v; }, $this->address)
-                                    ));
-                                    $status = true;
-                                    $notify = 'update';
-                                    break;*/
-                                case 'config':
-                                    $config = $this->getItems('config', $this->edit, 'one', false);
-                                    $this->config['id'] = $config['id_config'];
-                                    $this->config['bank_wire'] = isset($this->config['bank_wire']) ? 1 : 0;
-                                    $this->config['quotation_enabled'] = isset($this->config['quotation_enabled']) ? 1 : 0;
-                                    $this->config['order_enabled'] = isset($this->config['order_enabled']) ? 1 : 0;
-                                    //$this->config['type_order'] = $this->config['type_order'];
-                                    $this->config['account_owner'] = $this->config['account_owner'] === '' ? null : $this->config['account_owner'];
-                                    $this->config['bank_account'] = $this->config['bank_account'] === '' ? null : $this->config['bank_account'];
-                                    $this->config['bank_address'] = $this->config['bank_address'] === '' ? null : $this->config['bank_address'];
-                                    $this->config['bank_link'] = $this->config['bank_link'] === '' ? null : $this->config['bank_link'];
-
-                                    $this->config['email_config'] = $this->config['email_config'] === '' ? null : $this->config['email_config'];
-                                    $this->config['email_config_from'] = $this->config['email_config_from'] === '' ? null : $this->config['email_config_from'];
-                                    $this->config['billing_address'] = isset($this->config['billing_address']) ? 1 : 0;
-                                    $this->config['show_price'] = isset($this->config['show_price']) ? 1 : 0;
-
-                                    $this->upd(array(
-                                        'type' => 'config',
-                                        'data' => $this->config
-                                    ));
-
-                                    $status = true;
-                                    $notify = 'update';
-                                    break;
-                            }
-                            $this->message->json_post_response($status, $notify);
-                        } else {
-                            if(isset($this->status_order)){
-                                $this->upd(array(
-                                    'type' => 'status_order',
-                                    'data' => array(
-                                        'status_order'  =>  $this->status_order,
-                                        'id'=>$this->id
-                                    )
-                                ));
-                                $status = true;
-                                $notify = 'update';
-                                $this->message->json_post_response($status, $notify);
-
-                            }else {
-
-                                //$this->modelLanguage->getLanguage();
-                                $defaultLanguage = $this->collectionLanguage->fetchData(array('context' => 'one', 'type' => 'default'));
-                                if(class_exists('plugins_account_admin')) {
-                                    $cart = $this->getItems('cart_account', $this->edit, 'one', false);
-                                }else{
-                                    $cart = $this->getItems('cart', $this->edit, 'one', false);
-                                }
-                                if(class_exists('plugins_transport_admin')) {
-                                    $transport = new plugins_transport_admin($this->template);
-
-                                    $cart['transport'] = $transport->getTransport($this->edit);
-                                }
-                                //$order_num = $this->getItems('countCart', $this->edit, 'one', false);
-                                //$this->template->assign('order_num', $order_num['order_num']);
-
-                                $this->template->assign('cart', $cart);
-
-
-                                if(class_exists('plugins_attribute_admin')) {
-                                    $attribut = new plugins_attribute_admin($this->template);
-
-                                    $product = $attribut->getProductData(array('id' => $this->edit, 'default_lang' => $defaultLanguage['id_lang']));
-                                    $this->template->assign('product',$product);
-
-                                    if ($cart['type_cart'] == 'sale') {
-                                        $assign = array(
-                                            'id_items',
-                                            'name_p' => ['title' => 'name'],
-                                            'value_attr' => ['title' => 'name'],
-                                            'quantity' => ['title' => 'name', 'input' => null],
-                                            'price_p' => ['type' => 'price', 'input' => null]
-                                        );
-                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content','mc_attribute_product'), array('id_items', 'name_p', 'price_p'), $assign);
-                                    } else {
-                                        $assign = array(
-                                            'id_items',
-                                            'name_p' => ['title' => 'name'],
-                                            'value_attr' => ['title' => 'name'],
-                                            'quantity' => ['title' => 'name', 'input' => null]
-                                        );
-                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p'), $assign);
-                                    }
-                                }else{
-                                    $this->getItems('product', array(':id' => $this->edit, ':default_lang' => $defaultLanguage['id_lang']), 'all');
-                                    if ($cart['type_cart'] == 'sale') {
-                                        $assign = array(
-                                            'id_items',
-                                            'name_p' => ['title' => 'name'],
-                                            'quantity' => ['title' => 'name', 'input' => null],
-                                            'price_p' => ['type' => 'price', 'input' => null]
-                                        );
-                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p', 'price_p'), $assign);
-                                    } else {
-                                        $assign = array(
-                                            'id_items',
-                                            'name_p' => ['title' => 'name'],
-                                            'quantity' => ['title' => 'name', 'input' => null]
-                                        );
-                                        $this->data->getScheme(array('mc_cartpay_items', 'mc_catalog_product', 'mc_catalog_product_content'), array('id_items', 'name_p'), $assign);
-                                    }
-                                }
-                                /*$country = new component_collections_country();
-                                $this->template->assign('countries',$country->getCountries());*/
-
-                                $this->template->display('edit.tpl');
-                            }
-                        }
-                        break;
-                    case 'delete':
-                        if (isset($this->id) && !empty($this->id)) {
-                            $this->del(
-                                array(
-                                    'type' => 'account',
-                                    'data' => array(
-                                        'id' => $this->id
-                                    )
-                                )
-                            );
-                        }
-                        break;
+                    }
+                    $this->template->display('index.tpl');
                 }
-            } else {
-                /*$this->modelLanguage->getLanguage();
-                $langs = $this->modelLanguage->setLanguage();
-                $opts = array();
-                foreach ($langs as $id => $iso) {
-                    $opts[] = array(
-                        'v' => $id,
-                        'name' => $iso
-                    );
-                }*/
-                if(class_exists('plugins_account_admin')){
-                    $this->getItems('carts_account',null,'all',true,true);
-                }else{
-                    $this->getItems('carts',null,'all',true,true);
-                }
-                //$this->template->assign('carts',$carts);
-                $this->getItems('config', $this->edit, 'one');
-
-                $this->data->getScheme(array('mc_cartpay', 'mc_profil', 'mc_cartpay_buyer'),
-                    array('id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'status_order', 'date_register'),
-                    $this->tableconfig['all']
-                );
-                $this->template->display('index.tpl');
             }
         }
     }

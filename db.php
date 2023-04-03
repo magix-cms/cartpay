@@ -34,17 +34,12 @@
  */
 class plugins_cartpay_db
 {
-	/**
-	 * @param $config
-	 * @param bool $params
-	 * @return mixed|null
-	 * @throws Exception
-	 */
-	public function fetchData($config, $params = false)
-	{
-		if (!is_array($config)) return '$config must be an array';
-
-		$sql = '';
+    /**
+     * @param array $config
+     * @param array $params
+     * @return array|bool
+     */
+    public function fetchData(array $config, array $params = []) {
 
 		if ($config['context'] === 'all') {
 			switch ($config['type']) {
@@ -99,7 +94,7 @@ class plugins_cartpay_db
 						}
 					}
 
-					$sql = 'SELECT
+					$query = 'SELECT
  								cart.id_cart,
  								(CASE 
  								  WHEN a.id_account IS NOT NULL THEN a.email_ac
@@ -131,6 +126,121 @@ class plugins_cartpay_db
                             ' GROUP BY cart.id_cart DESC'.$limit;
 					break;
                 case 'carts':
+                    $cond = '';
+                    $limit = '';
+                    if ($config['offset']) {
+                        $limit = ' LIMIT 0, ' . $config['offset'];
+                        if (isset($config['page']) && $config['page'] > 1) {
+                            $limit = ' LIMIT ' . (($config['page'] - 1) * $config['offset']) . ', ' . $config['offset'];
+                        }
+                    }
+                    if (isset($config['search'])) {
+                        if (is_array($config['search']) && !empty($config['search'])) {
+                            $nbc = 0;
+                            foreach ($config['search'] as $key => $q) {
+                                if ($q !== '') {
+                                    $cond .= ' AND ';
+                                    $p = 'p'.$nbc;
+                                    switch ($key) {
+                                        case 'id_cart':
+                                            //case 'active_ac':
+                                            $cond .= 'cart.'.$key.' = :'.$p.' ';
+                                            break;
+                                        case 'email':
+                                        case 'firstname':
+                                        case 'lastname':
+                                            $cond .= "mcb.".$key."_buyer LIKE CONCAT('%', :".$p.", '%') ";
+                                            break;
+                                        case 'date_register':
+                                            $dateFormat = new component_format_date();
+                                            $q = $dateFormat->date_to_db_format($q);
+                                            $cond .= "cart.".$key." LIKE CONCAT('%', :".$p.", '%') ";
+                                            break;
+
+                                    }
+                                    if(isset($params['search']) && is_array($params['search'])) {
+                                        $newSearch = [];
+                                        foreach ($params['search'] as $newKey => $value) {
+                                            $newSearch = array_merge($newSearch, $value);
+                                        }
+                                        foreach ($newSearch as $search) {
+                                            if($key == $search['key']){
+                                                switch ($search['type']) {
+                                                    case 'string':
+                                                        $cond .= $search['as'] . "." . $key . " LIKE CONCAT('%', :" . $p . ", '%') ";
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                    }
+                                    $params[$p] = $q;
+                                    $nbc++;
+                                }
+                            }
+
+                        }
+                    }
+
+                    $where = '';
+                    if(isset($params['where']) && is_array($params['where'])) {
+                        $newWhere = [];
+
+                        foreach ($params['where'] as $key => $value) {
+                            $newWhere = array_merge($newWhere, $value);
+                        }
+                        foreach ($newWhere as $item) {
+                            $where .= ' '.$item['type'].' '.$item['condition'].' ';
+                        }
+                        unset($params['where']);
+                    }
+
+                    $select = [
+                        'cart.id_cart',
+                        'mcb.email_buyer AS email',
+                        'mcb.firstname_buyer AS firstname',
+                        'mcb.lastname_buyer AS lastname',
+                        '(CASE
+                            WHEN mco.id_cart IS NOT NULL THEN "sale"
+                            WHEN mcq.id_cart IS NOT NULL THEN "quotation"
+                          END) AS type_cart',
+                        'count(mci.id_items) AS nbr_product',
+                        'SUM(mci.quantity) AS nbr_quantity',
+                        'mco.status_order',
+                        'cart.date_register'
+                        ];
+
+                    if(isset($params['select'])) {
+                        foreach ($params['select'] as $extendSelect) {
+                            $select = array_merge($select, $extendSelect);
+                        }
+                        unset($params['select']);
+                    }
+
+                    $joins = '';
+                    if(isset($params['join']) && is_array($params['join'])) {
+                        $newJoin = [];
+
+                        foreach ($params['join'] as $key => $value) {
+                            $newJoin = array_merge($newJoin, $value);
+                        }
+                        foreach ($newJoin as $join) {
+                            $joins .= ' '.$join['type'].' '.$join['table'].' '.$join['as'].' ON ('.$join['on']['table'].'.'.$join['on']['key'].' = '.$join['as'].'.'.$join['on']['key'].') ';
+                        }
+                        unset($params['join']);
+                    }
+
+                    if(isset($params['search']) && is_array($params['search'])) {
+                        unset($params['search']);
+                    }
+                    $query = 'SELECT '.implode(',', $select).'
+							FROM `mc_cartpay` as cart
+                                JOIN `mc_cartpay_buyer` as mcb ON (mcb.id_buyer = cart.id_buyer)
+                                JOIN `mc_cartpay_items` as mci ON (cart.id_cart = mci.id_cart)
+                                LEFT JOIN `mc_cartpay_order` as mco ON (cart.id_cart = mco.id_cart)
+                                LEFT JOIN `mc_cartpay_quotation` as mcq ON (cart.id_cart = mcq.id_cart)'.$joins.'
+                                WHERE cart.transmission_cart = 1 '.$cond.$where.' GROUP BY cart.id_cart ORDER BY cart.id_cart DESC'. $limit;
+                    break;
+                /*case 'carts':
                     $limit = '';
                     if ($config['offset']) {
                         $limit = ' LIMIT 0, ' . $config['offset'];
@@ -168,7 +278,7 @@ class plugins_cartpay_db
                         }
                     }
 
-                    $sql = 'SELECT * FROM (
+                    $query = 'SELECT * FROM (
                                 SELECT
                                     cart.id_cart,
                                     b.email_buyer AS email,
@@ -190,17 +300,75 @@ class plugins_cartpay_db
                                 WHERE cart.transmission_cart = 1 AND cart.id_account IS NULL ' . $cond.
                         ' GROUP BY cart.id_cart ORDER BY cart.id_cart DESC) carts WHERE carts.id_cart IS NOT NULL AND carts.id_cart > 0
                           '.$limit;//GROUP BY carts.id_cart
-                    break;
+                    break;*/
                 case 'product':
-                    $sql = 'SELECT item.id_items,item.quantity,p.price_p,c.name_p
+                    $where = '';
+                    if(isset($params['where']) && is_array($params['where'])) {
+                        $newWhere = [];
+
+                        foreach ($params['where'] as $key => $value) {
+                            $newWhere = array_merge($newWhere, $value);
+                        }
+                        foreach ($newWhere as $item) {
+                            $where .= ' '.$item['type'].' '.$item['condition'].' ';
+                        }
+                        unset($params['where']);
+                    }
+
+                    $select = [
+                        'mci.id_items',
+                        'mci.quantity',
+                        'mcp.price_p',
+                        'mcpc.name_p'
+                    ];
+
+                    if(isset($params['select'])) {
+                        foreach ($params['select'] as $extendSelect) {
+                            $select = array_merge($select, $extendSelect);
+                        }
+                        unset($params['select']);
+                    }
+
+                    $joins = '';
+                    if(isset($params['join']) && is_array($params['join'])) {
+                        $newJoin = [];
+                        foreach ($params['join'] as $value) { $newJoin = array_merge($newJoin, $value); }
+                        //print_r($newJoin);
+                        foreach ($newJoin as $join) {
+                            if(isset($join['on']['table'])){
+                                $on = $join['on']['table'].'.'.$join['on']['key'].' = '.$join['as'].'.'.$join['on']['key'];
+                            }else{
+                                $newOn = [];
+                                unset($on);
+                                foreach ($join['on'] as $multiOn) {
+                                    $and = isset($multiOn['and']) ? ' '.$multiOn['and'].' ' : '';
+                                    $on .= $and.$multiOn['table'].'.'.$multiOn['key'].' = '.$join['as'].'.'.$multiOn['key'];
+                                }
+                            }
+                            $joins .= ' '.$join['type'].' '.$join['table'].' '.$join['as'].' ON ('.
+                                //$join['on']['table'].'.'.$join['on']['key'].' = '.$join['as'].'.'.$join['on']['key']
+                                $on
+                            .') ';
+                        }
+                        unset($params['join']);
+                    }
+
+                    $query = 'SELECT '.implode(',', $select).'
+							FROM `mc_cartpay_items` as mci
+                                JOIN `mc_catalog_product` as mcp ON(mci.id_product = mcp.id_product)
+                                JOIN mc_catalog_product_content AS mcpc ON ( mcp.id_product = mcpc.id_product )'.$joins.'
+                                WHERE mcpc.id_lang = :default_lang AND mci.id_cart = :id '.$where.' GROUP BY mci.id_items';
+                    /*
+                    $query = 'SELECT item.id_items,item.quantity,p.price_p,c.name_p
                             FROM mc_cartpay_items AS item 
                             JOIN mc_catalog_product AS p ON(item.id_product = p.id_product)
                             JOIN mc_catalog_product_content AS c ON ( p.id_product = c.id_product )
 							JOIN mc_lang AS lang ON ( c.id_lang = lang.id_lang )
-                            WHERE c.id_lang = :default_lang AND item.id_cart = :id';
+                            WHERE c.id_lang = :default_lang AND item.id_cart = :id';*/
+
                     break;
                 case 'catalog':
-					$sql = 'SELECT 
+					$query = 'SELECT 
        							item.id_items,
        							c.id_cat,
 								cat.name_cat, 
@@ -234,7 +402,7 @@ class plugins_cartpay_db
                             WHERE pc.id_lang = :default_lang 
 						  	AND item.id_cart = :id
 						  	ORDER BY item.date_register';
-                    /*$sql = 'SELECT
+                    /*$query = 'SELECT
 								item.id_items,
 								item.quantity,
 								p.price_p,
@@ -259,33 +427,41 @@ class plugins_cartpay_db
                     		WHERE pc.id_lang = :default_lang AND item.id_cart = :id GROUP BY item.id_items';*/
                     break;
 				case 'account_cart_items':
-					$sql = 'SELECT * FROM `mc_cartpay_items` WHERE id_cart = :id';
+					$query = 'SELECT * FROM `mc_cartpay_items` WHERE id_cart = :id';
 					break;
-			}
+                default:
+                    return false;
+            }
 
-			return $sql ? component_routing_db::layer()->fetchAll($sql, $params) : null;
+            try {
+                return component_routing_db::layer()->fetchAll($query, $params);
+            }
+            catch (Exception $e) {
+                if(!isset($this->logger)) $this->logger = new debug_logger(MP_LOG_DIR);
+                $this->logger->log('statement','db',$e->getMessage(),$this->logger::LOG_MONTH);
+            }
 		}
 		elseif ($config['context'] === 'one') {
 			switch ($config['type']) {
                 case 'account':
-                    $sql = 'SELECT *
+                    $query = 'SELECT *
 							FROM `mc_account` as a
 							JOIN `mc_account_address` as aa USING(`id_account`)
 							JOIN `mc_lang` as l USING(`id_lang`)
 							WHERE `id_account` = :id';
                     break;
                 case 'buyer':
-                    $sql = 'SELECT 
+                    $query = 'SELECT 
        							b.*
 							FROM `mc_cartpay` c  
 							LEFT JOIN `mc_cartpay_buyer` b using (id_buyer)
 							WHERE c.id_cart = :id';
                     break;
 				case 'config':
-					$sql = 'SELECT * FROM `mc_cartpay_config` ORDER BY id_config DESC LIMIT 0,1';
+					$query = 'SELECT * FROM `mc_cartpay_config` ORDER BY id_config DESC LIMIT 0,1';
 					break;
 				case 'cart_account':
-					$sql = 'SELECT cart.id_cart,
+					$query = 'SELECT cart.id_cart,
                                 cart.transmission_cart,
                                 (CASE 
  								  WHEN a.id_account IS NOT NULL THEN a.email_ac
@@ -315,8 +491,8 @@ class plugins_cartpay_db
 							LEFT JOIN `mc_cartpay_quotation` as q ON (cart.id_cart = q.id_cart)
 							WHERE cart.id_cart = :id';
 					break;
-                case 'cart':
-                    $sql = 'SELECT cart.id_cart,
+                /*case 'cart':
+                    $query = 'SELECT cart.id_cart,
                                 cart.transmission_cart,
                                 b.email_buyer AS email,
  								b.firstname_buyer AS firstname,
@@ -335,18 +511,76 @@ class plugins_cartpay_db
 							LEFT JOIN `mc_cartpay_order` as o USING (id_cart)
 							LEFT JOIN `mc_cartpay_quotation` as q ON (cart.id_cart = q.id_cart)
 							WHERE cart.id_cart = :id AND cart.id_account IS NULL';
+                    break;*/
+                case 'cart':
+                    $cond = '';
+                    $where = '';
+                    if(isset($params['where']) && is_array($params['where'])) {
+                        $newWhere = [];
+
+                        foreach ($params['where'] as $key => $value) {
+                            $newWhere = array_merge($newWhere, $value);
+                        }
+                        foreach ($newWhere as $item) {
+                            $where .= ' '.$item['type'].' '.$item['condition'].' ';
+                        }
+                        unset($params['where']);
+                    }
+                    $select = [
+                        'cart.id_cart',
+                        'cart.transmission_cart',
+                        'mcb.email_buyer AS email',
+                        'mcb.firstname_buyer AS firstname',
+                        'mcb.lastname_buyer AS lastname',
+                        '(CASE
+                            WHEN mco.id_cart IS NOT NULL THEN "sale"
+                            WHEN mcq.id_cart IS NOT NULL THEN "quotation"
+                          END) AS type_cart',
+                        'mco.amount_order',
+                        'mco.currency_order',
+                        'mco.payment_order',
+                        'mco.status_order',
+                        'cart.date_register'
+                    ];
+                    if(isset($params['select'])) {
+                        foreach ($params['select'] as $extendSelect) {
+                            $select = array_merge($select, $extendSelect);
+                        }
+                        unset($params['select']);
+                    }
+
+                    $joins = '';
+                    if(isset($params['join']) && is_array($params['join'])) {
+                        $newJoin = [];
+
+                        foreach ($params['join'] as $key => $value) {
+                            $newJoin = array_merge($newJoin, $value);
+                        }
+                        foreach ($newJoin as $join) {
+                            $joins .= ' '.$join['type'].' '.$join['table'].' '.$join['as'].' ON ('.$join['on']['table'].'.'.$join['on']['key'].' = '.$join['as'].'.'.$join['on']['key'].') ';
+                        }
+                        unset($params['join']);
+                    }
+
+                    $query = 'SELECT '.implode(',', $select).'
+							FROM `mc_cartpay` as cart
+                                JOIN `mc_cartpay_buyer` as mcb ON (mcb.id_buyer = cart.id_buyer)
+                                JOIN `mc_cartpay_items` as mci ON (cart.id_cart = mci.id_cart)
+                                LEFT JOIN `mc_cartpay_order` as mco ON (cart.id_cart = mco.id_cart)
+                                LEFT JOIN `mc_cartpay_quotation` as mcq ON (cart.id_cart = mcq.id_cart)'.$joins.'
+                                WHERE cart.id_cart = :id '.$cond.$where.' ORDER BY cart.id_cart DESC';
                     break;
 				case 'session':
-					/*$sql = 'SELECT *
+					/*$query = 'SELECT *
 							FROM mc_cartpay
 							WHERE session_key_cart = :session_key_cart
 							AND transmission_cart = 0';*/
-					$sql = 'SELECT *
+					$query = 'SELECT *
 							FROM mc_cartpay
 							WHERE session_key_cart = :session_key_cart';
 					break;
 				case 'account_session':
-					$sql = "SELECT * 
+					$query = "SELECT * 
 							FROM `mc_cartpay`
 							WHERE id_account = :id
 							AND id_cart NOT IN (
@@ -357,15 +591,15 @@ class plugins_cartpay_db
 							LIMIT 1";
 					break;
                 case 'product':
-                    $sql = 'SELECT *
+                    $query = 'SELECT *
 							FROM mc_cartpay_items
 							WHERE id_cart = :id AND id_product = :id_product';
                     break;
 				case 'product_price':
-					$sql = 'SELECT price_p FROM `mc_catalog_product` WHERE id_product = :id';
+					$query = 'SELECT price_p FROM `mc_catalog_product` WHERE id_product = :id';
 					break;
 				case 'item':
-					$sql = 'SELECT 
+					$query = 'SELECT 
 								item.id_items,
 								item.quantity,
 								catalog.* ,
@@ -401,38 +635,42 @@ class plugins_cartpay_db
 						  	ORDER BY item.date_register';
 					break;
 				case 'idFromIso':
-					$sql = 'SELECT `id_lang` FROM `mc_lang` WHERE `iso_lang` = :iso';
+					$query = 'SELECT `id_lang` FROM `mc_lang` WHERE `iso_lang` = :iso';
 					break;
                 case 'countProduct':
-                    $sql = 'SELECT count(id_items) AS nbr
+                    $query = 'SELECT count(id_items) AS nbr
 							FROM mc_cartpay_items
 							WHERE id_cart = :id';
                     break;
 				case 'order':
 				case 'quotation':
-					$sql = 'SELECT * FROM `mc_cartpay_'.$config['type'].'` WHERE id_cart = :id_cart ORDER BY date_register DESC LIMIT 0,1';
+					$query = 'SELECT * FROM `mc_cartpay_'.$config['type'].'` WHERE id_cart = :id_cart ORDER BY date_register DESC LIMIT 0,1';
                     break;
                 case 'countCart':
-                    $sql = 'SELECT count(id_cart) AS order_num FROM mc_cartpay 
+                    $query = 'SELECT count(id_cart) AS order_num FROM mc_cartpay 
                     WHERE id_cart BETWEEN 1 AND :id AND transmission_cart = 1';
                     break;
-			}
+                default:
+                    return false;
+            }
 
-			return $sql ? component_routing_db::layer()->fetch($sql, $params) : null;
+            try {
+                return component_routing_db::layer()->fetch($query, $params);
+            }
+            catch (Exception $e) {
+                if(!isset($this->logger)) $this->logger = new debug_logger(MP_LOG_DIR);
+                $this->logger->log('statement','db',$e->getMessage(),$this->logger::LOG_MONTH);
+            }
 		}
+        return false;
 	}
 
-	/**
-	 * @param $config
-	 * @param array $params
-	 * @return bool|string
-	 */
-	public function insert($config, $params = array())
-	{
-		if (!is_array($config)) return '$config must be an array';
-
-		$sql = '';
-
+    /**
+     * @param array $config
+     * @param array $params
+     * @return bool|string
+     */
+    public function insert(array $config, array $params = []) {
 		switch ($config['type']) {
             case 'buyer':
                 $id_cart = $params['id_cart'];
@@ -445,56 +683,51 @@ class plugins_cartpay_db
                 );
 
                 try {
-                    component_routing_db::layer()->transaction($queries);
-                    return true;
+                    $results = component_routing_db::layer()->transaction($queries);
+                    return $results[1];
                 }
                 catch (Exception $e) {
                     return 'Exception reçue : '.$e->getMessage();
                 }
                 break;
 			case 'session':
-				$sql = 'INSERT INTO `mc_cartpay` (`id_account`,`session_key_cart`)
+				$query = 'INSERT INTO `mc_cartpay` (`id_account`,`session_key_cart`)
 						VALUES (:id_account,:session_key_cart)';
 				break;
             case 'product':
-                $sql = 'INSERT INTO `mc_cartpay_items` (id_cart,id_product,quantity)
+                $query = 'INSERT INTO `mc_cartpay_items` (id_cart,id_product,quantity)
 						VALUES (:id_cart,:id_product,:quantity)';
                 break;
             case 'quotation':
-                $sql = 'INSERT INTO `mc_cartpay_quotation` (id_cart, step_quotation, amount_quotation, currency_quotation)
+                $query = 'INSERT INTO `mc_cartpay_quotation` (id_cart, step_quotation, amount_quotation, currency_quotation)
 						VALUES (:id_cart, :step_quotation, :amount_quotation, :currency_quotation)';
                 break;
 			case 'order':
-				$sql = 'INSERT INTO `mc_cartpay_order` (id_cart, step_order, amount_order, currency_order, transaction_id, payment_order, status_order)
+				$query = 'INSERT INTO `mc_cartpay_order` (id_cart, step_order, amount_order, currency_order, transaction_id, payment_order, status_order)
 						VALUES (:id_cart, :step_order, :amount_order, :currency_order, :transaction_id, :payment_order, :status_order)';
 				break;
-		}
+            default:
+                return false;
+        }
 
-		if($sql === '') return 'Unknown request asked';
-
-		try {
-			component_routing_db::layer()->insert($sql,$params);
-			return true;
-		}
-		catch (Exception $e) {
-			return 'Exception reçue : '.$e->getMessage();
-		}
+        try {
+            component_routing_db::layer()->insert($query,$params);
+            return true;
+        }
+        catch (Exception $e) {
+            return 'Exception reçue : '.$e->getMessage();
+        }
 	}
 
-	/**
-	 * @param $config
-	 * @param array $params
-	 * @return bool|string
-	 */
-	public function update($config, $params = array())
-	{
-		if (!is_array($config)) return '$config must be an array';
-
-		$sql = '';
-
+    /**
+     * @param array $config
+     * @param array $params
+     * @return bool|string
+     */
+    public function update(array $config, array $params = []) {
 		switch ($config['type']) {
 			case 'config':
-				$sql = 'UPDATE `mc_cartpay_config`
+				$query = 'UPDATE `mc_cartpay_config`
 						SET 
 							`quotation_enabled` = :quotation_enabled,
 							`order_enabled` = :order_enabled,
@@ -510,13 +743,13 @@ class plugins_cartpay_db
 						WHERE id_config = :id';
 				break;
             case 'product':
-                $sql = 'UPDATE `mc_cartpay_items` 
+                $query = 'UPDATE `mc_cartpay_items` 
                 SET 
                   quantity = :quantity
                 WHERE `id_cart` = :id_cart AND id_items = :id_items';
                 break;
 			case 'buyer':
-				$sql = "UPDATE `mc_cartpay_buyer`
+				$query = "UPDATE `mc_cartpay_buyer`
 						SET `firstname_buyer` = :firstname_buyer,
 							`lastname_buyer` = :lastname_buyer,
 							`email_buyer` = :email_buyer,
@@ -526,28 +759,28 @@ class plugins_cartpay_db
 						WHERE `id_buyer` = :id";
 				break;
 			case 'cart_account':
-				$sql = "UPDATE `mc_cartpay`
+				$query = "UPDATE `mc_cartpay`
 						SET `id_account` = :id_account
 						WHERE `id_cart` = :id_cart";
 				break;
             case 'session':
-                $sql = 'UPDATE `mc_cartpay`
+                $query = 'UPDATE `mc_cartpay`
 						SET `id_account` = :id_account
 						WHERE `id_cart` = :id';
                 break;
             case 'status':
-                $sql = 'UPDATE `mc_cartpay`
+                $query = 'UPDATE `mc_cartpay`
 						SET `transmission_cart` = :tc
 						WHERE `id_cart` = :id';
                 break;
             case 'status_order':
-                $sql = 'UPDATE `mc_cartpay_order`
+                $query = 'UPDATE `mc_cartpay_order`
 						SET `status_order` = :status_order
 						WHERE `id_cart` = :id';
                 break;
             case 'billing':
             case 'billing_address':
-                $sql = 'UPDATE `mc_cartpay_buyer`
+                $query = 'UPDATE `mc_cartpay_buyer`
 						SET `street_billing` = :street_billing,
 						`postcode_billing` = :postcode_billing,
 						`city_billing` = :city_billing,
@@ -555,72 +788,68 @@ class plugins_cartpay_db
 						WHERE `id_buyer` = :id';
                 break;
 			case 'order_payment':
-				$sql = "UPDATE `mc_cartpay_order` SET payment_order = :payment_order WHERE id_order = :id";
+				$query = "UPDATE `mc_cartpay_order` SET payment_order = :payment_order WHERE id_order = :id";
 				break;
 			case 'order_step':
 			case 'quotation_step':
 			    $type = substr($config['type'], 0, -5);
-				$sql = 'UPDATE `mc_cartpay_'.$type.'` SET step_'.$type.' = :step WHERE id_'.$type.' = :id';
+				$query = 'UPDATE `mc_cartpay_'.$type.'` SET step_'.$type.' = :step WHERE id_'.$type.' = :id';
 				break;
 			case 'order_info':
 			case 'quotation_info':
 			    $type = substr($config['type'], 0, -5);
-				$sql = 'UPDATE `mc_cartpay_'.$type.'` SET info_'.$type.' = :info WHERE id_'.$type.' = :id';
+				$query = 'UPDATE `mc_cartpay_'.$type.'` SET info_'.$type.' = :info WHERE id_'.$type.' = :id';
 				break;
-		}
+            default:
+                return false;
+        }
 
-		if($sql === '') return 'Unknown request asked';
-
-		try {
-			component_routing_db::layer()->update($sql,$params);
-			return true;
-		}
-		catch (Exception $e) {
-			return 'Exception reçue : '.$e->getMessage();
-		}
+        try {
+            component_routing_db::layer()->update($query,$params);
+            return true;
+        }
+        catch (Exception $e) {
+            return 'Exception reçue : '.$e->getMessage();
+        }
 	}
 
-	/**
-	 * @param $config
-	 * @param array $params
-	 * @return bool|string
-	 */
-	public function delete($config, $params = array())
-	{
-		if (!is_array($config)) return '$config must be an array';
-		$sql = '';
-
+    /**
+     * @param array $config
+     * @param array $params
+     * @return bool|string
+     */
+    public function delete(array $config, array $params = []) {
 		switch ($config['type']) {
 			case 'account':
-				$sql = 'DELETE FROM `mc_account` 
+				$query = 'DELETE FROM `mc_account` 
 						WHERE `id_account` IN ('.$params['id'].')';
-				$params = array();
+                $params = [];
 				break;
 			case 'session':
-				$sql = 'DELETE FROM `mc_account_session`
+				$query = 'DELETE FROM `mc_account_session`
 						WHERE `id_session` = :id_session';
 				break;
 			case 'lastSessions':
-				$sql = 'DELETE FROM `mc_account_session`
+				$query = 'DELETE FROM `mc_account_session`
 						WHERE TO_DAYS(DATE_FORMAT(NOW(), "%Y%m%d")) - TO_DAYS(DATE_FORMAT(last_modified_session, "%Y%m%d")) > :limit';
 				break;
 			case 'currentSession':
-				$sql = 'DELETE FROM `mc_account_session`
+				$query = 'DELETE FROM `mc_account_session`
 						WHERE `id_account` = :id_account';
 				break;
 			case 'product':
-				$sql = 'DELETE FROM `mc_cartpay_items` WHERE id_cart = :id_cart AND id_items = :id_items';
+				$query = 'DELETE FROM `mc_cartpay_items` WHERE id_cart = :id_cart AND id_items = :id_items';
 				break;
-		}
+            default:
+                return false;
+        }
 
-		if($sql === '') return 'Unknown request asked';
-
-		try {
-			component_routing_db::layer()->delete($sql,$params);
-			return true;
-		}
-		catch (Exception $e) {
-			return 'Exception reçue : '.$e->getMessage();
-		}
+        try {
+            component_routing_db::layer()->delete($query,$params);
+            return true;
+        }
+        catch (Exception $e) {
+            return 'Exception reçue : '.$e->getMessage();
+        }
 	}
 }

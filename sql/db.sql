@@ -52,19 +52,20 @@ CREATE TABLE IF NOT EXISTS `mc_cartpay_quotation` (
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `mc_cartpay_config` (
-  `id_config` smallint(3) UNSIGNED NOT NULL AUTO_INCREMENT,
-  `type_order` enum('sale','quotation') NOT NULL DEFAULT 'sale',
-  `quotation_enabled` smallint(1) UNSIGNED NOT NULL DEFAULT '1',
-  `order_enabled` smallint(1) UNSIGNED NOT NULL DEFAULT '0',
-  `bank_wire` smallint(1) NOT NULL DEFAULT '0',
-  `account_owner` varchar(40) DEFAULT NULL,
-  `bank_account` varchar(40) DEFAULT NULL,
-  `bank_address` varchar(150) DEFAULT NULL,
-  `email_config` varchar(150) DEFAULT NULL,
-  `email_config_from` varchar(150) DEFAULT NULL,
-  `billing_address` smallint(1) NOT NULL DEFAULT '0',
-  `show_price` smallint(1) UNSIGNED NOT NULL DEFAULT '0',
-  PRIMARY KEY (`id_config`)
+    `id_config` smallint(3) UNSIGNED NOT NULL AUTO_INCREMENT,
+    `type_order` enum('sale','quotation') NOT NULL DEFAULT 'sale',
+    `quotation_enabled` smallint(1) UNSIGNED NOT NULL DEFAULT '1',
+    `order_enabled` smallint(1) UNSIGNED NOT NULL DEFAULT '0',
+    `bank_wire` smallint(1) NOT NULL DEFAULT '0',
+    `account_owner` varchar(40) DEFAULT NULL,
+    `bank_account` varchar(40) DEFAULT NULL,
+    `bank_address` varchar(150) DEFAULT NULL,
+    `bank_link` varchar(150) DEFAULT NULL,
+    `email_config` varchar(150) DEFAULT NULL,
+    `email_config_from` varchar(150) DEFAULT NULL,
+    `billing_address` smallint(1) NOT NULL DEFAULT '0',
+    `show_price` smallint(1) UNSIGNED NOT NULL DEFAULT '0',
+    PRIMARY KEY (`id_config`)
 ) ENGINE=InnoDB AUTO_INCREMENT=1 DEFAULT CHARSET=utf8;
 
 CREATE TABLE IF NOT EXISTS `mc_cartpay_buyer` (

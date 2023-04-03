@@ -1,4 +1,4 @@
-{*<pre>{$cart|print_r}</pre>*}
+<pre>{$cart|print_r}</pre>
 <form id="cart_form" method="post" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;action=edit" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-6">
     <fieldset>
         <div class="row">
@@ -31,7 +31,8 @@
         </div>
     </fieldset>
 </form>
-{*<pre>{$product|print_r}</pre>*}
+{*<pre>{$product|print_r}</pre>
+<pre>{$scheme|print_r}</pre>*}
 {include file="section/form/table-form-3.tpl" data=$product idcolumn='id_items' checkbox=false dlt=false edit=false activation=false search=false sortable=false controller="cartpay"}
 {if $cart.type_cart eq "sale"}
 <form id="cart_form_order" method="post" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;action=edit" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-6">
@@ -66,79 +67,10 @@
                 </select>
             </div>
         </div>
-        {strip}
-            {if isset($cart.transport)}
-                {$transport = $cart.transport}
-            {/if}
-        {/strip}
-        {if isset($transport) && is_array($transport)}
-            {*<pre>{$transport|print_r}</pre>*}
-            {if $transport.type eq 'delivery'}
-            <fieldset>
-                <h3>Livraison</h3>
-                <div class="row">
-                    <div class="col-xs-12 col-md-6">
-                        <div class="form-group">
-                            <label for="transport[lastname]">{#lastname#|ucfirst} :</label>
-                            <input id="transport[lastname]" type="text" name="transport[lastname]" value="{$transport.lastname}" placeholder="{#ph_lastname#}" disabled class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-md-6">
-                        <div class="form-group">
-                            <label for="transport[firstname]">{#firstname#|ucfirst} :</label>
-                            <input id="transport[firstname]" type="text" name="transport[firstname]" value="{$transport.firstname}" placeholder="{#ph_firstname#}" disabled class="form-control" />
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-12 col-md-6">
-                        <div class="form-group">
-                            <label for="transport[street]">{#street_ac#|ucfirst} :</label>
-                            <input id="transport[street]" type="text" name="transport[street]" value="{$transport.street}" placeholder="{#ph_street#}" disabled class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-md-6">
-                        <div class="form-group">
-                            <label for="transport[city]">{#city_ac#|ucfirst} :</label>
-                            <input id="transport[city]" type="text" name="transport[city]" value="{$transport.city}" placeholder="{#ph_city#}" disabled class="form-control" />
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-12 col-md-6">
-                        <div class="form-group">
-                            <label for="transport[postcode]">{#postcode_ac#|ucfirst} :</label>
-                            <input id="transport[postcode]" type="text" name="transport[postcode]" value="{$transport.postcode}" placeholder="{#ph_postcode#}" disabled class="form-control" />
-                        </div>
-                    </div>
-                    <div class="col-xs-12 col-md-6">
-                        <div class="form-group">
-                            <label for="transport[country]">{#country_ac#|ucfirst} :</label>
-                            <input id="transport[country]" type="text" name="transport[country]" value="{#$transport.country#}" placeholder="{#ph_country#}" disabled class="form-control" />
-                        </div>
-                    </div>
-                </div>
-                <div class="row">
-                    <div class="col-xs-12 col-md-6">
-                        <div class="form-group">
-                            <label for="transport[price]">{#price#|ucfirst} :</label>
-                            <input id="transport[price]" type="text" name="transport[price]" value="{if $transport.price != NULL}{$transport.price}{else}0{/if}" placeholder="{#ph_price#}" disabled class="form-control" />
-                        </div>
-                    </div>
-                </div>
-            </fieldset>
-                {else}
-            <fieldset>
-            <h3>Livraison</h3>
-                <div class="row">
-                    <div class="col-xs-12 col-md-6">
-                        <div class="form-group">
-                            <input id="transport[price]" type="text" name="transport[type]" value="{#$transport.type#}" disabled class="form-control" />
-                        </div>
-                    </div>
-                </div>
-            </fieldset>
-            {/if}
+        {if isset($cartpay_params) && is_array($cartpay_params)}
+            {foreach $cartpay_params as $param}
+                {include file="$param"}
+            {/foreach}
         {/if}
         <fieldset>
             <input type="hidden" name="id" value="{$cart.id_cart}" />

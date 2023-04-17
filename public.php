@@ -181,8 +181,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		$this->loadModules();
 		if(isset($this->mods['account']) && method_exists($this->mods['account'],'accountData')){
 			$account = $this->mods['account']->accountData();
-			$this->id_account = $account['id_account'];
-
+			$this->id_account = $account['id'];
+            //print $this->id_account;
+            //print_r($account);
             // If id account is set, look for a abandonned cart for this account
             if($this->id_account) $account_cart = $this->getItems('account_session',$this->id_account,'one',false);
 		}
@@ -198,7 +199,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
         $session_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
 
         // Check if there is an account cart
-        if(isset($account_cart)) {
+        if(isset($account_cart) && !empty($account_cart)) {
+            
             // Check if the current cart is different from the account cart
             if($session_cart['session_key_cart'] !== $account_cart['session_key_cart']) {
                 // Get the content of the current cart
@@ -208,7 +210,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                 if(!$cart['nb_items']) {
                     // - create new cart session with this key and retreive items of the cart
                     $session_cart = $account_cart;
-					$this->cart->newCart($account_cart['session_key_cart']);
+					$this->cart->newCart($account_cart['session_key_cart'] ?? '');
                     $this->session_key_cart = $account_cart['session_key_cart'];
 					$this->cart->openCart();
                     $this->retreiveAccountCart();
@@ -931,17 +933,17 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		if(!empty($data)) {
 			switch($type){
 				case 'account':
-					$newArr['id'] = $data['id_account'];
-					$newArr['email'] = $data['email_ac'];
-					$newArr['lastname'] = $data['lastname_ac'];
-					$newArr['firstname'] = $data['firstname_ac'];
-					$newArr['phone'] = $data['phone_ac'];
-					$newArr['company'] = $data['company_ac'];
-					$newArr['vat'] = $data['vat_ac'];
-					$newArr['address'] = $data['street_address'];
-					$newArr['postcode'] = $data['postcode_address'];
-					$newArr['city'] = $data['city_address'];
-					$newArr['country'] = $data['country_address'];
+					$newArr['id'] = $data['id_buyer'];
+					$newArr['email'] = $data['email'];
+					$newArr['lastname'] = $data['lastname'];
+					$newArr['firstname'] = $data['firstname'];
+					$newArr['phone'] = $data['phone'];
+					$newArr['company'] = $data['company'];
+					$newArr['vat'] = $data['vat'];
+					$newArr['address'] = $data['address']['billing']['street'];
+					$newArr['postcode'] = $data['address']['billing']['postcode'];
+					$newArr['city'] = $data['address']['billing']['town'];
+					$newArr['country'] = $data['address']['billing']['country'];
 					$newArr['type_buyer'] = $type;
 					break;
 				case 'buyer':
@@ -972,6 +974,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			$account = $this->mods['account'];
 			$type = 'account';
 			$buyerData = $account->accountData();
+            $buyer = $this->getItems('buyer', $cart['id_cart'], 'one', false);
+            $buyerData['id_buyer'] = $buyer['id_buyer'];
+            //print_r($buyerData);
 		}
 		else {
 			$type = 'buyer';
@@ -1061,6 +1066,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				'country_billing' => $data['country']
 			]
 		];
+        //print_r($conf);
 		$this->upd($conf);
 	}
 
@@ -1275,7 +1281,6 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
 		if(isset($key_cart) && is_array($key_cart) && !empty($key_cart)) {
 			if (http_request::isGet('action')) $this->action = $this->clean->simpleClean($_GET['action']);
-
 			$this->config = $this->getConfig();
 			$pma = $this->getPaymentMethodAvailable();
 			$this->template->assign('available_payment_methods', $pma);

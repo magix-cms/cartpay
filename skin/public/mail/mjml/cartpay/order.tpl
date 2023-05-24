@@ -1,5 +1,5 @@
 <!doctype html>
-<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office" style="background: #EEEEEE;">
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:v="urn:schemas-microsoft-com:vml" xmlns:o="urn:schemas-microsoft-com:office:office">
 
 <head>
   <title> {if isset($title_mail)}{$title_mail}{/if} </title>
@@ -40,28 +40,30 @@
       display: block;
       margin: 13px 0;
     }
+
   </style>
   <!--[if mso]>
-        <noscript>
-        <xml>
-        <o:OfficeDocumentSettings>
-          <o:AllowPNG/>
-          <o:PixelsPerInch>96</o:PixelsPerInch>
-        </o:OfficeDocumentSettings>
-        </xml>
-        </noscript>
-        <![endif]-->
+    <noscript>
+    <xml>
+    <o:OfficeDocumentSettings>
+      <o:AllowPNG/>
+      <o:PixelsPerInch>96</o:PixelsPerInch>
+    </o:OfficeDocumentSettings>
+    </xml>
+    </noscript>
+    <![endif]-->
   <!--[if lte mso 11]>
-        <style type="text/css">
-          .mj-outlook-group-fix { width:100% !important; }
-        </style>
-        <![endif]-->
+    <style type="text/css">
+      .mj-outlook-group-fix { width:100% !important; }
+    </style>
+    <![endif]-->
   <!--[if !mso]><!-->
   <link href="https://fonts.googleapis.com/css?family=Roboto:300,400,500" rel="stylesheet" type="text/css">
   <link href="https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700" rel="stylesheet" type="text/css">
   <style type="text/css">
     @import url(https://fonts.googleapis.com/css?family=Roboto:300,400,500);
     @import url(https://fonts.googleapis.com/css?family=Ubuntu:300,400,500,700);
+
   </style>
   <!--<![endif]-->
   <style type="text/css">
@@ -76,6 +78,7 @@
         max-width: 50%;
       }
     }
+
   </style>
   <style media="screen and (min-width:480px)">
     .moz-text-html .mj-column-per-100 {
@@ -87,16 +90,22 @@
       width: 50% !important;
       max-width: 50%;
     }
+
   </style>
   <style type="text/css">
   </style>
+  <style type="text/css">
+  </style>
+  <!-- <mj-style inline="inline">
+        html, body { background: {$body_color}; !important; }
+    </mj-style> -->
 </head>
 
-<body style="word-spacing: normal; background-color: #EEEEEE; background: #EEEEEE;">
+<body style="word-spacing:normal;background-color:#EEEEEE;">
   <div style="background-color:#EEEEEE;">
-    <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" bgcolor="#EEEEEE" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
-    <div style="background:#EEEEEE;background-color:#EEEEEE;margin:0px auto;max-width:960px;">
-      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#EEEEEE;background-color:#EEEEEE;width:100%;">
+    <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" bgcolor="{$body_color}" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
+    <div style="background:{$body_color};background-color:{$body_color};margin:0px auto;max-width:960px;">
+      <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:{$body_color};background-color:{$body_color};width:100%;">
         <tbody>
           <tr>
             <td style="direction:ltr;font-size:0px;padding:20px 0;text-align:center;">
@@ -522,11 +531,11 @@
   </table>
   </div>
   <!--[if mso | IE]></td></tr></table><![endif]-->
-  <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:#EEEEEE;background-color:#EEEEEE;width:100%;">
+  <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="background:{$body_color};background-color:{$body_color};width:100%;">
     <tbody>
       <tr>
         <td>
-          <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" bgcolor="#EEEEEE" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
+          <!--[if mso | IE]><table align="center" border="0" cellpadding="0" cellspacing="0" class="" role="presentation" style="width:960px;" width="960" bgcolor="{$body_color}" ><tr><td style="line-height:0px;font-size:0px;mso-line-height-rule:exactly;"><![endif]-->
           <div style="margin:0px auto;max-width:960px;">
             <table align="center" border="0" cellpadding="0" cellspacing="0" role="presentation" style="width:100%;">
               <tbody>

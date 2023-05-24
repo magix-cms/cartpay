@@ -127,7 +127,7 @@ class Cart
 		}
 
 		$this->saveCart();
-		return $this->items[$key] ?: null;
+		return $this->items[$key] ?? null;
 	}
 
 	/**
@@ -268,19 +268,22 @@ class Cart
 	 * @param string $key (optional) id of the cart
 	 * @param string $session_name (optional) name of the session
 	 */
-	public function newCart(string $key = '', string $session_name = 'mc_cart') {
+	public function newCart(?string $key = '', string $session_name = 'mc_cart') {
 		$params = [];
 		if($key !== '') $params['ssid'] = $key;
 
 		if($this->key !== null) {
 			$this->session->close($this->cart_name);
+            session_write_close();
 		}
 		else {
 			session_write_close();
 		}
 		$this->session->start($session_name,$params);
+        if($key === null) session_regenerate_id();
 		$this->cart_name = $session_name;
-		$this->key = $key === '' ? (http_request::isSession('session_key_cart') ? form_inputEscape::simpleClean($_SESSION['session_key_cart']) : session_id()) : $key;
+		//$this->key = $key === '' ? (http_request::isSession('session_key_cart') ? form_inputEscape::simpleClean($_SESSION['session_key_cart']) : session_id()) : $key;
+		$this->key = empty($key) ? session_id() : $key;
 		$this->session->run(['session_key_cart' => $this->key]);
 	}
 

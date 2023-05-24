@@ -238,7 +238,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
             }
             elseif($session_cart['transmission_cart'] === 1){
 				// - cart was found but is closed
-				$this->cart->newCart();
+				$this->cart->newCart(null);
 				// Get the new key of the cart
 				$this->session_key_cart = $this->cart->getKey();
 				$this->openSession($this->session_key_cart, $this->id_account);
@@ -258,7 +258,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
             }
             elseif($session_cart['id_account'] && !$this->id_account) {
                 // - cart was found but assign to an account, empty the cart and start a new one
-                $this->cart->newCart();
+                $this->cart->newCart(null);
                 // Get the new key of the cart
                 $this->session_key_cart = $this->cart->getKey();
 				$this->openSession($this->session_key_cart, $this->id_account);
@@ -808,12 +808,12 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 			$langData = $this->getItems('idFromIso',['iso' => $this->lang],'one',false);
             $cart_items = $this->getItems('catalog',['id' => $key_cart['id_cart'],'default_lang' => $langData['id_lang']],'all',false);
 
-			$products = [];
-			foreach ($cart_items as $item) {
-				$products[$item['id_product']][] = $item;
-			}
-
 			if(!empty($cart_items)) {
+                $products = [];
+                foreach ($cart_items as $item) {
+                    $products[$item['id_product']][] = $item;
+                }
+
 				$mc = new frontend_model_catalog($this->template);
 				$ms = new frontend_model_core();
 				$current = $ms->setCurrentId();
@@ -841,7 +841,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                     if(!empty($item['item']->params)) {
                         $item['params'] = [];
                         foreach ($item['item']->params as $param => $value) {
-                            if(isset($value['price']) && !empty($value['price'])) {
+                            if(!empty($value['price'])) {
                                 $rate = 1 + ($value['price']['vat']/100);
                                 $exc = $value['price']['price'];
                                 $inc = $exc * $rate;
@@ -863,7 +863,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                         'value' => $value,
                                         'items' => $products[$item['item']->id][$i]['id_items']
                                     ]),
-                                    'price' => $value['price']
+                                    'price' => !empty($value['price']) ? $value['price'] : null
                                 ];
                             /*}
                             else {
@@ -887,11 +887,12 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                 $cart['total']['exc'] = round($cart['total']['exc'], 2);
                 $settings = new frontend_model_setting($this->template);
                 $price_display = $settings->getSetting("price_display");
-                if($price_display['value'] === 'tinc'){
+                /*if($price_display['value'] === 'tinc'){
                     $cart['total']['inc'] = round($cart['total']['inc'], 2);
                 }else{
                     $cart['total']['inc'] = round($cart['total']['exc'], 2);
-                }
+                }*/
+                $cart['total']['inc'] = round($cart['total']['inc'], 2);
 
                 foreach ($cart['total']['vat'] as $key => $val) {
                     $cart['total']['vat'][$key] = round($val,2);
@@ -1554,9 +1555,12 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                 'tc' => 1
                                                             )
                                                         ));
-                                                        $this->cart->newCart();
+                                                        //$this->cart->newCart();
+                                                        //$this->session_key_cart = $this->cart->getKey();
+                                                        //$this->openSession($this->session_key_cart, $this->id_account);
                                                     }
-                                                }elseif($this->action === 'quotation'){
+                                                }
+                                                elseif($this->action === 'quotation'){
                                                     $this->upd(array(
                                                         'type' => 'status',
                                                         'data' => array(
@@ -1564,7 +1568,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                             'tc' => 1
                                                         )
                                                     ));
-                                                    $this->cart->newCart();
+                                                    //$this->cart->newCart();
+                                                    //$this->session_key_cart = $this->cart->getKey();
+                                                    //$this->openSession($this->session_key_cart, $this->id_account);
                                                 }
                                             }
                                             //$log = new debug_logger(MP_LOG_DIR);

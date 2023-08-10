@@ -32,15 +32,18 @@
  # versions in the future. If you wish to customize MAGIX CMS for your
  # needs please refer to http://www.magix-cms.com for more information.
  */
-class plugins_cartpay_db
-{
+class plugins_cartpay_db {
+	/**
+	 * @var debug_logger $logger
+	 */
+	protected debug_logger $logger;
+
     /**
      * @param array $config
      * @param array $params
      * @return array|bool
      */
     public function fetchData(array $config, array $params = []) {
-
 		if ($config['context'] === 'all') {
 			switch ($config['type']) {
 				case 'carts_account':
@@ -203,8 +206,8 @@ class plugins_cartpay_db
                             WHEN mco.id_cart IS NOT NULL THEN "sale"
                             WHEN mcq.id_cart IS NOT NULL THEN "quotation"
                           END) AS type_cart',
-                        'count(mci.id_items) AS nbr_product',
-                        'SUM(mci.quantity) AS nbr_quantity',
+                        'mci.nbr_product',
+                        'mci.nbr_quantity',
                         'mco.status_order',
                         'cart.date_register'
                         ];
@@ -233,12 +236,14 @@ class plugins_cartpay_db
                         unset($params['search']);
                     }
                     $query = 'SELECT '.implode(',', $select).'
-							FROM `mc_cartpay` as cart
-                                JOIN `mc_cartpay_buyer` as mcb ON (mcb.id_buyer = cart.id_buyer)
-                                JOIN `mc_cartpay_items` as mci ON (cart.id_cart = mci.id_cart)
-                                LEFT JOIN `mc_cartpay_order` as mco ON (cart.id_cart = mco.id_cart)
-                                LEFT JOIN `mc_cartpay_quotation` as mcq ON (cart.id_cart = mcq.id_cart)'.$joins.'
-                                WHERE cart.transmission_cart = 1 '.$cond.$where.' GROUP BY cart.id_cart ORDER BY cart.id_cart DESC'. $limit;
+								FROM `mc_cartpay` as cart
+									JOIN `mc_cartpay_buyer` as mcb ON (mcb.id_buyer = cart.id_buyer)
+									JOIN (
+										SELECT id_cart, count(id_items) AS nbr_product, SUM(quantity) AS nbr_quantity FROM `mc_cartpay_items` GROUP BY id_cart
+									) as mci ON (cart.id_cart = mci.id_cart)
+									LEFT JOIN `mc_cartpay_order` as mco ON (cart.id_cart = mco.id_cart)
+									LEFT JOIN `mc_cartpay_quotation` as mcq ON (cart.id_cart = mcq.id_cart)'.$joins.'
+								WHERE cart.transmission_cart = 1'.$cond.$where.' ORDER BY cart.id_cart DESC'. $limit;
                     break;
                 /*case 'carts':
                     $limit = '';
@@ -302,6 +307,17 @@ class plugins_cartpay_db
                           '.$limit;//GROUP BY carts.id_cart
                     break;*/
                 case 'product':
+                    /*SELECT mci.id_items,mci.quantity,mcp.price_p,mcpc.name_p,CONCAT("/upload/catalog/product/",mci.id_product,"/s_",img.name_img) AS name_img,mavc.value_attr,IFNULL(map.price_p,mcp.price_p) AS value_price
+FROM `mc_cartpay_items` as mci
+JOIN `mc_catalog_product` as mcp ON(mci.id_product = mcp.id_product)
+JOIN mc_catalog_product_content AS mcpc ON ( mcp.id_product = mcpc.id_product )
+LEFT JOIN mc_catalog_product_img img ON (mci.id_product = img.id_product AND img.default_img = 1)
+LEFT JOIN mc_cartpay_attribute mca ON (mci.id_items = mca.id_items)
+LEFT JOIN mc_attribute_product map ON (mcp.id_product = map.id_product AND map.id_attr_va = mca.id_attr_va)
+LEFT JOIN mc_attribute_value mav ON (mca.id_attr_va = mav.id_attr_va)
+LEFT JOIN mc_attribute_value_content mavc ON (mav.id_attr_va = mavc.id_attr_va)
+LEFT JOIN mc_attribute ma ON (mav.id_attr = ma.id_attr)
+LEFT JOIN mc_attribute_content mac ON (ma.id_attr = mac.id_attr) WHERE mcpc.id_lang = 1 AND mci.id_cart = 118;*/
                     $where = '';
                     if(isset($params['where']) && is_array($params['where'])) {
                         $newWhere = [];
@@ -317,9 +333,11 @@ class plugins_cartpay_db
 
                     $select = [
                         'mci.id_items',
+                        'mci.id_product',
                         'mci.quantity',
                         'mcp.price_p',
-                        'mcpc.name_p'
+                        'mcpc.name_p',
+                        'CONCAT("/upload/catalog/product/",mci.id_product,"/s_",img.name_img) AS name_img'
                     ];
 
                     if(isset($params['select'])) {
@@ -337,9 +355,11 @@ class plugins_cartpay_db
                         foreach ($newJoin as $join) {
                             if(isset($join['on']['table'])){
                                 $on = $join['on']['table'].'.'.$join['on']['key'].' = '.$join['as'].'.'.$join['on']['key'];
-                            }else{
+                            }
+							else {
                                 $newOn = [];
-                                unset($on);
+                                //unset($on);
+								$on = '';
                                 foreach ($join['on'] as $multiOn) {
                                     $and = isset($multiOn['and']) ? ' '.$multiOn['and'].' ' : '';
                                     $on .= $and.$multiOn['table'].'.'.$multiOn['key'].' = '.$join['as'].'.'.$multiOn['key'];
@@ -356,7 +376,10 @@ class plugins_cartpay_db
                     $query = 'SELECT '.implode(',', $select).'
 							FROM `mc_cartpay_items` as mci
                                 JOIN `mc_catalog_product` as mcp ON(mci.id_product = mcp.id_product)
-                                JOIN mc_catalog_product_content AS mcpc ON ( mcp.id_product = mcpc.id_product )'.$joins.'
+                                JOIN mc_catalog_product_content AS mcpc ON ( mcp.id_product = mcpc.id_product )
+                                LEFT JOIN mc_catalog_product_img img ON (mci.id_product = img.id_product AND img.default_img = 1)
+							    LEFT JOIN mc_catalog_product_img_content imgc ON (img.id_img = imgc.id_img and mcpc.id_lang = imgc.id_lang)
+							'.$joins.'
                                 WHERE mcpc.id_lang = :default_lang AND mci.id_cart = :id '.$where.' GROUP BY mci.id_items';
                     /*
                     $query = 'SELECT item.id_items,item.quantity,p.price_p,c.name_p
@@ -528,6 +551,7 @@ class plugins_cartpay_db
                     }
                     $select = [
                         'cart.id_cart',
+                        'mco.id_order',
                         'cart.transmission_cart',
                         'mcb.email_buyer AS email',
                         'mcb.firstname_buyer AS firstname',
@@ -668,19 +692,19 @@ class plugins_cartpay_db
     /**
      * @param array $config
      * @param array $params
-     * @return bool|string
+     * @return bool
      */
     public function insert(array $config, array $params = []) {
 		switch ($config['type']) {
             case 'buyer':
                 $id_cart = $params['id_cart'];
                 unset($params['id_cart']);
-                $queries = array(
-                    array('request' => 'INSERT INTO `mc_cartpay_buyer` (`email_buyer`, `lastname_buyer`, `firstname_buyer`, `company_buyer`, `phone_buyer`, `vat_buyer`, `date_register`) 
-                    VALUES (:email_buyer, :lastname_buyer, :firstname_buyer, :company_buyer, :phone_buyer, :vat_buyer, NOW())', 'params' => $params),
-                    array('request' => 'SET @buyer_id = LAST_INSERT_ID()', 'params' => array()),
-                    array('request' => 'UPDATE `mc_cartpay` SET `id_buyer` = @buyer_id WHERE `mc_cartpay`.`id_cart` = :id_cart', 'params' => array('id_cart'=>$id_cart))
-                );
+                $queries = [
+					['request' => 'INSERT INTO `mc_cartpay_buyer` (`email_buyer`, `lastname_buyer`, `firstname_buyer`, `company_buyer`, `phone_buyer`, `vat_buyer`, `date_register`) 
+                    VALUES (:email_buyer, :lastname_buyer, :firstname_buyer, :company_buyer, :phone_buyer, :vat_buyer, NOW())', 'params' => $params],
+					['request' => 'SELECT @buyer_id := LAST_INSERT_ID() as id_buyer', 'params' => [], 'fetch' => true],
+					['request' => 'UPDATE `mc_cartpay` SET `id_buyer` = @buyer_id WHERE `mc_cartpay`.`id_cart` = :id_cart', 'params' => ['id_cart'=>$id_cart]]
+				];
 
                 try {
                     $results = component_routing_db::layer()->transaction($queries);
@@ -715,14 +739,16 @@ class plugins_cartpay_db
             return true;
         }
         catch (Exception $e) {
-            return 'Exception reçue : '.$e->getMessage();
+			if(!isset($this->logger)) $this->logger = new debug_logger(MP_LOG_DIR);
+			$this->logger->log('statement','db',$e->getMessage(),$this->logger::LOG_MONTH);
+			return false;
         }
 	}
 
     /**
      * @param array $config
      * @param array $params
-     * @return bool|string
+     * @return bool
      */
     public function update(array $config, array $params = []) {
 		switch ($config['type']) {
@@ -809,14 +835,16 @@ class plugins_cartpay_db
             return true;
         }
         catch (Exception $e) {
-            return 'Exception reçue : '.$e->getMessage();
+			if(!isset($this->logger)) $this->logger = new debug_logger(MP_LOG_DIR);
+			$this->logger->log('statement','db',$e->getMessage(),$this->logger::LOG_MONTH);
+			return false;
         }
 	}
 
     /**
      * @param array $config
      * @param array $params
-     * @return bool|string
+     * @return bool
      */
     public function delete(array $config, array $params = []) {
 		switch ($config['type']) {
@@ -844,12 +872,14 @@ class plugins_cartpay_db
                 return false;
         }
 
-        try {
-            component_routing_db::layer()->delete($query,$params);
-            return true;
-        }
-        catch (Exception $e) {
-            return 'Exception reçue : '.$e->getMessage();
-        }
+		try {
+			component_routing_db::layer()->delete($query,$params);
+			return true;
+		}
+		catch (Exception $e) {
+			if(!isset($this->logger)) $this->logger = new debug_logger(MP_LOG_DIR);
+			$this->logger->log('statement','db',$e->getMessage(),$this->logger::LOG_MONTH);
+			return false;
+		}
 	}
 }

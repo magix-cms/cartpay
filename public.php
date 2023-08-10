@@ -1421,6 +1421,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                         ]
                                                     ]);
                                                 }
+												$country = new component_collections_country();
+												$this->template->assign('countries',$country->getAllowedCountries());
 											}
 											// If the billing information had been given
 											if(isset($this->billing)) {

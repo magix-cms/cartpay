@@ -12,22 +12,23 @@
         </ul>
         <div class="cart-total">
             <div class="tot row">
-                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_products#}</div>
-                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_products">{if $setting.price_display === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
+                <div class="col-6 text-right">{#total_products#}</div>
+                <div class="col-6"><span class="tot_products">{if $setting.price_display === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
             </div>
             <div class="tot row">
-                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_exc#}</div>
-                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_exc">{$cart.total.exc|string_format:"%.2f"}</span>&nbsp;€</div>
+                <div class="col-6 text-right">{#total_exc#}</div>
+                <div class="col-6"><span class="tot_exc">{$cart.total.exc|string_format:"%.2f"}</span>&nbsp;€</div>
             </div>
             {foreach $cart.total.vat as $rate => $vat}
                 <div class="tot row">
-                    <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_vat#}&nbsp;<small>({$rate}%)</small></div>
-                    <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_vat_{$rate}">{$vat|string_format:"%.2f"}</span>&nbsp;€</div>
+                    <div class="col-6 text-right">{#total_vat#}&nbsp;<small>({$rate}%)</small></div>
+                    <div class="col-6"><span class="tot_vat_{$rate}">{$vat|string_format:"%.2f"}</span>&nbsp;€</div>
                 </div>
             {/foreach}
             <div class="tot row">
-                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6 text-right">{#total_inc#}</div>
-                <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-6"><span class="tot_inc">{if $setting.price_display === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>
+                <div class="col-6 text-right">{#total_inc#}</div>
+                {*<div class="col-6"><span class="tot_inc">{if $setting.price_display === 'tinc'}{$cart.total.inc|string_format:"%.2f"}{else}{$cart.total.exc|string_format:"%.2f"}{/if}</span>&nbsp;€</div>*}
+                <div class="col-6"><span class="tot_inc">{$cart.total.inc|string_format:"%.2f"}</span>&nbsp;€</div>
             </div>
         </div>
         <div class="actions">
@@ -49,7 +50,7 @@
                     </div>
                 {/if}
                 {if $config_cart.order_enabled && !empty($available_payment_methods)}
-                    <div class="col-12 col-xs-6 col-lg-4">
+                    <div class="col-12 col-sm-10 col-sm-8 col-md-6 col-lg-5 col-xl-4">
                         <div class="action order">
                             <div class="icon">
                                 <i class="material-icons ico ico-credit_card"></i>
@@ -81,7 +82,7 @@
     ],
     'defer' => [
     "/skin/{$theme}/js/{if $setting.mode === 'dev'}src/{/if}form{if $setting.mode !== 'dev'}.min{/if}.js",
-    "/skin/{$theme}/js/vendor/localization/messages_{$lang}.js"
+    "/plugins/cartpay/js/{if $dev}src/{/if}public{if !$dev}.min{/if}.js"
     ]
     ]}
     {if {$lang} !== "en"}{$js_files['defer'][] = "/libjs/vendor/localization/messages_{$lang}.js"}{/if}

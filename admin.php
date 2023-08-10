@@ -47,8 +47,7 @@ require_once('db.php');
  * @name plugins_cartpay_admin
  * Le plugin cartpay
  */
-class plugins_cartpay_admin extends plugins_cartpay_db
-{
+class plugins_cartpay_admin extends plugins_cartpay_db {
     /**
      * @var backend_model_template$template
      * @var backend_model_data $data
@@ -189,8 +188,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
      * Method to override the name of the plugin in the admin menu
      * @return string
      */
-    public function getExtensionName()
-    {
+    public function getExtensionName(): string {
         return $this->template->getConfigVars('cartpay_plugin');
     }
 
@@ -206,6 +204,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
     private function getItems(string $type, $id = null, string $context = null, $assign = true, bool $pagination = false) {
         return $this->data->getItems($type, $id, $context, $assign, $pagination);
     }
+
     /**
      *
      */
@@ -213,13 +212,14 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         $this->module = $this->module ?? new backend_controller_module();
         if(empty($this->mods)) $this->mods = $this->module->load_module('cartpay');
     }
+
     // -------- Listing root ----------
     /**
      * @return void
      */
     public function setTablesArray() {
         if(!isset($this->tables)) {
-            $this->tables = ['mc_cartpay','mc_cartpay_buyer'];
+            $this->tables = ['mc_cartpay','mc_cartpay_buyer','mc_cartpay_order','mc_cartpay_quotation'];
             $this->loadModules();
             if(!empty($this->mods)) {
                 foreach ($this->mods as $mod){
@@ -230,12 +230,14 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             }
         }
     }
+
     /**
      * @return void
      */
     public function setColumnsArray() {
         if(!isset($this->columns)) {
-            $this->columns = ['id_cart', 'email', 'firstname', 'lastname', 'type_cart', 'nbr_product', 'nbr_quantity', 'status_order', 'date_register'];
+            //$this->columns = ['id_cart', 'email_buyer', 'firstname_buyer', 'lastname_buyer', 'type_cart', 'nbr_product', 'nbr_quantity', 'status_order', 'date_register'];
+            $this->columns = ['id_cart', 'email_buyer', 'firstname_buyer', 'lastname_buyer', 'status_order', 'date_register'];
             $this->loadModules();
             if(!empty($this->mods)) {
                 foreach ($this->mods as $mod){
@@ -246,6 +248,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             }
         }
     }
+
     /**
      * @return void
      */
@@ -253,12 +256,12 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         if(!isset($this->assign)) {
             $this->assign = [
                 'id_cart',
-                'email' => ['title' => 'name'],
-                'firstname' => ['title' => 'name'],
-                'lastname' => ['title' => 'name'],
-                'type_cart' => ['type' => 'enum', 'enum' => 'type_', 'input' => null, 'class' => ''],
-                'nbr_product' => ['title' => 'name', 'input' => null],
-                'nbr_quantity' => ['title' => 'name', 'input' => null],
+                'email' => ['title' => 'name', 'col' => 'email_buyer'],
+                'firstname' => ['title' => 'name', 'col' => 'firstname_buyer'],
+                'lastname' => ['title' => 'name', 'col' => 'lastname_buyer'],
+                'type_cart' => ['title' => 'name', 'type' => 'enum', 'col' => 'type_cart', 'enum' => 'type_', 'input' => null, 'class' => ''],
+                'nbr_product' => ['title' => 'name', 'col' => 'nbr_product', 'input' => null],
+                'nbr_quantity' => ['title' => 'name', 'col' => 'nbr_quantity', 'input' => null],
                 'status_order' => ['title' => 'name','type' => 'enum', 'enum' => '', 'input' => null, 'class' => ''],
                 'date_register'
             ];
@@ -289,6 +292,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             }
         }
     }
+
     /**
      * @return void
      */
@@ -314,8 +318,8 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                 }
             }
         }
-        $this->getItems('carts',$params,'all',true,true);
-        $this->data->getScheme($this->tables,$this->columns,$this->assign);
+        $carts = $this->getItems('carts',$params,'all',true,true);
+        if(!empty($carts)) $this->data->getScheme($this->tables,$this->columns,$this->assign);
     }
 
     /**
@@ -369,8 +373,8 @@ class plugins_cartpay_admin extends plugins_cartpay_db
 
     }
     // -------- End Listing root ----------
-    // ----------------------------------------
-    // -------- Start Listing edit ----------------------------------------------
+
+    // -------- Start Listing edit --------
     /**
      * @return void
      */
@@ -387,12 +391,13 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             }
         }
     }
+
     /**
      * @return void
      */
     public function setColumnsEditArray() {
         if(!isset($this->extendedColumns)) {
-            $this->extendedColumns = ['id_items', 'name_p', 'price_p'];
+            $this->extendedColumns = ['id_items','name_img', 'name_p','quantity', 'price_p'];
             $this->loadModules();
             if(!empty($this->mods)) {
                 foreach ($this->mods as $mod){
@@ -403,6 +408,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             }
         }
     }
+
     /**
      * @return void
      */
@@ -411,7 +417,9 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             $this->extendedAssign = [
                 'id_items',
                 'name_p' => ['title' => 'name'],
-                'price_p' => ['title' => 'name','type' => 'price','input' => null]
+                'quantity' => ['title' => 'name'],
+                'price_p' => ['title' => 'name','type' => 'price','input' => null],
+                'name_img' => ['title' => 'img','type'=>'img','input' => null]
             ];
             $this->loadModules();
             if(!empty($this->mods)) {
@@ -458,6 +466,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
             }
         }
     }
+
     /**
      * @return void
      */
@@ -468,7 +477,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         $this->setAssignEditArray();
         $params = [];
         $this->loadModules();
-        if(!empty($this->mods)) {
+        /*if(!empty($this->mods)) {
             $extendQueryParams = [];
             foreach ($this->mods as $mod){
                 if(method_exists($mod,'extendEditListingQuery')) {
@@ -482,13 +491,44 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                     if(isset($extendParams['where']) && !empty($extendParams['where'])) $params['where'][] = $extendParams['where'];
                 }
             }
-        }
+        }*/
+
         $defaultLanguage = $this->collectionLanguage->fetchData(['context' => 'one', 'type' => 'default']);
+        $products = $this->getItems('product',['id' => $this->edit,'default_lang' => $defaultLanguage['id_lang']],'all',false,false);
+        $newProduct = [];
+        foreach($products as $key =>$item){
+            $newProduct[] = $item;
+            if(!empty($this->mods)) {
+                foreach ($this->mods as $mod) {
+                    if (method_exists($mod, 'extendEditListingQuery')) {
+                        $newProduct[$key]['params'] = $mod->extendEditListingQuery($item['id_items'],$item['id_product'],$item['price_p']);
+                    }
+                }
+            }
+        }
+        $extendProduct = [];
+        foreach($newProduct as $key => $item){
+            $extendProduct[$key]['id_items'] = $item['id_items'];
+            $extendProduct[$key]['name_p'] = $item['name_p'];
+            $extendProduct[$key]['quantity'] = $item['quantity'];
+            $extendProduct[$key]['name_img'] = $item['name_img'];
+            $extendProduct[$key]['price_p'] = $item['price_p'];
+            if(isset($item['params'])) {
+                foreach ($item['params'] as $val => $val2) {
+                    $extendProduct[$key][$val] = $val2;
+                    //$test[$key]['price_p'] = !is_null($val2['price_p']) ? $val2['price_p'] : $item['price_p'];
+                }
+            }
+        }
+        /*print '<pre>';
+        print_r($extendProduct);
+        print '</pre>';*/
+        $this->template->assign('product',$extendProduct);
         //$this->getItems('carts', array(':default_lang' => $defaultLanguage['id_lang']), 'all');
         /*print '<pre>';
         print_r(array_merge(['id' => $this->edit],$params));
         print '</pre>';*/
-        $this->getItems('product',array_merge(['id' => $this->edit,':default_lang' => $defaultLanguage['id_lang']],$params),'all',true,false);
+        //$this->getItems('product',array_merge(['id' => $this->edit,'default_lang' => $defaultLanguage['id_lang']],$params),'all',true,false);
         $this->data->getScheme($this->extendedTables,$this->extendedColumns,$this->extendedAssign);
     }
     // -------- End Listing edit ----------
@@ -538,7 +578,6 @@ class plugins_cartpay_admin extends plugins_cartpay_db
     }
 
     /// -------- Cart data --------
-    ///
     /**
      * Update data
      * @param array $config
@@ -585,7 +624,8 @@ class plugins_cartpay_admin extends plugins_cartpay_db
         else {
             if (isset($this->tableaction)) {
                 $this->tableform->run();
-            } else {
+            }
+			else {
                 if (isset($this->action)) {
                     switch ($this->action) {
                         case 'edit':
@@ -672,7 +712,8 @@ class plugins_cartpay_admin extends plugins_cartpay_db
                             }
                             break;
                     }
-                } else {
+                }
+				else {
                     /*if (class_exists('plugins_account_admin')) {
                         $this->getItems('carts_account', null, 'all', true, true);
                     } else {
@@ -681,7 +722,6 @@ class plugins_cartpay_admin extends plugins_cartpay_db
 
                     //$this->template->assign('carts',$carts);
                     $this->getItems('config', null, 'one');
-
                     $this->setTableformData();
                     $this->loadModules();
                     if (!empty($this->mods)) {

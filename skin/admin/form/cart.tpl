@@ -1,4 +1,4 @@
-<pre>{$cart|print_r}</pre>
+{*<pre>{$cart|print_r}</pre>*}
 <form id="cart_form" method="post" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;action=edit" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-6">
     <fieldset>
         <div class="row">

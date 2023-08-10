@@ -4,10 +4,10 @@
 {block name="step:name"}{#confirmation#}{/block}
 {block name="step:content"}
     <div class="row">
-        <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-9 order-resume">
+        <div class="col-12 col-sm-6 col-lg-9 order-resume">
             <h2>{#resume#}</h2>
             <div class="row">
-                <div class="col-4 col-xs-6 col-sm-8 col-md-10 col-lg-4">
+                <div class="col-12 col-lg-4">
                     <h3>{#personal_informations#}</h3>
                     <p>{$buyer.firstname}&nbsp;{$buyer.firstname}</p>
                     <p>{$buyer.email}</p>
@@ -15,19 +15,19 @@
                     {if $buyer.company}<p>{$buyer.company}</p>{/if}
                     {if $buyer.vat}<p>{$buyer.vat}</p>{/if}
                 </div>
-                <div class="col-4 col-xs-6 col-sm-8 col-md-10 col-lg-4">
+                <div class="col-12 col-lg-4">
                     <h3>{#billing_information#}</h3>
                     <p>{$buyer.address}</p>
                     <p>{$buyer.postcode}&nbsp;{$buyer.city}</p>
                     <p>{$buyer.country}</p>
                 </div>
-                <div class="col-4 col-xs-6 col-sm-8 col-md-10 col-lg-4">
+                <div class="col-12 col-lg-4">
                     <h3>{#payment_mehtod#}</h3>
                     <p>{$pma[$order.payment_order]['name']}</p>
                 </div>
                 {if is_array($additionnalResume) && !empty($additionnalResume)}
                 {foreach $additionnalResume as $resume}
-                    <div class="col-4 col-xs-6 col-sm-8 col-md-10 col-lg-4">
+                    <div class="col-12 col-lg-4">
                         <h3>{$resume.name}</h3>
                         {$resume.desc}
                     </div>
@@ -35,7 +35,7 @@
                 {/if}
             </div>
         </div>
-        <div class="col-2 col-xs-3 col-sm-4 col-md-5 col-lg-3 mini-cart">
+        <div class="col-12 col-sm-6 col-lg-3 mini-cart">
             <header>
                 <h2>{#my_cart#}</h2><div><i class="material-icons cart-icon ico ico-shopping_cart"></i><span class="badge cart-total-items">{$cart.nb_items}</span></div>
             </header>

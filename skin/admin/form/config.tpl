@@ -1,5 +1,5 @@
 <div class="row">
-<form id="edit_config" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;tabs=config&amp;action=edit" method="post" class="validate_form edit_form col-ph-12 col-sm-10 col-md-8 col-lg-8">
+<form id="edit_config" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;tabs=config&amp;action=edit" method="post" class="validate_form edit_form col-ph-12 col-sm-10 col-md-6 col-lg-6">
     <fieldset>
         <div class="row">
             <div class="col-xs-12 col-md-6">
@@ -46,6 +46,15 @@
                 </div>
             </div>
             <label for="order_enabled">{#order_enabled#}&nbsp;?</label>
+        </div>
+        <div class="form-group">
+            <div class="switch">
+                <input type="checkbox" id="retreive_enabled" name="acConfig[retreive_enabled]" class="switch-native-control type_order"{if $config.retreive_enabled} checked{/if} />
+                <div class="switch-bg">
+                    <div class="switch-knob"></div>
+                </div>
+            </div>
+            <label for="retreive_enabled">{#retreive_enabled#}&nbsp;?</label>
         </div>
         <hr>
         <div class="form-group">
@@ -114,4 +123,15 @@
         <button class="btn btn-main-theme" type="submit" name="action" value="edit">{#save#|ucfirst}</button>
     </div>
 </form>
+    <form id="remove_cart" action="{$smarty.server.SCRIPT_NAME}?controller={$smarty.get.controller}&amp;tabs=config&amp;action=edit" method="post" class="validate_form edit_form col-ph-12 col-sm-10 col-md-6 col-lg-6">
+        <div class="row">
+            <div class="col-xs-12 col-sm-12">
+                <input type="hidden" name="remove_abandoned_cart" value="true">
+                <div class="alert alert-warning"><span class="fa fa-warning margin-right-sm"></span> Ce bouton vide les paniers abandonnés</div>
+            </div>
+        </div>
+        <div id="submit">
+            <button class="btn btn-main-theme" type="submit">{#remove_abandoned_cart#|ucfirst}</button>
+        </div>
+    </form>
 </div>

@@ -56,6 +56,7 @@ CREATE TABLE IF NOT EXISTS `mc_cartpay_config` (
     `type_order` enum('sale','quotation') NOT NULL DEFAULT 'sale',
     `quotation_enabled` smallint(1) UNSIGNED NOT NULL DEFAULT '1',
     `order_enabled` smallint(1) UNSIGNED NOT NULL DEFAULT '0',
+    `retreive_enabled` smallint(1) UNSIGNED NOT NULL DEFAULT '1',
     `bank_wire` smallint(1) NOT NULL DEFAULT '0',
     `account_owner` varchar(40) DEFAULT NULL,
     `bank_account` varchar(40) DEFAULT NULL,

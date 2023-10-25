@@ -46,23 +46,28 @@ Ajouter a la fin du fichier :
 
 ```smarty
 {block name="scripts"}
-    {$jquery = true}
-    {$js_files = [
-    'group' => ['form'],
-    'defer' => [
-    "/skin/{$theme}/js/form.min.js",
-    "/plugins/cartpay/js/{if $dev}src/{/if}public{if !$dev}.min{/if}.js"
-    ]
-    ]}
+{$jquery = true}
+{$js_files = [
+'group' => [
+'form'
+],
+'normal' => [
+],
+'defer' => [
+"/skin/{$theme}/js/{if $setting.mode === 'dev'}src/{/if}form{if !$setting.mode === 'dev'}.min{/if}.js",
+"/skin/{$theme}/js/vendor/localization/messages_{$lang}.js"
+]
+]}
+{if {$lang} !== "en"}{$js_files['defer'][] = "/libjs/vendor/localization/messages_{$lang}.js"}{/if}
 {/block}
 ````
 
 Ouvrez le fichier layout.tpl de votre skin et ajouter les lignes suivantes: 
 #### JS
 ```smarty
-"/plugins/cartpay/js/{if $dev}src/{/if}cart{if !$dev}.min{/if}.js"
+"/skin/{$theme}/js/{if $setting.mode === 'dev'}src/{/if}cart{if $setting.mode !== 'dev'}.min{/if}.js"
 ````
 #### CSS
 ```smarty
-"cartpay"
+"/skin/{$theme}/css/cartpay{if $setting.mode !== 'dev'}.min{/if}.css"
 ````

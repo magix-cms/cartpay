@@ -197,9 +197,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 
         // Check if cart with this key exists in db
         $session_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
-
+        //if($this->config['retreive_enabled']) {
         // Check if there is an account cart
-        if(isset($account_cart) && !empty($account_cart)) {
+        if($this->config['retreive_enabled'] && isset($account_cart) && !empty($account_cart)) {
             
             // Check if the current cart is different from the account cart
             if($session_cart['session_key_cart'] !== $account_cart['session_key_cart']) {
@@ -444,6 +444,23 @@ class plugins_cartpay_public extends plugins_cartpay_db {
         }
     }
 
+    /**
+     * @param int $id
+     * @return array
+     */
+    private function getRetreiveParam(int $id): array {
+        $this->loadModules();
+        $arb = [];
+
+        if(!empty($this->mods)) {
+            foreach ($this->mods as $mod){
+                if(method_exists($mod,'getRetreiveParam')) $arb = $mod->getRetreiveParam($id);
+            }
+        }
+
+        return $arb;
+    }
+
 	/**
 	 * @param string $type
 	 * @return array|bool
@@ -611,7 +628,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 	 * Get account cart item and place them into cart
 	 */
 	private function retreiveAccountCart() {
-		if(is_array($this->current_cart) && isset($this->current_cart['id_cart'])) {
+        $this->current_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
+
+        if(is_array($this->current_cart) && isset($this->current_cart['id_cart'])) {
 			$items = $this->getItems('account_cart_items',$this->current_cart['id_cart'],'all',false);
 			foreach ($items as $item) {
 			    $product = $item['id_product'];
@@ -630,9 +649,17 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                     'quantity' => $quantity,
                     'id_account' => $this->id_account
                 ]);
-
-                // Insert into cart
-                $this->cart->addItem($product, $quantity, $unit_price ,$pVat);
+                //$item['id_items'];
+                $param = $this->getRetreiveParam($item['id_items']);
+                // Get the product retreive Param
+                if(!empty($param)) {
+                    // Insert into cart
+                    $this->cart->addItem($product, $quantity, $unit_price ,$pVat, $param);
+                }else{
+                    // Insert into cart
+                    $this->cart->addItem($product, $quantity, $unit_price ,$pVat);
+                }
+                //print_r($param);
 			}
 		}
 	}

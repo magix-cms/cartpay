@@ -85,7 +85,8 @@ class plugins_cartpay_admin extends plugins_cartpay_db {
         $action,
         $tableaction,
         $tabs,
-        $status_order;
+        $status_order,
+        $remove_abandoned_cart;
 
     /**
      * @var int $edit
@@ -181,6 +182,8 @@ class plugins_cartpay_admin extends plugins_cartpay_db {
         if (http_request::isPost('acConfig')) $this->config = (array)form_inputEscape::arrayClean($_POST['acConfig']);
         if (http_request::isPost('id')) $this->id = (int)form_inputEscape::simpleClean($_POST['id']);
         if (http_request::isPost('status_order')) $this->status_order = form_inputEscape::simpleClean($_POST['status_order']);
+        if (http_request::isPost('remove_abandoned_cart')) $this->remove_abandoned_cart = form_inputEscape::simpleClean($_POST['remove_abandoned_cart']);
+
         //
     }
 
@@ -597,7 +600,21 @@ class plugins_cartpay_admin extends plugins_cartpay_db {
                 break;
         }
     }
-
+    private function del($data)
+    {
+        switch($data['type']){
+            case 'abandoned_items':
+            case 'abandoned_cart':
+                parent::delete(
+                    array(
+                        'type' => $data['type']
+                    ),
+                    $data['data']
+                );
+                //$this->message->json_post_response(true,'delete',$data['data']);
+                break;
+        }
+    }
     /**
      * @return void
      */
@@ -634,29 +651,62 @@ class plugins_cartpay_admin extends plugins_cartpay_db {
                             if (!empty($this->tabs)) {
                                 switch ($this->tabs) {
                                     case 'config':
-                                        $config = $this->getItems('config', null, 'one', false);
-                                        $this->config['id'] = $config['id_config'];
-                                        $this->config['bank_wire'] = isset($this->config['bank_wire']) ? 1 : 0;
-                                        $this->config['quotation_enabled'] = isset($this->config['quotation_enabled']) ? 1 : 0;
-                                        $this->config['order_enabled'] = isset($this->config['order_enabled']) ? 1 : 0;
-                                        //$this->config['type_order'] = $this->config['type_order'];
-                                        $this->config['account_owner'] = $this->config['account_owner'] === '' ? null : $this->config['account_owner'];
-                                        $this->config['bank_account'] = $this->config['bank_account'] === '' ? null : $this->config['bank_account'];
-                                        $this->config['bank_address'] = $this->config['bank_address'] === '' ? null : $this->config['bank_address'];
-                                        $this->config['bank_link'] = $this->config['bank_link'] === '' ? null : $this->config['bank_link'];
+                                        if(isset($this->config)) {
+                                            $config = $this->getItems('config', null, 'one', false);
+                                            $this->config['id'] = $config['id_config'];
+                                            $this->config['bank_wire'] = isset($this->config['bank_wire']) ? 1 : 0;
+                                            $this->config['quotation_enabled'] = isset($this->config['quotation_enabled']) ? 1 : 0;
+                                            $this->config['order_enabled'] = isset($this->config['order_enabled']) ? 1 : 0;
+                                            $this->config['retreive_enabled'] = isset($this->config['retreive_enabled']) ? 1 : 0;
+                                            //$this->config['type_order'] = $this->config['type_order'];
+                                            $this->config['account_owner'] = $this->config['account_owner'] === '' ? null : $this->config['account_owner'];
+                                            $this->config['bank_account'] = $this->config['bank_account'] === '' ? null : $this->config['bank_account'];
+                                            $this->config['bank_address'] = $this->config['bank_address'] === '' ? null : $this->config['bank_address'];
+                                            $this->config['bank_link'] = $this->config['bank_link'] === '' ? null : $this->config['bank_link'];
 
-                                        $this->config['email_config'] = $this->config['email_config'] === '' ? null : $this->config['email_config'];
-                                        $this->config['email_config_from'] = $this->config['email_config_from'] === '' ? null : $this->config['email_config_from'];
-                                        $this->config['billing_address'] = isset($this->config['billing_address']) ? 1 : 0;
-                                        $this->config['show_price'] = isset($this->config['show_price']) ? 1 : 0;
-                                        //print_r($this->config);
-                                        $this->upd(array(
-                                            'type' => 'config',
-                                            'data' => $this->config
-                                        ));
+                                            $this->config['email_config'] = $this->config['email_config'] === '' ? null : $this->config['email_config'];
+                                            $this->config['email_config_from'] = $this->config['email_config_from'] === '' ? null : $this->config['email_config_from'];
+                                            $this->config['billing_address'] = isset($this->config['billing_address']) ? 1 : 0;
+                                            $this->config['show_price'] = isset($this->config['show_price']) ? 1 : 0;
+                                            //print_r($this->config);
+                                            $this->upd(array(
+                                                'type' => 'config',
+                                                'data' => $this->config
+                                            ));
 
-                                        $status = true;
-                                        $notify = 'update';
+                                            $status = true;
+                                            $notify = 'update';
+                                        }elseif($this->remove_abandoned_cart) {
+                                            $abandoned_cart = $this->getItems('abandoned_cart', null, 'all', false);
+                                            $cart_id = [];
+                                            if(!empty($abandoned_cart)) {
+                                                foreach ($abandoned_cart as $item) {
+                                                    $cart_id[] = $item['cart_id'];
+                                                }
+                                                if (!empty($cart_id)) {
+                                                    $act = implode(',', $cart_id);
+                                                    $this->del(
+                                                        array(
+                                                            'type' => 'abandoned_items',
+                                                            'data' => array(
+                                                                'id' => $act
+                                                            )
+                                                        )
+                                                    );
+
+                                                    $this->del(
+                                                        array(
+                                                            'type' => 'abandoned_cart',
+                                                            'data' => array(
+                                                                'id' => $act
+                                                            )
+                                                        )
+                                                    );
+                                                }
+                                            }
+                                            $status = true;
+                                            $notify = 'delete';
+                                        }
                                         break;
                                 }
                                 $this->message->json_post_response($status, $notify);
@@ -700,7 +750,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db {
                             }
                             break;
                         case 'delete':
-                            if (isset($this->id) && !empty($this->id)) {
+                            /*if (isset($this->id) && !empty($this->id)) {
                                 $this->del(
                                     array(
                                         'type' => 'account',
@@ -709,7 +759,7 @@ class plugins_cartpay_admin extends plugins_cartpay_db {
                                         )
                                     )
                                 );
-                            }
+                            }*/
                             break;
                     }
                 }

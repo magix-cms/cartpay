@@ -243,7 +243,7 @@ class plugins_cartpay_db {
 									) as mci ON (cart.id_cart = mci.id_cart)
 									LEFT JOIN `mc_cartpay_order` as mco ON (cart.id_cart = mco.id_cart)
 									LEFT JOIN `mc_cartpay_quotation` as mcq ON (cart.id_cart = mcq.id_cart)'.$joins.'
-								WHERE cart.transmission_cart = 1'.$cond.$where.' ORDER BY cart.id_cart DESC'. $limit;
+								WHERE cart.transmission_cart = 1'.$cond.$where.' ORDER BY cart.date_register DESC'. $limit;
                     break;
                 /*case 'carts':
                     $limit = '';
@@ -452,6 +452,9 @@ LEFT JOIN mc_attribute_content mac ON (ma.id_attr = mac.id_attr) WHERE mcpc.id_l
 				case 'account_cart_items':
 					$query = 'SELECT * FROM `mc_cartpay_items` WHERE id_cart = :id';
 					break;
+                case 'abandoned_cart':
+                    $query = 'SELECT id_cart AS cart_id FROM `mc_cartpay` WHERE transmission_cart = 0';
+                    break;
                 default:
                     return false;
             }
@@ -674,6 +677,9 @@ LEFT JOIN mc_attribute_content mac ON (ma.id_attr = mac.id_attr) WHERE mcpc.id_l
                     $query = 'SELECT count(id_cart) AS order_num FROM mc_cartpay 
                     WHERE id_cart BETWEEN 1 AND :id AND transmission_cart = 1';
                     break;
+                case 'abandoned_cart':
+                    $query = 'SELECT GROUP_CONCAT(id_cart) AS cart_id FROM `mc_cartpay` WHERE transmission_cart = 0';
+                    break;
                 default:
                     return false;
             }
@@ -759,6 +765,7 @@ LEFT JOIN mc_attribute_content mac ON (ma.id_attr = mac.id_attr) WHERE mcpc.id_l
 							`order_enabled` = :order_enabled,
 							`bank_wire` = :bank_wire,
 							`account_owner` = :account_owner,
+							`retreive_enabled` = :retreive_enabled,
 							`bank_account` = :bank_account,
 							`bank_address` = :bank_address,
 							`bank_link` = :bank_link,
@@ -796,7 +803,8 @@ LEFT JOIN mc_attribute_content mac ON (ma.id_attr = mac.id_attr) WHERE mcpc.id_l
                 break;
             case 'status':
                 $query = 'UPDATE `mc_cartpay`
-						SET `transmission_cart` = :tc
+						SET `transmission_cart` = :tc,
+						`date_register` = NOW()
 						WHERE `id_cart` = :id';
                 break;
             case 'status_order':
@@ -868,6 +876,16 @@ LEFT JOIN mc_attribute_content mac ON (ma.id_attr = mac.id_attr) WHERE mcpc.id_l
 			case 'product':
 				$query = 'DELETE FROM `mc_cartpay_items` WHERE id_cart = :id_cart AND id_items = :id_items';
 				break;
+            case 'abandoned_items':
+                $query = 'DELETE FROM `mc_cartpay_items` 
+						WHERE `id_cart` IN ('.$params['id'].')';
+                $params = [];
+                break;
+            case 'abandoned_cart':
+                $query = 'DELETE FROM `mc_cartpay` 
+						WHERE `id_cart` IN ('.$params['id'].')';
+                $params = [];
+                break;
             default:
                 return false;
         }

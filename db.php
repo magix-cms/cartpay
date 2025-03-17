@@ -380,7 +380,7 @@ LEFT JOIN mc_attribute_content mac ON (ma.id_attr = mac.id_attr) WHERE mcpc.id_l
                                 LEFT JOIN mc_catalog_product_img img ON (mci.id_product = img.id_product AND img.default_img = 1)
 							    LEFT JOIN mc_catalog_product_img_content imgc ON (img.id_img = imgc.id_img and mcpc.id_lang = imgc.id_lang)
 							'.$joins.'
-                                WHERE mcpc.id_lang = :default_lang AND mci.id_cart = :id '.$where.' GROUP BY mci.id_items';
+                                WHERE mcpc.id_lang = :default_lang AND mci.id_cart = :id '.$where;//.' GROUP BY mci.id_items';
                     /*
                     $query = 'SELECT item.id_items,item.quantity,p.price_p,c.name_p
                             FROM mc_cartpay_items AS item 
@@ -623,7 +623,7 @@ LEFT JOIN mc_attribute_content mac ON (ma.id_attr = mac.id_attr) WHERE mcpc.id_l
 							WHERE id_cart = :id AND id_product = :id_product';
                     break;
 				case 'product_price':
-					$query = 'SELECT price_p FROM `mc_catalog_product` WHERE id_product = :id';
+					$query = 'SELECT price_p, price_promo_p FROM `mc_catalog_product` WHERE id_product = :id';
 					break;
 				case 'item':
 					$query = 'SELECT 

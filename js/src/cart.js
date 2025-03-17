@@ -134,10 +134,21 @@ window.addEventListener('load',function(){
                 let optionPrice = 0;
                 let itemQ = quantity.value;
                 priceReplacer.forEach((pr) => {
-                    let selected = pr.options[pr.selectedIndex];
+                    /*let selected = pr.options[pr.selectedIndex];
                     if(typeof selected !== "undefined") {
                         updatedPrice = (selected.dataset.price !== '' && selected.dataset.price !== undefined) ? parseFloat(selected.dataset.price) : updatedPrice;
                         if(selected.dataset.vat !== '' && selected.dataset.vat !== undefined) productVat = parseFloat(selected.dataset.vat);
+                    }*/
+                    let radioGroup = document.querySelector('.radio-group');
+                    if(radioGroup !== null && radioGroup !== undefined) {
+                        let checked = pr.checked;
+                        //console.log(checked);
+                        if (typeof checked !== "undefined" && checked !== false) {
+                            selected = pr;
+                            updatedPrice = (selected.dataset.price !== '' && selected.dataset.price !== undefined) ? parseFloat(selected.dataset.price) : updatedPrice;
+                            if (selected.dataset.vat !== '' && selected.dataset.vat !== undefined) productVat = parseFloat(selected.dataset.vat);
+                            //console.log(updatedPrice);
+                        }
                     }
                 });
                 priceImpacter.forEach((pi) => {
@@ -179,6 +190,26 @@ window.addEventListener('load',function(){
             });
             quantity.addEventListener('change',updatePrice);
             quantity.addEventListener('input',updatePrice);
+            const inc = document.getElementById("increment");
+            let counter = 1;
+            inc.addEventListener('click', function() {
+                //let counter = quantity.value;
+                counter++;
+                quantity.value = counter;
+                updatePrice();
+                //console.log(counter);
+            });
+            const dec = document.getElementById("decrement");
+            dec.addEventListener('click', function() {
+                //let counter = quantity.value;
+                if (quantity.value > 1) {
+                    counter--;
+
+                    quantity.value = counter;
+                    updatePrice();
+                }
+                //console.log(counter);
+            });
             ofs.forEach((of) => {
                 of.addEventListener('change',updatePrice);
                 of.addEventListener('input',updatePrice);
@@ -189,3 +220,37 @@ window.addEventListener('load',function(){
 
     Cart.container = document.getElementById('shopping-cart');
 });
+
+/*function incrementValue(e) {
+    e.preventDefault();
+    var fieldName = $(e.target).data('field');
+    var parent = $(e.target).closest('div');
+    var currentVal = parseInt(parent.find('input[name=' + fieldName + ']').val(), 10);
+
+    if (!isNaN(currentVal)) {
+        parent.find('input[name=' + fieldName + ']').val(currentVal + 1);
+    } else {
+        parent.find('input[name=' + fieldName + ']').val(0);
+    }
+}
+
+function decrementValue(e) {
+    e.preventDefault();
+    var fieldName = $(e.target).data('field');
+    var parent = $(e.target).closest('div');
+    var currentVal = parseInt(parent.find('input[name=' + fieldName + ']').val(), 10);
+
+    if (!isNaN(currentVal) && currentVal > 0) {
+        parent.find('input[name=' + fieldName + ']').val(currentVal - 1);
+    } else {
+        parent.find('input[name=' + fieldName + ']').val(0);
+    }
+}
+
+$('.input-group').on('click', '.button-plus', function(e) {
+    incrementValue(e);
+});
+
+$('.input-group').on('click', '.button-minus', function(e) {
+    decrementValue(e);
+});*/

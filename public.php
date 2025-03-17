@@ -199,7 +199,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
         $session_cart = $this->getItems('session',['session_key_cart' => $this->session_key_cart],'one',false);
         //if($this->config['retreive_enabled']) {
         // Check if there is an account cart
-        if($this->config['retreive_enabled'] && isset($account_cart) && !empty($account_cart)) {
+        if(isset($this->config['retreive_enabled']) && isset($account_cart) && !empty($account_cart)) {
             
             // Check if the current cart is different from the account cart
             if($session_cart['session_key_cart'] !== $account_cart['session_key_cart']) {
@@ -395,7 +395,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 		$this->loadModules();
 
 		$pPrice = $this->getItems('product_price',$params['id_product'],'one',false);
-		$unit_price = $pPrice['price_p'];
+		// Promo ou pas sur le produit
+        $unit_price = $pPrice['price_promo_p'] !== '0.00' ? $pPrice['price_promo_p'] : $pPrice['price_p'];
 
 		if(!empty($this->mods)) {
 			// Replace unit price
@@ -1246,6 +1247,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                     $mail_settings = new frontend_model_setting($this->template);
                     $from = $mail_settings->getSetting('mail_sender');
                     $file = null;
+                    $config = $this->getConfig();
+
 					if($contacts) {
 						//Initialisation du contenu du message
 						//$send = false;
@@ -1281,6 +1284,16 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                         $from['value'],//$from['mail_sender'],
                         $file
 					);*/
+
+                    $this->mail->send_email(
+                        $config['email_config'],
+                        $tpl,
+                        $data,
+                        '',
+                        $noreply,
+                        $config['email_config_from'],//$from['mail_sender'],
+                        $file
+                    );
 					$this->mail->send_email(
 						$buyer['email'],
 						$tpl,
@@ -1356,7 +1369,9 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 						$cartProducts = $this->getItems('countProduct',['id' => $key_cart['id_cart']],'one',false);
 
 						// Set breadcrumb information
-						$breadplugin[0]['url'] = http_url::getUrl().'/'.$this->template->lang.'/cartpay/';
+                    $this->template->breadcrumb->addItem($this->template->getConfigVars('my_cart'));
+
+                    $breadplugin[0]['url'] = http_url::getUrl().'/'.$this->template->lang.'/cartpay/';
 						$breadplugin[0]['title'] = $this->template->getConfigVars('my_cart');
 						$breadplugin[] = ['name' => $this->template->getConfigVars($this->action)];
 						$this->template->assign('breadplugin', $breadplugin);
@@ -1584,7 +1599,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                                                                 'tc' => 1
                                                             )
                                                         ));
-                                                        //$this->cart->newCart();
+                                                        $this->cart->newCart();
                                                         //$this->session_key_cart = $this->cart->getKey();
                                                         //$this->openSession($this->session_key_cart, $this->id_account);
                                                     }
@@ -1611,6 +1626,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 											if(isset($this->done) && !$this->done['error']) {
                                                 /*$log = new debug_logger(MP_LOG_DIR);
                                                 $log->tracelog($buyer['email']);
+                                                $log->tracelog(json_encode($this->status));
                                                 $log->tracelog(json_encode($this->action));
                                                 $log->tracelog(json_encode($buyer));
                                                 $log->tracelog(json_encode($record));*/
@@ -1638,7 +1654,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
 				}
 			}
 			else {
-				$this->template->assign('breadplugin', $breadplugin);
+                $this->template->breadcrumb->addItem($this->template->getConfigVars('my_cart'));
+                $this->template->assign('breadplugin', $breadplugin);
 				$quotationStep = $this->getSteps('quotation');
                 $this->template->assign('quotationFirstStep', $this->setStepUrl('quotation',$quotationStep[1]['step']));
 				$orderStep = $this->getSteps('order');

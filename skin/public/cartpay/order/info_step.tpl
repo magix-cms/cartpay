@@ -1,6 +1,6 @@
 {extends file="cartpay/step.tpl"}
 
-{block name="step:formclass"} nice-form{/block}
+{block name="step:formclass"}{/block}
 {block name="step:name"}{#personal_informations#}{/block}
 {block name="step:content"}
     <div class="row row-center">

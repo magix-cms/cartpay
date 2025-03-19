@@ -121,8 +121,8 @@ window.addEventListener('load',function(){
     let productPrice = document.querySelector('.product-price');
     if(productPrice !== null && productPrice !== undefined) {
         let displayMode = productPrice.dataset.display;
-        let productVat = parseFloat(productPrice.dataset.vat);
-        let price = parseFloat(productPrice.dataset.price);
+        let productVat = parseFloat(productPrice.dataset.vat).toFixed(2);
+        let price = parseFloat(productPrice.dataset.price).toFixed(2);
         addToCart.forEach((atc) => {
             let priceReplacer = atc.querySelectorAll('[data-price-replacer]');
             let priceImpacter = atc.querySelectorAll('[data-impact]');
@@ -130,7 +130,7 @@ window.addEventListener('load',function(){
             let quantity = atc.querySelector('[name="quantity"]');
             let ofs = atc.querySelectorAll('.optional-field');
             function updatePrice() {
-                let updatedPrice = price;
+                let updatedPrice = price.toFixed(2);
                 let optionPrice = 0;
                 let itemQ = quantity.value;
                 priceReplacer.forEach((pr) => {
@@ -156,7 +156,7 @@ window.addEventListener('load',function(){
                 });
                 priceAdditionnal.forEach((pa) => {
                     let vat = pa.dataset.vat !== undefined ? parseFloat(pa.dataset.vat) : 0;
-                    let computedOptionPrice = displayMode === 'tinc' ? parseFloat(pa.dataset.price) * (1 + (vat/100)) : parseFloat(pa.dataset.price);
+                    let computedOptionPrice = displayMode === 'tinc' ? parseFloat(pa.dataset.price).toFixed(2) * (1 + (vat/100)) : parseFloat(pa.dataset.price).toFixed(2);
                     if(pa.checked || pa.selected) optionPrice = optionPrice + computedOptionPrice;
                 });
                 let computedPrice = displayMode === 'tinc' ? updatedPrice * (1 + productVat/100) : updatedPrice;

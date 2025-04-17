@@ -861,7 +861,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                     $rate = 1 + $item['item']->vat/100;
                     $product['vat'] = $item['item']->vat;
                     $product['unit_price'] = round($item['item']->unit_price, 2);
-                    $product['unit_price_inc'] = round($item['item']->unit_price * $rate, 2);
+                    $product['unit_price_inc'] = round($item['item']->unit_price * $rate, 1);
                     $product['total'] = $item['item']->unit_price * $item['q'];
                     $product['total_inc'] = $item['item']->unit_price * $item['q'] * $rate;
 
@@ -901,7 +901,7 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                     }
 
                     $product['total'] = round($product['total'],2);
-                    $product['total_inc'] = round($product['total_inc'],2);
+                    $product['total_inc'] = round($product['total_inc'],1);
 
                     $item = array_merge($item,$product);
                 }
@@ -920,7 +920,8 @@ class plugins_cartpay_public extends plugins_cartpay_db {
                 }else{
                     $cart['total']['inc'] = round($cart['total']['exc'], 2);
                 }*/
-                $cart['total']['inc'] = round($cart['total']['inc'], 2);
+                //print number_format(round($cart['total']['inc'], 3),2);
+                $cart['total']['inc'] = number_format(round($cart['total']['inc'], 3),2);//round($cart['total']['inc'], 2);
 
                 foreach ($cart['total']['vat'] as $key => $val) {
                     $cart['total']['vat'][$key] = round($val,2);

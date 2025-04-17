@@ -53,7 +53,7 @@
 {/block}
 {block name="step:submit"}
     <div class="cart-submit">
-        <input id="amount" type="hidden" name="purchase[amount]" class="form-control required" value="{$cart.total.inc|number_format:2:'.':'&thinsp;'}" />
+        <input id="amount" type="hidden" name="purchase[amount]" class="form-control required" value="{$cart.total.inc|round:2|number_format:2:'.':'&thinsp;'}" />
         <input type="hidden" name="custom[order]" value=""/>
         <input id="amount" type="hidden" name="custom[email]" class="form-control required" value="{$buyer.email}" />
         {*<input id="shipping" type="hidden" name="custom[shipping]" class="form-control required" value="" />*}

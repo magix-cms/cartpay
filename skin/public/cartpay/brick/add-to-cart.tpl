@@ -9,7 +9,7 @@
                     {else}
                         {$price = $price|round:1|number_format:2:',':' '|decimal_trim:','}
                     {/if}
-                <span class="product-price" data-price="{if $product.promo_price !== '0.00'}{$promo_price}{else}{$price}{/if}" data-vat="{$setting.vat_rate}">{$price|round:2|number_format:2:',':' '|decimal_trim:','}</span> €&nbsp;{if $setting.price_display === 'tinc'}<span class="price-tax">{#tax_included#}</span>{else}<span class="price-tax">{#tax_excluded#}</span>{/if}
+                <span class="product-price" data-price="{if $product.promo_price !== '0.00'}{$promo_price}{else}{$price|round:2|number_format:2:',':' '|decimal_trim:','}{/if}" data-vat="{$setting.vat_rate}">{if $product.promo_price !== '0.00'}{$promo_price}{else}{$price}{/if}</span> €&nbsp;{if $setting.price_display === 'tinc'}<span class="price-tax">{#tax_included#}</span>{else}<span class="price-tax">{#tax_excluded#}</span>{/if}
                 </div>
             {/if}{/strip}
         </div>
@@ -47,7 +47,7 @@
     {/if}
     <div class="submit">
         <input type="hidden" name="id_product" value="{$product.id}" />
-        <button type="submit" class="btn btn-block btn-main">{#add_cart#|ucfirst}</button>
+        <button type="submit" class="btn btn-main">{#add_cart#|ucfirst}</button>
         {*<a href="#desc" data-toggle="tab" class="btn btn-sd">annuler</a>*}
     </div>
     <div class="mc-message mc-message-cartpay"></div>

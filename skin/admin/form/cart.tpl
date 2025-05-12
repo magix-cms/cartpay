@@ -41,7 +41,7 @@
             <div class="col-xs-12 col-md-6">
                 <div class="form-group">
                     <label for="amount_order">{#amount_order#|ucfirst} :</label>
-                    <input id="amount_order" type="text" name="cart[amount_order]" value="{$cart.amount_order}" placeholder="{#amount_order#}" disabled class="form-control" />
+                    <input id="amount_order" type="text" name="cart[amount_order]" value="{$cart.amount_order|round:1|number_format:2:',':' '|decimal_trim:','}" placeholder="{#amount_order#}" disabled class="form-control" />
                 </div>
             </div>
             <div class="col-xs-12 col-md-6">

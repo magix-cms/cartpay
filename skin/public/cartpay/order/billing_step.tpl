@@ -26,10 +26,10 @@
             <div class="form-group">
                 {*<input id="country" type="text" name="billing[country]" placeholder="{#ph_billing_country#}" class="form-control required"{if $buyer.country} value="{$buyer.country}"{/if} required/>
                 <label for="country" class="is_empty">{#billing_country#}*&nbsp;:</label>*}
-                <label for="country">{#pn_transport_country#|ucfirst}&nbsp;*:</label>
+                <label for="country">{#billing_country#|ucfirst}&nbsp;*:</label>
                 {country_data}
                 <select name="billing[country]" id="country" class="form-control required" required>
-                    <option disabled selected>-- {#pn_transport_country#|ucfirst} --</option>
+                    <option disabled selected>-- {#billing_country#|ucfirst} --</option>
                     {*{foreach $countries as $key}
                         <option value="{$key.id}"{if isset($account.address.delivery) && !empty($account.address.delivery) && {#$account.address.delivery.country#} === $key.country} selected{/if}>{$key.country}</option>
                     {/foreach}*}
